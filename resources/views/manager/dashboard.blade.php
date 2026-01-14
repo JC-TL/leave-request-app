@@ -10,7 +10,8 @@
                 <span class="badge badge-primary">{{ ucfirst($user->role) }}</span>
                 <form action="{{ route('logout') }}" method="POST" class="inline">
                     @csrf
-                    <button type="submit" class="text-base-content hover:text-base-content/70 transition-colors">Logout</button>
+                    <button type="submit" class="cursor-pointer text-black-100 underline underline-offset-2
+         hover:text-red-700 hover:underline hover:decoration-2">Logout</button>
                 </form>
             </div>
             @endauth
@@ -35,7 +36,6 @@
             </div>
         @endif
 
-        <!-- Section 1: Summary Stats -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div class="card bg-base-100 shadow-sm border border-base-300">
                 <div class="card-body">
@@ -57,7 +57,6 @@
             </div>
         </div>
 
-        <!-- Section 2: Pending Requests from My Team -->
         <div class="card bg-base-100 shadow-sm border border-base-300">
             <div class="card-body">
                 <h2 class="card-title text-2xl mb-4">Pending Requests from My Team</h2>
@@ -108,7 +107,6 @@
             </div>
         </div>
 
-        <!-- Section 3: Team Members List -->
         <div class="card bg-base-100 shadow-sm border border-base-300">
             <div class="card-body">
                 <h2 class="card-title text-2xl mb-4">Team Members</h2>

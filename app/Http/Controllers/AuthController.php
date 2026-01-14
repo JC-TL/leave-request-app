@@ -72,4 +72,12 @@ class AuthController extends Controller
             'message' => 'Success',
         ]);
     }
+
+    /**
+     * Show the contact admin form.
+     */
+    public function showContactAdmin()
+    {
+        return view('contact-admin');
+    }
 }

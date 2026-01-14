@@ -182,6 +182,7 @@ class DatabaseSeeder extends Seeder
             $alice,
             $bob,
             $carol,
+            $brad,
         ];
 
         $currentYear = now()->year;

@@ -13,7 +13,7 @@
 </head>
 
 <body class="min-h-screen flex flex-col bg-base-200 font-sans" 
-      style="background-image: url('{{ asset('images/bg.png') }}'); 
+      style="background-color: #f0f0f0;
              background-size: cover; 
              background-position: center;
              background-attachment: fixed;
@@ -23,7 +23,7 @@
         {{ $navigation }}
     @endisset
 
-    <main class="flex-1 max-w-3xl mx-auto px-6 py-6">
+    <main class="flex-1 w-full px-6 py-6 {{ !isset($navigation) ? 'max-w-md mx-auto' : '' }}">
         {{ $slot }}
     </main>
 

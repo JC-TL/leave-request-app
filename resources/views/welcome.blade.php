@@ -47,7 +47,7 @@
                 <br><br>
                 <div class="text-center">
                     <p >Sign-in issues?</p>
-                    <a href="/register" class="text-blue-700 hover:underline"><p>Contact Admin</p></a>
+                    <a href="{{ route('contact-admin') }}" class="text-blue-700 hover:underline"><p>Contact Admin</p></a>
                 </div>
             </div>
         </div>

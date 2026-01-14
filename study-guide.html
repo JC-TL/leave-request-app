@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leave Request App - Study Guide</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .arrow {
+            position: relative;
+        }
+        .arrow::after {
+            content: '→';
+            font-size: 2rem;
+            color: #6366f1;
+        }
+        .arrow-down::after {
+            content: '↓';
+        }
+        .flow-line {
+            border-left: 3px dashed #6366f1;
+        }
+        .code-block {
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.85rem;
+        }
+        .highlight {
+            background: linear-gradient(120deg, #fef08a 0%, #fef08a 100%);
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+        .connection-line {
+            stroke-dasharray: 5,5;
+            animation: dash 0.5s linear infinite;
+        }
+        @keyframes dash {
+            to { stroke-dashoffset: -10; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+    
+    <!-- Header -->
+    <header class="bg-indigo-600 text-white py-8">
+        <div class="container mx-auto px-6">
+            <h1 class="text-4xl font-bold">📚 Leave Request App - Study Guide</h1>
+            <p class="text-indigo-200 mt-2">Understanding Laravel MVC Architecture</p>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-6 py-4">
+            <ul class="flex flex-wrap gap-4 text-sm">
+                <li><a href="#overview" class="text-indigo-600 hover:underline">Overview</a></li>
+                <li><a href="#mvc" class="text-indigo-600 hover:underline">MVC Pattern</a></li>
+                <li><a href="#routes" class="text-indigo-600 hover:underline">Routes</a></li>
+                <li><a href="#controllers" class="text-indigo-600 hover:underline">Controllers</a></li>
+                <li><a href="#models" class="text-indigo-600 hover:underline">Models</a></li>
+                <li><a href="#views" class="text-indigo-600 hover:underline">Views</a></li>
+                <li><a href="#employee-flow" class="text-indigo-600 hover:underline">Employee Flow</a></li>
+                <li><a href="#approval-flow" class="text-indigo-600 hover:underline">Approval Flow</a></li>
+                <li><a href="#database" class="text-indigo-600 hover:underline">Database</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container mx-auto px-6 py-8 space-y-12">
+
+        <!-- Section 1: Project Overview -->
+        <section id="overview" class="bg-white rounded-xl shadow-lg p-8">
+            <h2 class="text-3xl font-bold text-indigo-600 mb-6">🎯 Project Overview</h2>
+            
+            <div class="grid md:grid-cols-2 gap-8">
+                <div>
+                    <h3 class="text-xl font-semibold mb-4">What is this app?</h3>
+                    <p class="text-gray-600 mb-4">
+                        A <strong>Leave Request Management System</strong> where employees can request time off, 
+                        managers can approve/reject, and HR can manage policies.
+                    </p>
+                    
+                    <h3 class="text-xl font-semibold mb-4 mt-6">User Roles</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
+                            <span class="text-2xl">👤</span>
+                            <div>
+                                <strong>Employee</strong>
+                                <p class="text-sm text-gray-600">Submit & track leave requests</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
+                            <span class="text-2xl">👔</span>
+                            <div>
+                                <strong>Department Manager</strong>
+                                <p class="text-sm text-gray-600">Approve/reject team requests</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 p-3 bg-purple-50 rounded-lg">
+                            <span class="text-2xl">🏢</span>
+                            <div>
+                                <strong>HR Admin</strong>
+                                <p class="text-sm text-gray-600">Final approval & manage policies</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-xl font-semibold mb-4">Project Structure</h3>
+                    <div class="bg-gray-900 text-green-400 p-4 rounded-lg code-block overflow-x-auto">
+<pre>leave-request-app/
+├── app/
+│   ├── Http/
+│   │   └── Controllers/
+│   │       ├── <span class="text-yellow-400">AuthController.php</span>
+│   │       ├── <span class="text-yellow-400">EmployeeController.php</span>
+│   │       ├── <span class="text-yellow-400">ManagerController.php</span>
+│   │       └── <span class="text-yellow-400">HRController.php</span>
+│   └── Models/
+│       ├── <span class="text-cyan-400">User.php</span>
+│       ├── <span class="text-cyan-400">Request.php</span>
+│       ├── <span class="text-cyan-400">Balance.php</span>
+│       ├── <span class="text-cyan-400">Department.php</span>
+│       └── <span class="text-cyan-400">Policy.php</span>
+├── routes/
+│   ├── <span class="text-pink-400">web.php</span>
+│   ├── <span class="text-pink-400">auth.php</span>
+│   ├── <span class="text-pink-400">employee.php</span>
+│   ├── <span class="text-pink-400">manager.php</span>
+│   └── <span class="text-pink-400">hr.php</span>
+└── resources/views/
+    ├── employee/
+    │   └── <span class="text-orange-400">dashboard.blade.php</span>
+    ├── manager/
+    │   ├── <span class="text-orange-400">dashboard.blade.php</span>
+    │   └── <span class="text-orange-400">show-request.blade.php</span>
+    └── hr/
+        ├── <span class="text-orange-400">dashboard.blade.php</span>
+        ├── <span class="text-orange-400">show-request.blade.php</span>
+        └── <span class="text-orange-400">policies.blade.php</span></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: MVC Pattern -->
+        <section id="mvc" class="bg-white rounded-xl shadow-lg p-8">
+            <h2 class="text-3xl font-bold text-indigo-600 mb-6">🏗️ MVC Architecture Pattern</h2>
+            
+            <p class="text-gray-600 mb-6">
+                Laravel uses the <strong>Model-View-Controller (MVC)</strong> pattern to organize code. 
+                This separates concerns and makes the code easier to maintain.
+            </p>
+
+            <!-- Visual MVC Diagram -->
+            <div class="bg-gradient-to-r from-indigo-50 to-purple-50 p-8 rounded-xl mb-8">
+                <div class="flex flex-col lg:flex-row items-center justify-center gap-4 lg:gap-8">
+                    
+                    <!-- User -->
+                    <div class="text-center">
+                        <div class="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center text-4xl mx-auto">
+                            🧑‍💻
+                        </div>
+                        <p class="mt-2 font-semibold">User</p>
+                        <p class="text-sm text-gray-500">Browser</p>
+                    </div>
+                    
+                    <div class="arrow hidden lg:block"></div>
+                    <div class="arrow-down lg:hidden arrow"></div>
+                    
+                    <!-- Routes -->
+                    <div class="text-center">
+                        <div class="w-24 h-24 bg-pink-500 rounded-lg flex items-center justify-center text-white mx-auto shadow-lg">
+                            <div>
+                                <div class="text-2xl">🛤️</div>
+                                <div class="text-xs mt-1">Routes</div>
+                            </div>
+                        </div>
+                        <p class="mt-2 text-sm text-gray-600">routes/*.php</p>
+                    </div>
+                    
+                    <div class="arrow hidden lg:block"></div>
+                    <div class="arrow-down lg:hidden arrow"></div>
+                    
+                    <!-- Controller -->
+                    <div class="text-center">
+                        <div class="w-24 h-24 bg-yellow-500 rounded-lg flex items-center justify-center text-white mx-auto shadow-lg">
+                            <div>
+                                <div class="text-2xl">🎮</div>
+                                <div class="text-xs mt-1">Controller</div>
+                            </div>
+                        </div>
+                        <p class="mt-2 text-sm text-gray-600">Controllers/*.php</p>
+                    </div>
+                    
+                    <div class="flex flex-col lg:flex-row items-center gap-4 lg:gap-8">
+                        <div class="arrow hidden lg:block"></div>
+                        <div class="arrow-down lg:hidden arrow"></div>
+                        
+                        <!-- Model -->
+                        <div class="text-center">
+                            <div class="w-24 h-24 bg-cyan-500 rounded-lg flex items-center justify-center text-white mx-auto shadow-lg">
+                                <div>
+                                    <div class="text-2xl">💾</div>
+                                    <div class="text-xs mt-1">Model</div>
+                                </div>
+                            </div>
+                            <p class="mt-2 text-sm text-gray-600">Models/*.php</p>
+                        </div>
+                    </div>
+                    
+                    <div class="arrow hidden lg:block"></div>
+                    <div class="arrow-down lg:hidden arrow"></div>
+                    
+                    <!-- View -->
+                    <div class="text-center">
+                        <div class="w-24 h-24 bg-orange-500 rounded-lg flex items-center justify-center text-white mx-auto shadow-lg">
+                            <div>
+                                <div class="text-2xl">🖼️</div>
+                                <div class="text-xs mt-1">View</div>
+                            </div>
+                        </div>
+                        <p class="mt-2 text-sm text-gray-600">views/*.blade.php</p>
+                    </div>
+                    
+                    <div class="arrow hidden lg:block"></div>
+                    <div class="arrow-down lg:hidden arrow"></div>
+                    
+                    <!-- Response -->
+                    <div class="text-center">
+                        <div class="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center text-4xl mx-auto">
+                            📄
+                        </div>
+                        <p class="mt-2 font-semibold">HTML</p>
+                        <p class="text-sm text-gray-500">Response</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MVC Explanation Cards -->
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="border-2 border-cyan-500 rounded-xl p-6">
+                    <h3 class="text-xl font-bold text-cyan-600 mb-3">💾 Model</h3>
+                    <p class="text-gray-600 mb-4">Represents data and business logic. Interacts with the database.</p>
+                    <div class="bg-gray-100 p-3 rounded code-block text-sm">
+                        <span class="text-purple-600">User</span>, <span class="text-purple-600">Request</span>, <span class="text-purple-600">Balance</span>
+                    </div>
+                    <p class="text-sm text-gray-500 mt-3">📁 app/Models/</p>
+                </div>
+                
+                <div class="border-2 border-orange-500 rounded-xl p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-3">🖼️ View</h3>
+                    <p class="text-gray-600 mb-4">The UI layer. Displays data to users using Blade templates.</p>
+                    <div class="bg-gray-100 p-3 rounded code-block text-sm">
+                        dashboard<span class="text-green-600">.blade.php</span>
+                    </div>
+                    <p class="text-sm text-gray-500 mt-3">📁 resources/views/</p>
+                </div>
+                
+                <div class="border-2 border-yellow-500 rounded-xl p-6">
+                    <h3 class="text-xl font-bold text-yellow-600 mb-3">🎮 Controller</h3>
+                    <p class="text-gray-600 mb-4">The middleman. Handles requests, processes data, returns views.</p>
+                    <div class="bg-gray-100 p-3 rounded code-block text-sm">
+                        <span class="text-purple-600">EmployeeController</span>
+                    </div>
+                    <p class="text-sm text-gray-500 mt-3">📁 app/Http/Controllers/</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Routes -->
+        <section id="routes" class="bg-white rounded-xl shadow-lg p-8">
+            <h2 class="text-3xl font-bold text-pink-600 mb-6">🛤️ Routes - The URL Mapper</h2>
+            
+            <p class="text-gray-600 mb-6">
+                Routes define <strong>which URL goes to which Controller method</strong>. 
+                Think of them as a map that directs traffic.
+            </p>
+
+            <div class="grid lg:grid-cols-2 gap-8">
+                <!-- Route Anatomy -->
+                <div>
+                    <h3 class="text-xl font-semibold mb-4">Route Anatomy</h3>
+                    <div class="bg-gray-900 text-white p-6 rounded-lg code-block">
+<pre><span class="text-gray-500">// routes/employee.php</span>
+
+Route::<span class="text-yellow-400">get</span>(<span class="text-green-400">'/employee/dashboard'</span>, 
+    [<span class="text-cyan-400">EmployeeController</span>::class, <span class="text-green-400">'dashboard'</span>]
+)-><span class="text-pink-400">name</span>(<span class="text-green-400">'employee.dashboard'</span>);</pre>
+                    </div>
+                    
+                    <div class="mt-4 space-y-3">
+                        <div class="flex items-start gap-3">
+                            <span class="bg-yellow-400 text-black px-2 py-1 rounded text-sm font-mono">get</span>
+                            <p class="text-gray-600">HTTP method (get, post, patch, delete)</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="bg-green-400 text-black px-2 py-1 rounded text-sm font-mono">/employee/dashboard</span>
+                            <p class="text-gray-600">The URL path users visit</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="bg-cyan-400 text-black px-2 py-1 rounded text-sm font-mono">EmployeeController</span>
+                            <p class="text-gray-600">Which controller handles it</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="bg-green-400 text-black px-2 py-1 rounded text-sm font-mono">'dashboard'</span>
+                            <p class="text-gray-600">Which method in the controller</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="bg-pink-400 text-black px-2 py-1 rounded text-sm font-mono">name()</span>
+                            <p class="text-gray-600">A nickname to reference this route</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- All Routes Table -->
+                <div>
+                    <h3 class="text-xl font-semibold mb-4">All Routes in Your App</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="text-left p-3">Method</th>
+                                    <th class="text-left p-3">URL</th>
+                                    <th class="text-left p-3">Controller@Method</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y">
+                                <tr class="bg-blue-50">
+                                    <td class="p-3"><span class="bg-green-500 text-white px-2 py-1 rounded text-xs">GET</span></td>
+                                    <td class="p-3 font-mono text-xs">/</td>
+                                    <td class="p-3 font-mono text-xs">Auth@showLoginForm</td>
+                                </tr>
+                                <tr class="bg-blue-50">
+                                    <td class="p-3"><span class="bg-blue-500 text-white px-2 py-1 rounded text-xs">POST</span></td>
+                                    <td class="p-3 font-mono text-xs">/login</td>
+                                    <td class="p-3 font-mono text-xs">Auth@login</td>
+                                </tr>
+                                <tr class="bg-blue-50">
+                                    <td class="p-3"><span class="bg-blue-500 text-white px-2 py-1 rounded text-xs">POST</span></td>
+                                    <td class="p-3 font-mono text-xs">/logout</td>
+                                    <td class="p-3 font-mono text-xs">Auth@logout</td>
+                                </tr>
+                                <tr class="bg-indigo-50">
+                                    <td class="p-3"><span class="bg-green-500 text-white px-2 py-1 rounded text-xs">GET</span></td>
+                                    <td class="p-3 font-mono text-xs">/employee/dashboard</td>
+                                    <td class="p-3 font-mono text-xs">Employee@dashboard</td>
+                                </tr>
+                                <tr class="bg-indigo-50">
+                                    <td class="p-3"><span class="bg-blue-500 text-white px-2 py-1 rounded text-xs">POST</span></td>
+                                    <td class="p-3 font-mono text-xs">/employee/request</td>
+                                    <td class="p-3 font-mono text-xs">Employee@storeRequest</td>
+                                </tr>
+                                <tr class="bg-indigo-50">
+                                    <td class="p-3"><span class="bg-yellow-500 text-white px-2 py-1 rounded text-xs">PATCH</span></td>
+                                    <td class="p-3 font-mono text-xs">/request/{id}/cancel</td>
+                                    <td class="p-3 font-mono text-xs">Employee@cancelRequest</td>
+                                </tr>
+                                <tr class="bg-green-50">
+                                    <td class="p-3"><span class="bg-green-500 text-white px-2 py-1 rounded text-xs">GET</span></td>
+                                    <td class="p-3 font-mono text-xs">/manager/dashboard</td>
+                                    <td class="p-3 font-mono text-xs">Manager@dashboard</td>
+                                </tr>
+                                <tr class="bg-green-50">
+                                    <td class="p-3"><span class="bg-yellow-500 text-white px-2 py-1 rounded text-xs">PATCH</span></td>
+                                    <td class="p-3 font-mono text-xs">/manager/request/{id}/approve</td>
+                                    <td class="p-3 font-mono text-xs">Manager@approveRequest</td>
+                                </tr>
+                                <tr class="bg-purple-50">
+                                    <td class="p-3"><span class="bg-green-500 text-white px-2 py-1 rounded text-xs">GET</span></td>
+                                    <td class="p-3 font-mono text-xs">/hr/dashboard</td>
+                                    <td class="p-3 font-mono text-xs">HR@dashboard</td>
+                                </tr>
+                                <tr class="bg-purple-50">
+                                    <td class="p-3"><span class="bg-yellow-500 text-white px-2 py-1 rounded text-xs">PATCH</span></td>
+                                    <td class="p-3 font-mono text-xs">/hr/request/{id}/approve</td>
+                                    <td class="p-3 font-mono text-xs">HR@approveRequest</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Middleware -->
+            <div class="mt-8 bg-yellow-50 border-l-4 border-yellow-500 p-6 rounded-r-lg">
+                <h3 class="text-lg font-semibold text-yellow-700 mb-2">🔐 Middleware - Route Protection</h3>
+                <p class="text-gray-600 mb-4">Middleware acts as a "gatekeeper" that checks conditions before allowing access.</p>
+                <div class="bg-gray-900 text-white p-4 rounded code-block">
+<pre>Route::<span class="text-pink-400">middleware</span>([<span class="text-green-400">'auth'</span>, <span class="text-green-400">'role:employee'</span>])-><span class="text-yellow-400">group</span>(function () {
+    <span class="text-gray-500">// Only authenticated employees can access these routes</span>
+});</pre>
+                </div>
+                <ul class="mt-4 space-y-2 text-sm text-gray-600">
+                    <li>• <code class="bg-gray-200 px-2 py-1 rounded">auth</code> - User must be logged in</li>
+                    <li>• <code class="bg-gray-200 px-2 py-1 rounded">role:employee</code> - User must have "employee" role</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Section 4: Controllers -->
+        <section id="controllers" class="bg-white rounded-xl shadow-lg p-8">
+            <h2 class="text-3xl font-bold text-yellow-600 mb-6">🎮 Controllers - The Brain</h2>
+            
+            <p class="text-gray-600 mb-6">
+                Controllers handle the logic. They receive requests, interact with models, and return views.
+            </p>
+
+            <!-- EmployeeController Deep Dive -->
+            <div class="bg-indigo-50 rounded-xl p-6 mb-8">
+                <h3 class="text-2xl font-bold text-indigo-600 mb-4">📋 EmployeeController.php - Deep Dive</h3>
+                
+                <div class="grid lg:grid-cols-2 gap-6">
+                    <!-- dashboard() method -->
+                    <div class="bg-white rounded-lg p-6 shadow">
+                        <h4 class="font-bold text-lg mb-3 flex items-center gap-2">
+                            <span class="bg-green-500 text-white px-2 py-1 rounded text-xs">GET</span>
+                            dashboard()
+                        </h4>
+                        <div class="bg-gray-900 text-white p-4 rounded code-block text-sm overflow-x-auto">
+<pre><span class="text-pink-400">public function</span> <span class="text-yellow-400">dashboard</span>()
+{
+    <span class="text-gray-500">// 1. Get the logged-in user</span>
+    <span class="text-cyan-400">$user</span> = Auth::<span class="text-yellow-400">user</span>();
+    
+    <span class="text-gray-500">// 2. Get their leave balances</span>
+    <span class="text-cyan-400">$balances</span> = <span class="text-cyan-400">$user</span>-><span class="text-yellow-400">leaveBalances</span>()
+        -><span class="text-yellow-400">where</span>(<span class="text-green-400">'year'</span>, now()->year)
+        -><span class="text-yellow-400">get</span>();
+    
+    <span class="text-gray-500">// 3. Get their leave requests</span>
+    <span class="text-cyan-400">$requests</span> = <span class="text-cyan-400">$user</span>-><span class="text-yellow-400">leaveRequests</span>()
+        -><span class="text-yellow-400">paginate</span>(10);
+    
+    <span class="text-gray-500">// 4. Return the view with data</span>
+    <span class="text-pink-400">return</span> <span class="text-yellow-400">view</span>(<span class="text-green-400">'employee.dashboard'</span>, 
+        <span class="text-yellow-400">compact</span>(<span class="text-green-400">'balances'</span>, <span class="text-green-400">'requests'</span>, <span class="text-green-400">'user'</span>));
+}</pre>
+                        </div>
+                        <div class="mt-4 p-3 bg-green-50 rounded text-sm">
+                            <strong>What it does:</strong> Fetches data and passes it to the view for display.
+                        </div>
+                    </div>
+
+                    <!-- storeRequest() method -->
+                    <div class="bg-white rounded-lg p-6 shadow">
+                        <h4 class="font-bold text-lg mb-3 flex items-center gap-2">
+                            <span class="bg-blue-500 text-white px-2 py-1 rounded text-xs">POST</span>
+                            storeRequest()
+                        </h4>
+                        <div class="bg-gray-900 text-white p-4 rounded code-block text-sm overflow-x-auto">
+<pre><span class="text-pink-400">public function</span> <span class="text-yellow-400">storeRequest</span>(Request <span class="text-cyan-400">$request</span>)
+{
+    <span class="text-gray-500">// 1. Validate the form data</span>
+    <span class="text-cyan-400">$validated</span> = <span class="text-cyan-400">$request</span>-><span class="text-yellow-400">validate</span>([
+        <span class="text-green-400">'leave_type'</span> => <span class="text-green-400">'required'</span>,
+        <span class="text-green-400">'start_date'</span> => <span class="text-green-400">'required|date'</span>,
+        <span class="text-green-400">'end_date'</span>   => <span class="text-green-400">'required|date'</span>,
+        <span class="text-green-400">'reason'</span>     => <span class="text-green-400">'required'</span>,
+    ]);
+    
+    <span class="text-gray-500">// 2. Check leave balance</span>
+    <span class="text-gray-500">// 3. Create the leave request</span>
+    LeaveRequest::<span class="text-yellow-400">create</span>([...]);
+    
+    <span class="text-gray-500">// 4. Redirect back with success</span>
+    <span class="text-pink-400">return</span> <span class="text-yellow-400">redirect</span>()
+        -><span class="text-yellow-400">route</span>(<span class="text-green-400">'employee.dashboard'</span>)
+        -><span class="text-yellow-400">with</span>(<span class="text-green-400">'success'</span>, <span class="text-green-400">'Request submitted!'</span>);
+}</pre>
+                        </div>
+                        <div class="mt-4 p-3 bg-blue-50 rounded text-sm">
+                            <strong>What it does:</strong> Validates form, saves to database, redirects back.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- The compact() function -->
+            <div class="bg-green-50 border-l-4 border-green-500 p-6 rounded-r-lg mb-8">
+                <h3 class="text-lg font-semibold text-green-700 mb-2">💡 Understanding compact()</h3>
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div class="bg-gray-900 text-white p-4 rounded code-block">
+<pre><span class="text-gray-500">// These two are equivalent:</span>
+
+<span class="text-yellow-400">compact</span>(<span class="text-green-400">'balances'</span>, <span class="text-green-400">'requests'</span>, <span class="text-green-400">'user'</span>)
+
+<span class="text-gray-500">// Same as:</span>
+[
+    <span class="text-green-400">'balances'</span> => <span class="text-cyan-400">$balances</span>,
+    <span class="text-green-400">'requests'</span> => <span class="text-cyan-400">$requests</span>,
+    <span class="text-green-400">'user'</span>     => <span class="text-cyan-400">$user</span>,
+]</pre>
+                    </div>
+                    <div class="flex items-center">
+                        <p class="text-gray-600">
+                            <code class="bg-gray-200 px-2 py-1 rounded">compact()</code> is a PHP function that creates 
+                            an array from variable names. It's a shortcut to pass multiple variables to views.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- All Controllers Overview -->
+            <h3 class="text-xl font-semibold mb-4">All Controllers Overview</h3>
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="border rounded-lg p-4">
+                    <h4 class="font-bold text-blue-600">AuthController</h4>
+                    <ul class="text-sm text-gray-600 mt-2 space-y-1">
+                        <li>• showLoginForm()</li>
+                        <li>• login()</li>
+                        <li>• logout()</li>
+                    </ul>
+                </div>
+                <div class="border rounded-lg p-4">
+                    <h4 class="font-bold text-indigo-600">EmployeeController</h4>
+                    <ul class="text-sm text-gray-600 mt-2 space-y-1">
+                        <li>• dashboard()</li>
+                        <li>• storeRequest()</li>
+                        <li>• cancelRequest()</li>
+                    </ul>
+                </div>
+                <div class="border rounded-lg p-4">
+                    <h4 class="font-bold text-green-600">ManagerController</h4>
+                    <ul class="text-sm text-gray-600 mt-2 space-y-1">
+                        <li>• dashboard()</li>
+                        <li>• showRequest()</li>
+                        <li>• approveRequest()</li>
+                        <li>• rejectRequest()</li>
+                    </ul>
+                </div>
+                <div class="border rounded-lg p-4">
+                    <h4 class="font-bold text-purple-600">HRController</h4>
+                    <ul class="text-sm text-gray-600 mt-2 space-y-1">
+                        <li>• dashboard()</li>
+                        <li>• showRequest()</li>
+                        <li>• approveRequest()</li>
+                        <li>• rejectRequest()</li>
+                        <li>• policies()</li>
+                        <li>• updatePolicy()</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5: Models -->
+        <section id="models" class="bg-white rounded-xl shadow-lg p-8">
+            <h2 class="text-3xl font-bold text-cyan-600 mb-6">💾 Models - The Data Layer</h2>
+            
+            <p class="text-gray-600 mb-6">
+                Models represent database tables and contain business logic. Each model typically corresponds to one table.
+            </p>
+
+            <!-- Model Relationship Diagram -->
+            <div class="bg-gradient-to-br from-cyan-50 to-blue-50 p-8 rounded-xl mb-8">
+                <h3 class="text-xl font-semibold mb-6 text-center">Entity Relationship Diagram</h3>
+                <div class="flex flex-wrap justify-center gap-8">
+                    
+                    <!-- User Model -->
+                    <div class="bg-white rounded-lg shadow-lg p-4 w-64">
+                        <h4 class="font-bold text-cyan-600 border-b pb-2 mb-3">👤 User</h4>
+                        <ul class="text-sm space-y-1 font-mono">
+                            <li class="text-yellow-600">id (PK)</li>
+                            <li>name</li>
+                            <li>email</li>
+                            <li>password</li>
+                            <li class="text-purple-600">role</li>
+                            <li class="text-blue-600">department_id (FK)</li>
+                            <li class="text-blue-600">manager_id (FK)</li>
+                        </ul>
+                        <div class="mt-3 pt-3 border-t text-xs text-gray-500">
+                            Has many: Requests, Balances
+                        </div>
+                    </div>
+
+                    <!-- Request Model -->
+                    <div class="bg-white rounded-lg shadow-lg p-4 w-64">
+                        <h4 class="font-bold text-orange-600 border-b pb-2 mb-3">📝 Request</h4>
+                        <ul class="text-sm space-y-1 font-mono">
+                            <li class="text-yellow-600">id (PK)</li>
+                            <li class="text-blue-600">employee_id (FK)</li>
+                            <li>leave_type</li>
+                            <li>start_date</li>
+                            <li>end_date</li>
+                            <li>number_of_days</li>
+                            <li class="text-purple-600">status</li>
+                            <li>reason</li>
+                        </ul>
+                        <div class="mt-3 pt-3 border-t text-xs text-gray-500">
+                            Belongs to: User (employee)
+                        </div>
+                    </div>
+
+                    <!-- Balance Model -->
+                    <div class="bg-white rounded-lg shadow-lg p-4 w-64">
+                        <h4 class="font-bold text-green-600 border-b pb-2 mb-3">⚖️ Balance</h4>
+                        <ul class="text-sm space-y-1 font-mono">
+                            <li class="text-yellow-600">id (PK)</li>
+                            <li class="text-blue-600">user_id (FK)</li>
+                            <li>leave_type</li>
+                            <li>balance</li>
+                            <li>used</li>
+                            <li>year</li>
+                        </ul>
+                        <div class="mt-3 pt-3 border-t text-xs text-gray-500">
+                            Belongs to: User
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Legend -->
+                <div class="flex justify-center gap-6 mt-6 text-sm">
+                    <span><span class="text-yellow-600">●</span> Primary Key</span>
+                    <span><span class="text-blue-600">●</span> Foreign Key</span>
+                    <span><span class="text-purple-600">●</span> Important Field</span>
+                </div>
+            </div>
+
+            <!-- Model Relationships Code -->
+            <div class="grid lg:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="text-lg font-semibold mb-3">User Model - Relationships</h3>
+                    <div class="bg-gray-900 text-white p-4 rounded code-block text-sm">
+<pre><span class="text-pink-400">class</span> <span class="text-yellow-400">User</span> <span class="text-pink-400">extends</span> Authenticatable
+{
+    <span class="text-gray-500">// A user has many leave requests</span>
+    <span class="text-pink-400">public function</span> <span class="text-yellow-400">leaveRequests</span>()
+    {
+        <span class="text-pink-400">return</span> <span class="text-cyan-400">$this</span>-><span class="text-yellow-400">hasMany</span>(Request::class, <span class="text-green-400">'employee_id'</span>);
+    }
+    
+    <span class="text-gray-500">// A user has many leave balances</span>
+    <span class="text-pink-400">public function</span> <span class="text-yellow-400">leaveBalances</span>()
+    {
+        <span class="text-pink-400">return</span> <span class="text-cyan-400">$this</span>-><span class="text-yellow-400">hasMany</span>(Balance::class);
+    }
+    
+    <span class="text-gray-500">// A manager has many employees</span>
+    <span class="text-pink-400">public function</span> <span class="text-yellow-400">employees</span>()
+    {
+        <span class="text-pink-400">return</span> <span class="text-cyan-400">$this</span>-><span class="text-yellow-400">hasMany</span>(User::class, <span class="text-green-400">'manager_id'</span>);
+    }
+}</pre>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-lg font-semibold mb-3">Request Model - Status Methods</h3>
+                    <div class="bg-gray-900 text-white p-4 rounded code-block text-sm">
+<pre><span class="text-pink-400">class</span> <span class="text-yellow-400">Request</span> <span class="text-pink-400">extends</span> Model
+{
+    <span class="text-gray-500">// Status checking methods</span>
+    <span class="text-pink-400">public function</span> <span class="text-yellow-400">isPending</span>(): bool
+    {
+        <span class="text-pink-400">return</span> <span class="text-cyan-400">$this</span>->status === <span class="text-green-400">'pending'</span>;
+    }
+    
+    <span class="text-pink-400">public function</span> <span class="text-yellow-400">isApproved</span>(): bool
+    {
+        <span class="text-pink-400">return</span> <span class="text-cyan-400">$this</span>->status === <span class="text-green-400">'hr_approved'</span>;
+    }
+    
+    <span class="text-pink-400">public function</span> <span class="text-yellow-400">getStatusLabel</span>(): string
+    {
+        <span class="text-pink-400">return match</span>(<span class="text-cyan-400">$this</span>->status) {
+            <span class="text-green-400">'pending'</span> => <span class="text-green-400">'Pending'</span>,
+            <span class="text-green-400">'hr_approved'</span> => <span class="text-green-400">'Approved'</span>,
+            <span class="text-gray-500">// ...</span>
+        };
+    }
+}</pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Request Status Flow -->
+            <div class="mt-8 bg-orange-50 border-l-4 border-orange-500 p-6 rounded-r-lg">
+                <h3 class="text-lg font-semibold text-orange-700 mb-4">📊 Request Status Flow</h3>
+                <div class="flex flex-wrap items-center justify-center gap-2 text-sm">
+                    <span class="bg-gray-200 px-3 py-2 rounded-full">pending</span>
+                    <span class="text-2xl">→</span>
+                    <span class="bg-blue-200 px-3 py-2 rounded-full">dept_manager_approved</span>
+                    <span class="text-2xl">→</span>
+                    <span class="bg-green-200 px-3 py-2 rounded-full">hr_approved ✓</span>
+                </div>
+                <div class="flex flex-wrap items-center justify-center gap-2 text-sm mt-4">
+                    <span class="text-gray-400">or rejected at any step →</span>
+                    <span class="bg-red-200 px-3 py-2 rounded-full">dept_manager_rejected</span>
+                    <span class="bg-red-200 px-3 py-2 rounded-full">hr_rejected</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 6: Views -->
+        <section id="views" class="bg-white rounded-xl shadow-lg p-8">
+            <h2 class="text-3xl font-bold text-orange-600 mb-6">🖼️ Views - The UI Layer</h2>
+            
+            <p class="text-gray-600 mb-6">
+                Views are Blade templates that display data to users. They receive data from controllers and render HTML.
+            </p>
+
+            <!-- View Location Mapping -->
+            <div class="bg-orange-50 rounded-xl p-6 mb-8">
+                <h3 class="text-lg font-semibold mb-4">View Path Mapping</h3>
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div class="bg-white p-4 rounded-lg">
+                        <p class="font-mono text-sm mb-2"><span class="text-indigo-600">view(</span><span class="text-green-600">'employee.dashboard'</span><span class="text-indigo-600">)</span></p>
+                        <p class="text-gray-500 text-sm">↓ maps to ↓</p>
+                        <p class="font-mono text-sm text-orange-600">resources/views/employee/dashboard.blade.php</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg">
+                        <p class="font-mono text-sm mb-2"><span class="text-indigo-600">view(</span><span class="text-green-600">'hr.policies'</span><span class="text-indigo-600">)</span></p>
+                        <p class="text-gray-500 text-sm">↓ maps to ↓</p>
+                        <p class="font-mono text-sm text-orange-600">resources/views/hr/policies.blade.php</p>
+                    </div>
+                </div>
+                <p class="text-sm text-gray-500 mt-4">
+                    💡 Dots (.) in view names become directory separators (/)
+                </p>
+            </div>
+
+            <!-- Blade Syntax -->
+            <h3 class="text-xl font-semibold mb-4">Blade Syntax Cheat Sheet</h3>
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- Displaying Data -->
+                <div class="border rounded-lg p-4">
+                    <h4 class="font-bold mb-3">📤 Displaying Data</h4>
+                    <div class="bg-gray-900 text-white p-3 rounded code-block text-sm">
+<pre><span class="text-gray-500">&lt;!-- Echo variable (escaped) --&gt;</span>
+{{ <span class="text-cyan-400">$user</span>->name }}
+
+<span class="text-gray-500">&lt;!-- Echo unescaped HTML --&gt;</span>
+{!! <span class="text-cyan-400">$htmlContent</span> !!}
+
+<span class="text-gray-500">&lt;!-- Use in attributes --&gt;</span>
+&lt;input value="{{ <span class="text-cyan-400">$user</span>->email }}"&gt;</pre>
+                    </div>
+                </div>
+
+                <!-- Conditionals -->
+                <div class="border rounded-lg p-4">
+                    <h4 class="font-bold mb-3">❓ Conditionals</h4>
+                    <div class="bg-gray-900 text-white p-3 rounded code-block text-sm">
+<pre><span class="text-pink-400">@if</span>(<span class="text-cyan-400">$user</span>->isAdmin())
+    &lt;span&gt;Admin&lt;/span&gt;
+<span class="text-pink-400">@elseif</span>(<span class="text-cyan-400">$user</span>->isManager())
+    &lt;span&gt;Manager&lt;/span&gt;
+<span class="text-pink-400">@else</span>
+    &lt;span&gt;Employee&lt;/span&gt;
+<span class="text-pink-400">@endif</span></pre>
+                    </div>
+                </div>
+
+                <!-- Loops -->
+                <div class="border rounded-lg p-4">
+                    <h4 class="font-bold mb-3">🔁 Loops</h4>
+                    <div class="bg-gray-900 text-white p-3 rounded code-block text-sm">
+<pre><span class="text-pink-400">@foreach</span>(<span class="text-cyan-400">$requests</span> <span class="text-pink-400">as</span> <span class="text-cyan-400">$request</span>)
+    &lt;tr&gt;
+        &lt;td&gt;{{ <span class="text-cyan-400">$request</span>->leave_type }}&lt;/td&gt;
+        &lt;td&gt;{{ <span class="text-cyan-400">$request</span>->status }}&lt;/td&gt;
+    &lt;/tr&gt;
+<span class="text-pink-400">@endforeach</span>
+
+<span class="text-gray-500">&lt;!-- With empty state --&gt;</span>
+<span class="text-pink-400">@forelse</span>(<span class="text-cyan-400">$items</span> <span class="text-pink-400">as</span> <span class="text-cyan-400">$item</span>)
+    {{ <span class="text-cyan-400">$item</span>->name }}
+<span class="text-pink-400">@empty</span>
+    No items found.
+<span class="text-pink-400">@endforelse</span></pre>
+                    </div>
+                </div>
+
+                <!-- Forms -->
+                <div class="border rounded-lg p-4">
+                    <h4 class="font-bold mb-3">📝 Forms</h4>
+                    <div class="bg-gray-900 text-white p-3 rounded code-block text-sm">
+<pre><span class="text-gray-500">&lt;!-- CSRF protection (required!) --&gt;</span>
+&lt;form action="{{ <span class="text-yellow-400">route</span>(<span class="text-green-400">'employee.store-request'</span>) }}" 
+      method="POST"&gt;
+    <span class="text-pink-400">@csrf</span>
+    
+    <span class="text-gray-500">&lt;!-- For PATCH/PUT/DELETE --&gt;</span>
+    <span class="text-pink-400">@method</span>(<span class="text-green-400">'PATCH'</span>)
+    
+    &lt;input name="reason" value="{{ <span class="text-yellow-400">old</span>(<span class="text-green-400">'reason'</span>) }}"&gt;
+&lt;/form&gt;</pre>
+                    </div>
+                </div>
+
+                <!-- Components -->
+                <div class="border rounded-lg p-4">
+                    <h4 class="font-bold mb-3">🧩 Components</h4>
+                    <div class="bg-gray-900 text-white p-3 rounded code-block text-sm">
+<pre><span class="text-gray-500">&lt;!-- Using a component --&gt;</span>
+&lt;<span class="text-pink-400">x-balance-card</span> <span class="text-cyan-400">:balance</span>="<span class="text-cyan-400">$balance</span>" /&gt;
+
+<span class="text-gray-500">&lt;!-- Layout with slots --&gt;</span>
+&lt;<span class="text-pink-400">x-layout</span>&gt;
+    &lt;<span class="text-pink-400">x-slot</span> name="navigation"&gt;
+        Nav content here
+    &lt;/<span class="text-pink-400">x-slot</span>&gt;
+    
+    Main content here
+&lt;/<span class="text-pink-400">x-layout</span>&gt;</pre>
+                    </div>
+                </div>
+
+                <!-- Error Handling -->
+                <div class="border rounded-lg p-4">
+                    <h4 class="font-bold mb-3">⚠️ Errors & Sessions</h4>
+                    <div class="bg-gray-900 text-white p-3 rounded code-block text-sm">
+<pre><span class="text-gray-500">&lt;!-- Show validation errors --&gt;</span>
+<span class="text-pink-400">@error</span>(<span class="text-green-400">'email'</span>)
+    &lt;span class="text-red-500"&gt;{{ <span class="text-cyan-400">$message</span> }}&lt;/span&gt;
+<span class="text-pink-400">@enderror</span>
+
+<span class="text-gray-500">&lt;!-- Show flash messages --&gt;</span>
+<span class="text-pink-400">@if</span>(<span class="text-yellow-400">session</span>(<span class="text-green-400">'success'</span>))
+    &lt;div class="alert"&gt;
+        {{ <span class="text-yellow-400">session</span>(<span class="text-green-400">'success'</span>) }}
+    &lt;/div&gt;
+<span class="text-pink-400">@endif</span></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 7: Complete Employee Flow -->
+        <section id="employee-flow" class="bg-white rounded-xl shadow-lg p-8">
+            <h2 class="text-3xl font-bold text-indigo-600 mb-6">🔄 Complete Employee Flow</h2>
+            
+            <p class="text-gray-600 mb-6">
+                Let's trace the complete journey of an employee viewing their dashboard and submitting a leave request.
+            </p>
+
+            <!-- Visual Flow -->
+            <div class="space-y-6">
+                <!-- Step 1 -->
+                <div class="flex gap-4">
+                    <div class="flex-shrink-0 w-12 h-12 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold text-lg">1</div>
+                    <div class="flex-1 bg-gray-50 rounded-lg p-4">
+                        <h4 class="font-bold text-lg mb-2">User visits /employee/dashboard</h4>
+                        <p class="text-gray-600">Browser sends a GET request to the server.</p>
+                    </div>
+                </div>
+
+                <div class="ml-6 flow-line h-8"></div>
+
+                <!-- Step 2 -->
+                <div class="flex gap-4">
+                    <div class="flex-shrink-0 w-12 h-12 bg-pink-600 text-white rounded-full flex items-center justify-center font-bold text-lg">2</div>
+                    <div class="flex-1 bg-pink-50 rounded-lg p-4">
+                        <h4 class="font-bold text-lg mb-2">Route matches the URL</h4>
+                        <div class="bg-gray-900 text-white p-3 rounded code-block text-sm mt-2">
+<pre><span class="text-gray-500">// routes/employee.php</span>
+Route::<span class="text-yellow-400">get</span>(<span class="text-green-400">'/employee/dashboard'</span>, [<span class="text-cyan-400">EmployeeController</span>::class, <span class="text-green-400">'dashboard'</span>]);</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ml-6 flow-line h-8"></div>
+
+                <!-- Step 3 -->
+                <div class="flex gap-4">
+                    <div class="flex-shrink-0 w-12 h-12 bg-yellow-500 text-white rounded-full flex items-center justify-center font-bold text-lg">3</div>
+                    <div class="flex-1 bg-yellow-50 rounded-lg p-4">
+                        <h4 class="font-bold text-lg mb-2">Controller method executes</h4>
+                        <div class="bg-gray-900 text-white p-3 rounded code-block text-sm mt-2">
+<pre><span class="text-gray-500">// EmployeeController.php</span>
+<span class="text-pink-400">public function</span> <span class="text-yellow-400">dashboard</span>() {
+    <span class="text-cyan-400">$user</span> = Auth::<span class="text-yellow-400">user</span>();
+    <span class="text-cyan-400">$balances</span> = <span class="text-cyan-400">$user</span>-><span class="text-yellow-400">leaveBalances</span>()-><span class="text-yellow-400">get</span>();
+    <span class="text-cyan-400">$requests</span> = <span class="text-cyan-400">$user</span>-><span class="text-yellow-400">leaveRequests</span>()-><span class="text-yellow-400">paginate</span>(10);
+    <span class="text-pink-400">return</span> <span class="text-yellow-400">view</span>(<span class="text-green-400">'employee.dashboard'</span>, <span class="text-yellow-400">compact</span>(<span class="text-green-400">'balances'</span>, <span class="text-green-400">'requests'</span>, <span class="text-green-400">'user'</span>));
+}</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ml-6 flow-line h-8"></div>
+
+                <!-- Step 4 -->
+                <div class="flex gap-4">
+                    <div class="flex-shrink-0 w-12 h-12 bg-cyan-600 text-white rounded-full flex items-center justify-center font-bold text-lg">4</div>
+                    <div class="flex-1 bg-cyan-50 rounded-lg p-4">
+                        <h4 class="font-bold text-lg mb-2">Models fetch data from database</h4>
+                        <div class="bg-gray-900 text-white p-3 rounded code-block text-sm mt-2">
+<pre><span class="text-gray-500">// Eloquent generates SQL like:</span>
+SELECT * FROM balances WHERE user_id = 1 AND year = 2025;
+SELECT * FROM requests WHERE employee_id = 1 LIMIT 10;</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ml-6 flow-line h-8"></div>
+
+                <!-- Step 5 -->
+                <div class="flex gap-4">
+                    <div class="flex-shrink-0 w-12 h-12 bg-orange-600 text-white rounded-full flex items-center justify-center font-bold text-lg">5</div>
+                    <div class="flex-1 bg-orange-50 rounded-lg p-4">
+                        <h4 class="font-bold text-lg mb-2">View renders with the data</h4>
+                        <div class="bg-gray-900 text-white p-3 rounded code-block text-sm mt-2">
+<pre><span class="text-gray-500">&lt;!-- employee/dashboard.blade.php --&gt;</span>
+<span class="text-pink-400">@foreach</span>(<span class="text-cyan-400">$balances</span> <span class="text-pink-400">as</span> <span class="text-cyan-400">$balance</span>)
+    &lt;<span class="text-yellow-400">x-balance-card</span> <span class="text-cyan-400">:balance</span>="<span class="text-cyan-400">$balance</span>" /&gt;
+<span class="text-pink-400">@endforeach</span>
+
+<span class="text-pink-400">@foreach</span>(<span class="text-cyan-400">$requests</span> <span class="text-pink-400">as</span> <span class="text-cyan-400">$request</span>)
+    &lt;tr&gt;{{ <span class="text-cyan-400">$request</span>->leave_type }}&lt;/tr&gt;
+<span class="text-pink-400">@endforeach</span></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ml-6 flow-line h-8"></div>
+
+                <!-- Step 6 -->
+                <div class="flex gap-4">
+                    <div class="flex-shrink-0 w-12 h-12 bg-green-600 text-white rounded-full flex items-center justify-center font-bold text-lg">6</div>
+                    <div class="flex-1 bg-green-50 rounded-lg p-4">
+                        <h4 class="font-bold text-lg mb-2">HTML sent to browser</h4>
+                        <p class="text-gray-600">User sees their dashboard with balances, form, and request history.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Submission Flow -->
+            <div class="mt-12 pt-8 border-t">
+                <h3 class="text-2xl font-bold text-indigo-600 mb-6">📝 Form Submission Flow</h3>
+                
+                <div class="grid lg:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="font-bold mb-3">In the View (Form)</h4>
+                        <div class="bg-gray-900 text-white p-4 rounded code-block text-sm">
+<pre>&lt;form action="{{ <span class="text-yellow-400">route</span>(<span class="text-green-400">'employee.store-request'</span>) }}" 
+      method="POST"&gt;
+    <span class="text-pink-400">@csrf</span>
+    
+    &lt;select name="leave_type"&gt;...&lt;/select&gt;
+    &lt;input name="start_date" type="date"&gt;
+    &lt;input name="end_date" type="date"&gt;
+    &lt;textarea name="reason"&gt;&lt;/textarea&gt;
+    
+    &lt;button type="submit"&gt;Submit&lt;/button&gt;
+&lt;/form&gt;</pre>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-bold mb-3">In the Controller (Handling)</h4>
+                        <div class="bg-gray-900 text-white p-4 rounded code-block text-sm">
+<pre><span class="text-pink-400">public function</span> <span class="text-yellow-400">storeRequest</span>(Request <span class="text-cyan-400">$request</span>)
+{
+    <span class="text-gray-500">// Access form data</span>
+    <span class="text-cyan-400">$request</span>->leave_type;   <span class="text-gray-500">// "Annual Leave"</span>
+    <span class="text-cyan-400">$request</span>->start_date;   <span class="text-gray-500">// "2025-01-20"</span>
+    <span class="text-cyan-400">$request</span>->end_date;     <span class="text-gray-500">// "2025-01-22"</span>
+    <span class="text-cyan-400">$request</span>->reason;       <span class="text-gray-500">// "Family vacation"</span>
+    
+    <span class="text-gray-500">// Validate, save, redirect...</span>
+}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 8: Approval Flow -->
+        <section id="approval-flow" class="bg-white rounded-xl shadow-lg p-8">
+            <h2 class="text-3xl font-bold text-purple-600 mb-6">✅ Two-Level Approval Flow</h2>
+            
+            <p class="text-gray-600 mb-6">
+                Leave requests go through a two-step approval process: first by the Department Manager, then by HR.
+            </p>
+
+            <!-- Visual Approval Flow -->
+            <div class="bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 p-8 rounded-xl">
+                <div class="flex flex-col lg:flex-row items-center justify-between gap-6">
+                    
+                    <!-- Employee -->
+                    <div class="text-center">
+                        <div class="w-24 h-24 bg-blue-500 rounded-xl flex items-center justify-center text-white text-3xl shadow-lg mx-auto">
+                            👤
+                        </div>
+                        <p class="mt-3 font-bold">Employee</p>
+                        <p class="text-sm text-gray-500">Submits request</p>
+                        <div class="mt-2 bg-gray-200 text-xs px-3 py-1 rounded-full">pending</div>
+                    </div>
+                    
+                    <div class="text-3xl text-gray-400 hidden lg:block">→</div>
+                    <div class="text-3xl text-gray-400 lg:hidden">↓</div>
+                    
+                    <!-- Manager -->
+                    <div class="text-center">
+                        <div class="w-24 h-24 bg-green-500 rounded-xl flex items-center justify-center text-white text-3xl shadow-lg mx-auto">
+                            👔
+                        </div>
+                        <p class="mt-3 font-bold">Dept Manager</p>
+                        <p class="text-sm text-gray-500">Reviews & approves</p>
+                        <div class="mt-2 bg-blue-200 text-xs px-3 py-1 rounded-full">dept_manager_approved</div>
+                    </div>
+                    
+                    <div class="text-3xl text-gray-400 hidden lg:block">→</div>
+                    <div class="text-3xl text-gray-400 lg:hidden">↓</div>
+                    
+                    <!-- HR -->
+                    <div class="text-center">
+                        <div class="w-24 h-24 bg-purple-500 rounded-xl flex items-center justify-center text-white text-3xl shadow-lg mx-auto">
+                            🏢
+                        </div>
+                        <p class="mt-3 font-bold">HR Admin</p>
+                        <p class="text-sm text-gray-500">Final approval</p>
+                        <div class="mt-2 bg-green-200 text-xs px-3 py-1 rounded-full">hr_approved ✓</div>
+                    </div>
+                    
+                    <div class="text-3xl text-gray-400 hidden lg:block">→</div>
+                    <div class="text-3xl text-gray-400 lg:hidden">↓</div>
+                    
+                    <!-- Complete -->
+                    <div class="text-center">
+                        <div class="w-24 h-24 bg-emerald-500 rounded-xl flex items-center justify-center text-white text-3xl shadow-lg mx-auto">
+                            ✅
+                        </div>
+                        <p class="mt-3 font-bold">Complete!</p>
+                        <p class="text-sm text-gray-500">Balance deducted</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Table -->
+            <div class="mt-8">
+                <h3 class="text-xl font-semibold mb-4">Status Values Reference</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="text-left p-3">Status</th>
+                                <th class="text-left p-3">Meaning</th>
+                                <th class="text-left p-3">Next Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y">
+                            <tr>
+                                <td class="p-3"><code class="bg-gray-200 px-2 py-1 rounded">pending</code></td>
+                                <td class="p-3">Waiting for manager review</td>
+                                <td class="p-3">Manager approves/rejects</td>
+                            </tr>
+                            <tr class="bg-blue-50">
+                                <td class="p-3"><code class="bg-blue-200 px-2 py-1 rounded">dept_manager_approved</code></td>
+                                <td class="p-3">Manager approved, waiting for HR</td>
+                                <td class="p-3">HR approves/rejects</td>
+                            </tr>
+                            <tr class="bg-green-50">
+                                <td class="p-3"><code class="bg-green-200 px-2 py-1 rounded">hr_approved</code></td>
+                                <td class="p-3">Fully approved! ✓</td>
+                                <td class="p-3">Leave is scheduled</td>
+                            </tr>
+                            <tr class="bg-red-50">
+                                <td class="p-3"><code class="bg-red-200 px-2 py-1 rounded">dept_manager_rejected</code></td>
+                                <td class="p-3">Manager rejected</td>
+                                <td class="p-3">Employee may resubmit</td>
+                            </tr>
+                            <tr class="bg-red-50">
+                                <td class="p-3"><code class="bg-red-200 px-2 py-1 rounded">hr_rejected</code></td>
+                                <td class="p-3">HR rejected</td>
+                                <td class="p-3">Employee may resubmit</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 9: Database -->
+        <section id="database" class="bg-white rounded-xl shadow-lg p-8">
+            <h2 class="text-3xl font-bold text-emerald-600 mb-6">🗃️ Database Structure</h2>
+            
+            <div class="grid lg:grid-cols-2 gap-8">
+                <!-- Users Table -->
+                <div class="border rounded-lg overflow-hidden">
+                    <div class="bg-cyan-600 text-white p-3 font-bold">users</div>
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="text-left p-2">Column</th>
+                                <th class="text-left p-2">Type</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y">
+                            <tr><td class="p-2 font-mono">id</td><td class="p-2">bigint (PK)</td></tr>
+                            <tr><td class="p-2 font-mono">name</td><td class="p-2">varchar</td></tr>
+                            <tr><td class="p-2 font-mono">email</td><td class="p-2">varchar (unique)</td></tr>
+                            <tr><td class="p-2 font-mono">password</td><td class="p-2">varchar</td></tr>
+                            <tr><td class="p-2 font-mono">role</td><td class="p-2">enum</td></tr>
+                            <tr><td class="p-2 font-mono">department_id</td><td class="p-2">bigint (FK)</td></tr>
+                            <tr><td class="p-2 font-mono">manager_id</td><td class="p-2">bigint (FK)</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Requests Table -->
+                <div class="border rounded-lg overflow-hidden">
+                    <div class="bg-orange-600 text-white p-3 font-bold">requests</div>
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="text-left p-2">Column</th>
+                                <th class="text-left p-2">Type</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y">
+                            <tr><td class="p-2 font-mono">id</td><td class="p-2">bigint (PK)</td></tr>
+                            <tr><td class="p-2 font-mono">employee_id</td><td class="p-2">bigint (FK → users)</td></tr>
+                            <tr><td class="p-2 font-mono">leave_type</td><td class="p-2">varchar</td></tr>
+                            <tr><td class="p-2 font-mono">start_date</td><td class="p-2">date</td></tr>
+                            <tr><td class="p-2 font-mono">end_date</td><td class="p-2">date</td></tr>
+                            <tr><td class="p-2 font-mono">number_of_days</td><td class="p-2">integer</td></tr>
+                            <tr><td class="p-2 font-mono">status</td><td class="p-2">varchar</td></tr>
+                            <tr><td class="p-2 font-mono">reason</td><td class="p-2">text</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Balances Table -->
+                <div class="border rounded-lg overflow-hidden">
+                    <div class="bg-green-600 text-white p-3 font-bold">balances</div>
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="text-left p-2">Column</th>
+                                <th class="text-left p-2">Type</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y">
+                            <tr><td class="p-2 font-mono">id</td><td class="p-2">bigint (PK)</td></tr>
+                            <tr><td class="p-2 font-mono">user_id</td><td class="p-2">bigint (FK → users)</td></tr>
+                            <tr><td class="p-2 font-mono">leave_type</td><td class="p-2">varchar</td></tr>
+                            <tr><td class="p-2 font-mono">balance</td><td class="p-2">decimal</td></tr>
+                            <tr><td class="p-2 font-mono">used</td><td class="p-2">decimal</td></tr>
+                            <tr><td class="p-2 font-mono">year</td><td class="p-2">integer</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Departments Table -->
+                <div class="border rounded-lg overflow-hidden">
+                    <div class="bg-purple-600 text-white p-3 font-bold">departments</div>
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="text-left p-2">Column</th>
+                                <th class="text-left p-2">Type</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y">
+                            <tr><td class="p-2 font-mono">id</td><td class="p-2">bigint (PK)</td></tr>
+                            <tr><td class="p-2 font-mono">name</td><td class="p-2">varchar</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quick Reference -->
+        <section class="bg-indigo-600 text-white rounded-xl shadow-lg p-8">
+            <h2 class="text-3xl font-bold mb-6">📌 Quick Reference</h2>
+            
+            <div class="grid md:grid-cols-3 gap-6">
+                <div>
+                    <h3 class="text-xl font-bold mb-3">🔗 Key Laravel Functions</h3>
+                    <ul class="space-y-2 text-indigo-100">
+                        <li><code class="bg-indigo-700 px-2 py-1 rounded">Auth::user()</code> - Get logged-in user</li>
+                        <li><code class="bg-indigo-700 px-2 py-1 rounded">view('name', [])</code> - Return a view</li>
+                        <li><code class="bg-indigo-700 px-2 py-1 rounded">redirect()->route()</code> - Redirect</li>
+                        <li><code class="bg-indigo-700 px-2 py-1 rounded">$request->validate()</code> - Validate input</li>
+                        <li><code class="bg-indigo-700 px-2 py-1 rounded">Model::create()</code> - Insert record</li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="text-xl font-bold mb-3">🎨 Blade Directives</h3>
+                    <ul class="space-y-2 text-indigo-100">
+                        <li><code class="bg-indigo-700 px-2 py-1 rounded">@if / @else / @endif</code></li>
+                        <li><code class="bg-indigo-700 px-2 py-1 rounded">@foreach / @endforeach</code></li>
+                        <li><code class="bg-indigo-700 px-2 py-1 rounded">@forelse / @empty / @endforelse</code></li>
+                        <li><code class="bg-indigo-700 px-2 py-1 rounded">@csrf</code> - CSRF token</li>
+                        <li><code class="bg-indigo-700 px-2 py-1 rounded">@method('PATCH')</code></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="text-xl font-bold mb-3">📁 File Locations</h3>
+                    <ul class="space-y-2 text-indigo-100">
+                        <li>Routes: <code class="bg-indigo-700 px-2 py-1 rounded">routes/*.php</code></li>
+                        <li>Controllers: <code class="bg-indigo-700 px-2 py-1 rounded">app/Http/Controllers/</code></li>
+                        <li>Models: <code class="bg-indigo-700 px-2 py-1 rounded">app/Models/</code></li>
+                        <li>Views: <code class="bg-indigo-700 px-2 py-1 rounded">resources/views/</code></li>
+                        <li>Components: <code class="bg-indigo-700 px-2 py-1 rounded">resources/views/components/</code></li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8 mt-12">
+        <div class="container mx-auto px-6 text-center">
+            <p>📚 Leave Request App Study Guide</p>
+            <p class="text-gray-400 text-sm mt-2">Built with Laravel MVC Architecture</p>
+        </div>
+    </footer>
+
+</body>
+</html>

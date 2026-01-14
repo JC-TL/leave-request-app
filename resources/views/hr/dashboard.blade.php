@@ -19,105 +19,122 @@
         <h2 class="flex justify-center mt-5 text-3xl font-semibold">HR Admin Dashboard</h2>
     </x-slot>
 
-    <div class="space-y-6">
-        @if(session('success'))
-            <div class="alert alert-success">
-                <span>{{ session('success') }}</span>
-            </div>
-        @endif
+    <div class="w-full max-w-[1920px] mx-auto">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Left Column: Main Content -->
+            <div class="lg:col-span-2 space-y-6">
+            @if(session('success'))
+                <div class="alert alert-success">
+                    <span>{{ session('success') }}</span>
+                </div>
+            @endif
 
-        @if($errors->any())
-            <div class="alert alert-error">
-                <ul>
-                    @foreach($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
+            @if($errors->any())
+                <div class="alert alert-error">
+                    <ul>
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
 
-        <!-- Section 1: Summary Stats Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div class="card bg-base-100 shadow-sm border border-base-300">
-                <div class="card-body">
-                    <h3 class="card-title text-sm">Pending Requests</h3>
-                    <p class="text-3xl font-bold">{{ $totalPending }}</p>
+            <!-- Section 1: Summary Stats Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="card bg-base-100 shadow-sm border border-base-300">
+                    <div class="card-body">
+                        <h3 class="card-title text-sm">Pending Requests</h3>
+                        <p class="text-3xl font-bold">{{ $totalPending }}</p>
+                    </div>
+                </div>
+                <div class="card bg-base-100 shadow-sm border border-base-300">
+                    <div class="card-body">
+                        <h3 class="card-title text-sm">Approved This Month</h3>
+                        <p class="text-3xl font-bold">{{ $totalApprovedThisMonth }}</p>
+                    </div>
+                </div>
+                <div class="card bg-base-100 shadow-sm border border-base-300">
+                    <div class="card-body">
+                        <h3 class="card-title text-sm">Rejected This Month</h3>
+                        <p class="text-3xl font-bold">{{ $totalRejectedThisMonth }}</p>
+                    </div>
+                </div>
+                <div class="card bg-base-100 shadow-sm border border-base-300">
+                    <div class="card-body">
+                        <h3 class="card-title text-sm">Total Employees</h3>
+                        <p class="text-3xl font-bold">{{ $totalEmployees }}</p>
+                    </div>
                 </div>
             </div>
+
+            <!-- Section 2: Pending Requests Awaiting HR Approval -->
             <div class="card bg-base-100 shadow-sm border border-base-300">
                 <div class="card-body">
-                    <h3 class="card-title text-sm">Approved This Month</h3>
-                    <p class="text-3xl font-bold">{{ $totalApprovedThisMonth }}</p>
-                </div>
-            </div>
-            <div class="card bg-base-100 shadow-sm border border-base-300">
-                <div class="card-body">
-                    <h3 class="card-title text-sm">Rejected This Month</h3>
-                    <p class="text-3xl font-bold">{{ $totalRejectedThisMonth }}</p>
-                </div>
-            </div>
-            <div class="card bg-base-100 shadow-sm border border-base-300">
-                <div class="card-body">
-                    <h3 class="card-title text-sm">Total Employees</h3>
-                    <p class="text-3xl font-bold">{{ $totalEmployees }}</p>
+                    <h2 class="card-title text-2xl mb-4">Pending Requests Awaiting HR Approval</h2>
+                    <div class="overflow-x-auto w-full">
+                        <table class="table table-zebra w-full">
+                            <thead>
+                                <tr>
+                                    <th>Employee Name</th>
+                                    <th>Department</th>
+                                    <th>Leave Type</th>
+                                    <th>Start Date</th>
+                                    <th>End Date</th>
+                                    <th>Days</th>
+                                    <th>Manager Approval Status</th>
+                                    <th>Submitted Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($pendingRequests as $request)
+                                    <tr>
+                                        <td>{{ $request->employee->name }}</td>
+                                        <td>{{ $request->employee->department->name ?? 'N/A' }}</td>
+                                        <td>{{ $request->leave_type }}</td>
+                                        <td>{{ $request->start_date->format('M d, Y') }}</td>
+                                        <td>{{ $request->end_date->format('M d, Y') }}</td>
+                                        <td>{{ $request->number_of_days }}</td>
+                                        <td>
+                                            @if($request->status === 'pending')
+                                                <span class="badge badge-warning">Pending Manager</span>
+                                            @elseif($request->status === 'dept_manager_approved')
+                                                <span class="badge badge-info">Manager Approved - Waiting HR</span>
+                                            @endif
+                                        </td>
+                                        <td>{{ $request->created_at->format('M d, Y') }}</td>
+                                        <td>
+                                            <a href="{{ route('hr.show-request', $request->id) }}" class="btn btn-sm btn-info btn-outline">View Details</a>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="9" class="text-center text-base-content/60">No pending requests found.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    @if($pendingRequests->hasPages())
+                        <div class="mt-4">
+                            {{ $pendingRequests->links() }}
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
 
-        <!-- Section 2: Pending Requests Awaiting HR Approval -->
-        <div class="card bg-base-100 shadow-sm border border-base-300">
-            <div class="card-body">
-                <h2 class="card-title text-2xl mb-4">Pending Requests Awaiting HR Approval</h2>
-                <div class="overflow-x-auto">
-                    <table class="table table-zebra">
-                        <thead>
-                            <tr>
-                                <th>Employee Name</th>
-                                <th>Department</th>
-                                <th>Leave Type</th>
-                                <th>Start Date</th>
-                                <th>End Date</th>
-                                <th>Days</th>
-                                <th>Manager Approval Status</th>
-                                <th>Submitted Date</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($pendingRequests as $request)
-                                <tr>
-                                    <td>{{ $request->employee->name }}</td>
-                                    <td>{{ $request->employee->department->name ?? 'N/A' }}</td>
-                                    <td>{{ $request->leave_type }}</td>
-                                    <td>{{ $request->start_date->format('M d, Y') }}</td>
-                                    <td>{{ $request->end_date->format('M d, Y') }}</td>
-                                    <td>{{ $request->number_of_days }}</td>
-                                    <td>
-                                        @if($request->status === 'pending')
-                                            <span class="badge badge-warning">Pending Manager</span>
-                                        @elseif($request->status === 'dept_manager_approved')
-                                            <span class="badge badge-info">Manager Approved - Waiting HR</span>
-                                        @endif
-                                    </td>
-                                    <td>{{ $request->created_at->format('M d, Y') }}</td>
-                                    <td>
-                                        <a href="{{ route('hr.show-request', $request->id) }}" class="btn btn-sm btn-info btn-outline">View Details</a>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="9" class="text-center text-base-content/60">No pending requests found.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-                
-                @if($pendingRequests->hasPages())
-                    <div class="mt-4">
-                        {{ $pendingRequests->links() }}
+            <!-- Right Column: Calendar -->
+            <div class="lg:col-span-1">
+                <div class="card bg-base-100 shadow-sm border border-base-300 sticky top-6">
+                    <div class="card-body">
+                        <h2 class="card-title text-xl mb-4">Calendar</h2>
+                        <div class="flex items-center justify-center min-h-[400px] bg-base-200 rounded-lg">
+                            <p class="text-base-content/60 text-center">Event Calendar here</p>
+                        </div>
                     </div>
-                @endif
+                </div>
             </div>
         </div>
     </div>

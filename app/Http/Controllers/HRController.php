@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Request as LeaveRequest;
 use App\Models\User;
 use App\Models\Policy;
-use App\Models\Balance;
 
 class HRController extends Controller
 {

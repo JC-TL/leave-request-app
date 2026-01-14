@@ -10,7 +10,10 @@
                 <span class="badge badge-primary">{{ ucfirst($user->role) }}</span>
                 <form action="{{ route('logout') }}" method="POST" class="inline">
                     @csrf
-                    <button type="submit" class="text-base-content hover:text-base-content/70 transition-colors">Logout</button>
+                    <button type="submit" class="cursor-pointer text-blue-600 underline underline-offset-2
+         hover:text-blue-700 hover:underline hover:decoration-2
+         focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400
+         transition-colors">Logout</button>
                 </form>
             </div>
             @endauth
