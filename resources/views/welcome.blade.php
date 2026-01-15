@@ -5,6 +5,7 @@
 </div>
 <x-layout>
     <br><br>
+    
         <div class="card bg-base-100 shadow-sm border border-base-300">
             <div class="card-body p-6">
                 <h2 class="text-3xl font-semibold text-center mt-2 mb-2">Welcome</h2>

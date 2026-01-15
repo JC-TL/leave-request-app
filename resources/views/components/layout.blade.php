@@ -10,6 +10,18 @@
     <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
     <link href="https://cdn.jsdelivr.net/npm/daisyui@5/themes.css" rel="stylesheet" type="text/css" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.20/index.global.min.js'></script>
+    <script>
+
+      document.addEventListener('DOMContentLoaded', function() {
+        var calendarEl = document.getElementById('calendar');
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+          initialView: 'dayGridMonth'
+        });
+        calendar.render();
+      });
+
+    </script>
 </head>
 
 <body class="min-h-screen flex flex-col bg-base-200 font-sans" 
@@ -23,11 +35,11 @@
         {{ $navigation }}
     @endisset
 
-    <main class="flex-1 w-full px-6 py-6 {{ !isset($navigation) ? 'max-w-md mx-auto' : '' }}">
+    <ma class="flex-1 w-full px-6 py-6 {{ !isset($navigation) ? 'max-w-md mx-auto' : '' }}">
         {{ $slot }}
     </main>
 
-    <footer class="footer footer-center p-5 bg-base-300 text-base-content text-xs mt-auto">
+    <footer class="footer footer-center p-5 bg-base-300 text-base-content text-xs mt-5">
         <div>
             <p>© Vertex Global 2026</p>
         </div>

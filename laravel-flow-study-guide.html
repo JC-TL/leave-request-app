@@ -1,0 +1,1610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laravel Flow Study Guide - Routes, Controllers, Models & Blade</title>
+    <style>
+        :root{
+            --bg0: #0b1020;
+            --bg1: #0f172a;
+            --card: #ffffff;
+            --card2: #f8fafc;
+            --text: #0f172a;
+            --muted: #475569;
+            --border: rgba(15, 23, 42, 0.12);
+            --shadow: 0 20px 60px rgba(0,0,0,0.25);
+            --brand: #667eea;
+            --brand2: #764ba2;
+            --accent: #4ec9b0;
+            --warnBg: #fff3cd;
+            --warnBorder: #ffc107;
+            --infoBg: #e7f3ff;
+            --infoBorder: #2196F3;
+            --codeBg: #0b1220;
+            --codeBg2: #0e172a;
+            --codeText: #dbeafe;
+            --codeBorder: rgba(148, 163, 184, 0.18);
+        }
+
+        [data-theme="dark"]{
+            --card: #0b1220;
+            --card2: #0e172a;
+            --text: #e5e7eb;
+            --muted: #a7b0bf;
+            --border: rgba(148, 163, 184, 0.18);
+            --shadow: 0 24px 80px rgba(0,0,0,0.55);
+            --warnBg: rgba(245, 158, 11, 0.14);
+            --warnBorder: rgba(245, 158, 11, 0.65);
+            --infoBg: rgba(59, 130, 246, 0.14);
+            --infoBorder: rgba(59, 130, 246, 0.65);
+            --codeBg: #060b14;
+            --codeBg2: #0a1222;
+            --codeText: #dbeafe;
+            --codeBorder: rgba(148, 163, 184, 0.20);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background:
+                radial-gradient(1200px 600px at 10% 0%, rgba(102,126,234,0.35), transparent 60%),
+                radial-gradient(900px 500px at 90% 20%, rgba(118,75,162,0.35), transparent 55%),
+                linear-gradient(135deg, var(--bg0) 0%, var(--bg1) 100%);
+            padding: 20px;
+            line-height: 1.6;
+            color: var(--text);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: var(--card);
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--brand) 0%, var(--brand2) 100%);
+            color: white;
+            padding: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .header .title-wrap{
+            text-align: left;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .header .controls{
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        .pill{
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 12px;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.22);
+            background: rgba(255,255,255,0.10);
+            backdrop-filter: blur(10px);
+            color: white;
+        }
+
+        .pill input{
+            background: transparent;
+            border: none;
+            outline: none;
+            color: white;
+            width: 260px;
+        }
+
+        .pill input::placeholder{
+            color: rgba(255,255,255,0.75);
+        }
+
+        .toggle{
+            cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.22);
+            background: rgba(255,255,255,0.12);
+            color: white;
+            padding: 10px 12px;
+            border-radius: 999px;
+            font-weight: 700;
+            transition: transform 0.15s ease, background 0.15s ease;
+            user-select: none;
+        }
+
+        .toggle:hover{ transform: translateY(-1px); background: rgba(255,255,255,0.18); }
+
+        .tabs {
+            display: flex;
+            background: var(--card2);
+            border-bottom: 1px solid var(--border);
+            overflow-x: auto;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .tab {
+            padding: 15px 30px;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            font-size: 1.1em;
+            font-weight: 600;
+            color: var(--muted);
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .tab:hover {
+            background: rgba(15, 23, 42, 0.04);
+        }
+
+        .tab.active {
+            background: var(--card);
+            color: var(--brand);
+            border-bottom: 3px solid var(--brand);
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .flow-diagram {
+            background: var(--card2);
+            border-radius: 10px;
+            padding: 30px;
+            margin: 20px 0;
+            border: 2px dashed rgba(102,126,234,0.55);
+        }
+
+        .flow-step {
+            background: var(--card);
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            border-left: 4px solid var(--brand);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            position: relative;
+            border-top: 1px solid var(--border);
+            border-right: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .flow-step::before {
+            content: counter(step-counter);
+            counter-increment: step-counter;
+            position: absolute;
+            left: -15px;
+            top: 20px;
+            background: var(--brand);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .flow-diagram {
+            counter-reset: step-counter;
+        }
+
+        .arrow {
+            text-align: center;
+            font-size: 2em;
+            color: var(--brand);
+            margin: 10px 0;
+        }
+
+        .comparison-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .code-block {
+            background: var(--codeBg);
+            color: var(--codeText);
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.8;
+            position: relative;
+            border: 1px solid var(--codeBorder);
+        }
+
+        .code-block h3 {
+            color: var(--accent);
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .line-number {
+            color: #858585;
+            margin-right: 15px;
+            user-select: none;
+        }
+
+        .code-line {
+            margin: 5px 0;
+            padding: 3px 0;
+            transition: background 0.2s;
+        }
+
+        .code-line:hover {
+            background: rgba(148, 163, 184, 0.10);
+        }
+
+        .code-line.highlight {
+            background: rgba(78, 201, 176, 0.12);
+            border-left: 3px solid var(--accent);
+            padding-left: 10px;
+        }
+
+        .code-line.linked {
+            background: rgba(102, 126, 234, 0.18);
+            outline: 1px solid rgba(102, 126, 234, 0.35);
+            border-left: 3px solid rgba(102, 126, 234, 0.85);
+            padding-left: 10px;
+        }
+
+        .explanation {
+            background: var(--warnBg);
+            border-left: 4px solid var(--warnBorder);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            border: 1px solid var(--border);
+        }
+
+        .explanation h4 {
+            color: var(--text);
+            margin-bottom: 10px;
+        }
+
+        .anatomy-box {
+            background: var(--infoBg);
+            border: 2px solid var(--infoBorder);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .anatomy-box h3 {
+            color: var(--text);
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .anatomy-item {
+            background: var(--card);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid var(--infoBorder);
+            border: 1px solid var(--border);
+        }
+
+        .anatomy-item strong {
+            color: var(--text);
+        }
+
+        .highlight-box {
+            background: var(--card2);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+        }
+
+        .highlight-box strong {
+            color: var(--brand);
+        }
+
+        .data-flow {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .data-box {
+            background: linear-gradient(135deg, var(--brand) 0%, var(--brand2) 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            min-width: 200px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .data-box h4 {
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .data-arrow {
+            font-size: 2em;
+            color: var(--brand);
+            margin: 0 10px;
+        }
+
+        @media (max-width: 768px) {
+            .comparison-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .data-flow {
+                flex-direction: column;
+            }
+            
+            .data-arrow {
+                transform: rotate(90deg);
+                margin: 10px 0;
+            }
+        }
+
+        .interactive-btn {
+            background: var(--brand);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+            transition: all 0.3s;
+        }
+
+        .interactive-btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .code-comment {
+            color: #6a9955;
+        }
+
+        .code-keyword {
+            color: #569cd6;
+        }
+
+        .code-string {
+            color: #ce9178;
+        }
+
+        .code-function {
+            color: #dcdcaa;
+        }
+
+        .code-variable {
+            color: #9cdcfe;
+        }
+
+        /* Comparison “workbench” */
+        .workbench{
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .scenario-bar{
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: var(--card2);
+        }
+
+        .scenario-left{
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .chip{
+            border: 1px solid var(--border);
+            background: var(--card);
+            color: var(--text);
+            padding: 8px 10px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-weight: 800;
+            transition: transform 0.15s ease, background 0.15s ease;
+        }
+        .chip:hover{ transform: translateY(-1px); }
+        .chip.active{
+            background: rgba(102,126,234,0.14);
+            border-color: rgba(102,126,234,0.35);
+        }
+
+        .scenario-right{
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            color: var(--muted);
+            font-weight: 700;
+        }
+
+        .kbd{
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 0.9em;
+            padding: 4px 8px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            color: var(--text);
+        }
+
+        .pane-grid{
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .pane{
+            border-radius: 14px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            background: var(--card);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+        }
+
+        .pane-header{
+            padding: 14px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 10px;
+            background: linear-gradient(135deg, rgba(102,126,234,0.14), rgba(118,75,162,0.10));
+            border-bottom: 1px solid var(--border);
+        }
+
+        .pane-title{
+            font-size: 1.05em;
+            font-weight: 900;
+            color: var(--text);
+        }
+        .pane-sub{
+            font-size: 0.9em;
+            color: var(--muted);
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .pane-body{
+            display: grid;
+            grid-template-columns: 1fr;
+        }
+
+        .code-scroll{
+            max-height: 340px;
+            overflow: auto;
+        }
+
+        .code-scroll .code-block{
+            border: none;
+            border-radius: 0;
+            background: var(--codeBg2);
+        }
+
+        .inspector{
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            background: var(--card2);
+            padding: 16px;
+        }
+        .inspector h3{
+            margin-bottom: 8px;
+        }
+        .inspector .hint{
+            color: var(--muted);
+            font-weight: 700;
+        }
+
+        .callout{
+            margin-top: 12px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: var(--card);
+            padding: 12px 14px;
+        }
+        .callout strong{ color: var(--brand); }
+
+        .pane-anatomy{
+            padding: 12px 14px;
+            border-top: 1px solid var(--border);
+            background: var(--card);
+        }
+        .pane-anatomy details{
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: var(--card2);
+            padding: 10px 12px;
+        }
+        .pane-anatomy summary{
+            cursor: pointer;
+            font-weight: 900;
+            color: var(--text);
+            outline: none;
+        }
+        .pane-anatomy ul{
+            margin: 10px 0 0 18px;
+            color: var(--muted);
+            font-weight: 700;
+        }
+        .pane-anatomy code{
+            color: var(--text);
+            font-weight: 900;
+        }
+
+        @media (max-width: 980px){
+            .header{
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .header .controls{ width: 100%; justify-content: flex-start; }
+            .pill input{ width: 180px; }
+            .pane-grid{ grid-template-columns: 1fr; }
+            .code-scroll{ max-height: 260px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="appRoot">
+        <div class="header">
+            <div class="title-wrap">
+                <h1>🚀 Laravel Flow Study Guide</h1>
+                <p>Understanding Routes → Controllers → Models → Blade Files</p>
+            </div>
+            <div class="controls">
+                <div class="pill" title="Search highlights (works best in Side-by-Side tab)">
+                    <span style="font-weight:900;">Search</span>
+                    <input id="globalSearch" type="text" placeholder="try: route, validate, create, view, compact">
+                </div>
+                <button class="toggle" id="themeToggle" type="button" title="Toggle dark mode">Dark mode</button>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" data-section="overview">📊 Overview & Flow</button>
+            <button class="tab" data-section="routes">🛣️ Routes</button>
+            <button class="tab" data-section="controllers">🎮 Controllers</button>
+            <button class="tab" data-section="models">📦 Models</button>
+            <button class="tab" data-section="blade">🎨 Blade Files</button>
+            <button class="tab" data-section="comparison">⚖️ Side-by-Side</button>
+        </div>
+
+        <div class="content">
+            <!-- Overview Section -->
+            <div id="overview" class="section active">
+                <h2>📊 Complete Request Flow Overview</h2>
+                
+                <div class="flow-diagram">
+                    <div class="flow-step">
+                        <h3>1. User Action (Browser)</h3>
+                        <p>User clicks "Submit Request" button in the Blade template</p>
+                        <div class="code-block">
+                            <div class="code-line"><span class="code-string">&lt;form action="{{ route('employee.store-request') }}" method="POST"&gt;</span></div>
+                        </div>
+                    </div>
+
+                    <div class="arrow">⬇️</div>
+
+                    <div class="flow-step">
+                        <h3>2. Route Matching</h3>
+                        <p>Laravel looks at <strong>routes/employee.php</strong> to find matching route</p>
+                        <div class="code-block">
+                            <div class="code-line"><span class="code-keyword">Route::</span><span class="code-function">post</span>(<span class="code-string">'/employee/request'</span>, [<span class="code-variable">EmployeeController</span>::<span class="code-keyword">class</span>, <span class="code-string">'storeRequest'</span>])</div>
+                        </div>
+                        <p><strong>What happens:</strong> Laravel matches the POST request to `/employee/request` and finds the controller method</p>
+                    </div>
+
+                    <div class="arrow">⬇️</div>
+
+                    <div class="flow-step">
+                        <h3>3. Middleware Execution</h3>
+                        <p>Before reaching controller, middleware checks authentication and role</p>
+                        <div class="code-block">
+                            <div class="code-line"><span class="code-keyword">Route::</span><span class="code-function">middleware</span>([<span class="code-string">'auth'</span>, <span class="code-string">'role:employee'</span>])</div>
+                        </div>
+                        <p><strong>What happens:</strong> Verifies user is logged in AND has 'employee' role</p>
+                    </div>
+
+                    <div class="arrow">⬇️</div>
+
+                    <div class="flow-step">
+                        <h3>4. Controller Method Execution</h3>
+                        <p>Laravel calls <strong>EmployeeController@storeRequest</strong> method</p>
+                        <div class="code-block">
+                            <div class="code-line"><span class="code-keyword">public function</span> <span class="code-function">storeRequest</span>(<span class="code-variable">Request</span> <span class="code-variable">$request</span>)</div>
+                        </div>
+                        <p><strong>What happens:</strong> Controller receives form data, validates it, processes business logic</p>
+                    </div>
+
+                    <div class="arrow">⬇️</div>
+
+                    <div class="flow-step">
+                        <h3>5. Model Interaction</h3>
+                        <p>Controller uses <strong>Model</strong> to interact with database</p>
+                        <div class="code-block">
+                            <div class="code-line"><span class="code-variable">LeaveRequest::</span><span class="code-function">create</span>([...])</div>
+                            <div class="code-line"><span class="code-variable">$user</span>-><span class="code-function">getLeaveBalance</span>(...)</div>
+                        </div>
+                        <p><strong>What happens:</strong> Model queries database, creates records, retrieves data</p>
+                    </div>
+
+                    <div class="arrow">⬇️</div>
+
+                    <div class="flow-step">
+                        <h3>6. Return Response</h3>
+                        <p>Controller returns a view or redirect with data</p>
+                        <div class="code-block">
+                            <div class="code-line"><span class="code-keyword">return</span> <span class="code-function">redirect</span>()-><span class="code-function">route</span>(<span class="code-string">'employee.dashboard'</span>)</div>
+                        </div>
+                        <p><strong>What happens:</strong> User is redirected back to dashboard with success message</p>
+                    </div>
+
+                    <div class="arrow">⬇️</div>
+
+                    <div class="flow-step">
+                        <h3>7. Blade Template Rendering</h3>
+                        <p>Laravel renders the Blade template with data</p>
+                        <div class="code-block">
+                            <div class="code-line"><span class="code-string">@if</span>(<span class="code-variable">session</span>(<span class="code-string">'success'</span>))</div>
+                        </div>
+                        <p><strong>What happens:</strong> Blade compiles PHP, displays HTML to user</p>
+                    </div>
+                </div>
+
+                <div class="highlight-box">
+                    <h3>💡 Key Concept: Data Flow Direction</h3>
+                    <div class="data-flow">
+                        <div class="data-box">
+                            <h4>User Input</h4>
+                            <p>Form Data</p>
+                        </div>
+                        <div class="data-arrow">→</div>
+                        <div class="data-box">
+                            <h4>Route</h4>
+                            <p>URL Matching</p>
+                        </div>
+                        <div class="data-arrow">→</div>
+                        <div class="data-box">
+                            <h4>Controller</h4>
+                            <p>Business Logic</p>
+                        </div>
+                        <div class="data-arrow">→</div>
+                        <div class="data-box">
+                            <h4>Model</h4>
+                            <p>Database</p>
+                        </div>
+                        <div class="data-arrow">→</div>
+                        <div class="data-box">
+                            <h4>Controller</h4>
+                            <p>Return Data</p>
+                        </div>
+                        <div class="data-arrow">→</div>
+                        <div class="data-box">
+                            <h4>Blade</h4>
+                            <p>Display</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Routes Section -->
+            <div id="routes" class="section">
+                <h2>🛣️ Routes - The Entry Point</h2>
+                
+                <div class="anatomy-box">
+                    <h3>Anatomy of a Route</h3>
+                    <div class="anatomy-item">
+                        <strong>HTTP Method:</strong> GET, POST, PUT, PATCH, DELETE
+                        <br><small>Defines what type of request this route accepts</small>
+                    </div>
+                    <div class="anatomy-item">
+                        <strong>URL Path:</strong> '/employee/dashboard'
+                        <br><small>The URL pattern that triggers this route</small>
+                    </div>
+                    <div class="anatomy-item">
+                        <strong>Controller Reference:</strong> [Controller::class, 'method']
+                        <br><small>Which controller and method to call</small>
+                    </div>
+                    <div class="anatomy-item">
+                        <strong>Route Name:</strong> 'employee.dashboard'
+                        <br><small>Unique identifier for referencing in code</small>
+                    </div>
+                    <div class="anatomy-item">
+                        <strong>Middleware:</strong> ['auth', 'role:employee']
+                        <br><small>Filters that run before the controller</small>
+                    </div>
+                </div>
+
+                <h3>Real Example: routes/employee.php</h3>
+                <div class="code-block">
+                    <h3>routes/employee.php</h3>
+                    <div class="code-line"><span class="code-comment">// Line 1-2: PHP opening tag and namespace</span></div>
+                    <div class="code-line"><span class="code-keyword">&lt;?php</span></div>
+                    <div class="code-line"><br></div>
+                    <div class="code-line"><span class="code-comment">// Line 3-4: Import Laravel's Route facade and EmployeeController</span></div>
+                    <div class="code-line"><span class="code-keyword">use</span> <span class="code-variable">Illuminate\Support\Facades\Route</span>;</div>
+                    <div class="code-line"><span class="code-keyword">use</span> <span class="code-variable">App\Http\Controllers\EmployeeController</span>;</div>
+                    <div class="code-line"><br></div>
+                    <div class="code-line"><span class="code-comment">// Line 7: Group routes with middleware</span></div>
+                    <div class="code-line highlight"><span class="code-keyword">Route::</span><span class="code-function">middleware</span>([<span class="code-string">'auth'</span>, <span class="code-string">'role:employee'</span>])-><span class="code-function">group</span>(<span class="code-keyword">function</span> () {</div>
+                    <div class="code-line highlight"><span class="code-comment">    // Line 8: GET route - displays dashboard</span></div>
+                    <div class="code-line highlight"><span class="code-keyword">    Route::</span><span class="code-function">get</span>(<span class="code-string">'/employee/dashboard'</span>, [<span class="code-variable">EmployeeController</span>::<span class="code-keyword">class</span>, <span class="code-string">'dashboard'</span>])-><span class="code-function">name</span>(<span class="code-string">'employee.dashboard'</span>);</div>
+                    <div class="code-line highlight"><span class="code-comment">    // Line 9: POST route - handles form submission</span></div>
+                    <div class="code-line highlight"><span class="code-keyword">    Route::</span><span class="code-function">post</span>(<span class="code-string">'/employee/request'</span>, [<span class="code-variable">EmployeeController</span>::<span class="code-keyword">class</span>, <span class="code-string">'storeRequest'</span>])-><span class="code-function">name</span>(<span class="code-string">'employee.store-request'</span>);</div>
+                    <div class="code-line highlight"><span class="code-comment">    // Line 10: PATCH route - updates existing resource</span></div>
+                    <div class="code-line highlight"><span class="code-keyword">    Route::</span><span class="code-function">patch</span>(<span class="code-string">'/request/{id}/cancel'</span>, [<span class="code-variable">EmployeeController</span>::<span class="code-keyword">class</span>, <span class="code-string">'cancelRequest'</span>])-><span class="code-function">name</span>(<span class="code-string">'request.cancel'</span>);</div>
+                    <div class="code-line"><span class="code-keyword">}</span>);</div>
+                </div>
+
+                <div class="explanation">
+                    <h4>Line-by-Line Breakdown:</h4>
+                    <p><strong>Line 7:</strong> <code>middleware(['auth', 'role:employee'])</code> - Only authenticated employees can access these routes</p>
+                    <p><strong>Line 8:</strong> <code>Route::get()</code> - Handles GET requests (page loads, links)</p>
+                    <p><strong>Line 9:</strong> <code>Route::post()</code> - Handles POST requests (form submissions)</p>
+                    <p><strong>Line 10:</strong> <code>Route::patch()</code> - Handles PATCH requests (partial updates)</p>
+                    <p><strong>Route Parameters:</strong> <code>{id}</code> in line 10 is a dynamic parameter passed to the controller</p>
+                </div>
+
+                <div class="highlight-box">
+                    <h3>🔗 How Routes Connect to Controllers</h3>
+                    <p><strong>Syntax:</strong> <code>[ControllerClass::class, 'methodName']</code></p>
+                    <p><strong>Example:</strong> <code>[EmployeeController::class, 'dashboard']</code></p>
+                    <p>This tells Laravel: "When this route is hit, call the <code>dashboard()</code> method in <code>EmployeeController</code>"</p>
+                </div>
+            </div>
+
+            <!-- Controllers Section -->
+            <div id="controllers" class="section">
+                <h2>🎮 Controllers - The Business Logic Hub</h2>
+                
+                <div class="anatomy-box">
+                    <h3>Anatomy of a Controller</h3>
+                    <div class="anatomy-item">
+                        <strong>Namespace:</strong> App\Http\Controllers
+                        <br><small>Organizes classes into folders</small>
+                    </div>
+                    <div class="anatomy-item">
+                        <strong>Class Declaration:</strong> extends Controller
+                        <br><small>Inherits base controller functionality</small>
+                    </div>
+                    <div class="anatomy-item">
+                        <strong>Public Methods:</strong> Each method handles one route
+                        <br><small>Methods are called by routes</small>
+                    </div>
+                    <div class="anatomy-item">
+                        <strong>Request Object:</strong> Receives form data
+                        <br><small>Contains all input from user</small>
+                    </div>
+                    <div class="anatomy-item">
+                        <strong>Return Statement:</strong> Returns view or redirect
+                        <br><small>Sends response back to user</small>
+                    </div>
+                </div>
+
+                <h3>Real Example: EmployeeController@dashboard</h3>
+                <div class="code-block">
+                    <h3>app/Http/Controllers/EmployeeController.php</h3>
+                    <div class="code-line"><span class="code-comment">// Line 1-3: PHP opening, namespace declaration</span></div>
+                    <div class="code-line"><span class="code-keyword">&lt;?php</span></div>
+                    <div class="code-line"><span class="code-keyword">namespace</span> <span class="code-variable">App\Http\Controllers</span>;</div>
+                    <div class="code-line"><br></div>
+                    <div class="code-line"><span class="code-comment">// Line 5-9: Import dependencies</span></div>
+                    <div class="code-line"><span class="code-keyword">use</span> <span class="code-variable">Illuminate\Http\Request</span>;</div>
+                    <div class="code-line"><span class="code-keyword">use</span> <span class="code-variable">Illuminate\Support\Facades\Auth</span>;</div>
+                    <div class="code-line"><span class="code-keyword">use</span> <span class="code-variable">App\Models\Request</span> <span class="code-keyword">as</span> <span class="code-variable">LeaveRequest</span>;</div>
+                    <div class="code-line"><span class="code-keyword">use</span> <span class="code-variable">App\Models\Balance</span>;</div>
+                    <div class="code-line"><br></div>
+                    <div class="code-line"><span class="code-comment">// Line 11-12: Class declaration</span></div>
+                    <div class="code-line"><span class="code-keyword">class</span> <span class="code-variable">EmployeeController</span> <span class="code-keyword">extends</span> <span class="code-variable">Controller</span></div>
+                    <div class="code-line"><span class="code-keyword">{</span></div>
+                    <div class="code-line"><br></div>
+                    <div class="code-line highlight"><span class="code-comment">    // Line 16: Method that matches route 'dashboard'</span></div>
+                    <div class="code-line highlight"><span class="code-keyword">    public function</span> <span class="code-function">dashboard</span>()</div>
+                    <div class="code-line highlight"><span class="code-keyword">    {</span></div>
+                    <div class="code-line highlight"><span class="code-comment">        // Line 18: Get currently logged-in user</span></div>
+                    <div class="code-line highlight"><span class="code-variable">        $user</span> = <span class="code-variable">Auth::</span><span class="code-function">user</span>();</div>
+                    <div class="code-line highlight"><span class="code-comment">        // Line 19: Get current year</span></div>
+                    <div class="code-line highlight"><span class="code-variable">        $currentYear</span> = <span class="code-function">now</span>()-><span class="code-function">year</span>;</div>
+                    <div class="code-line highlight"><span class="code-comment">        // Line 22-25: Query database through Model relationship</span></div>
+                    <div class="code-line highlight"><span class="code-variable">        $balances</span> = <span class="code-variable">$user</span>-><span class="code-function">leaveBalances</span>()</div>
+                    <div class="code-line highlight">            -><span class="code-function">where</span>(<span class="code-string">'year'</span>, <span class="code-variable">$currentYear</span>)</div>
+                    <div class="code-line highlight">            -><span class="code-function">orderBy</span>(<span class="code-string">'leave_type'</span>)</div>
+                    <div class="code-line highlight">            -><span class="code-function">get</span>();</div>
+                    <div class="code-line highlight"><span class="code-comment">        // Line 28-30: Get leave requests with pagination</span></div>
+                    <div class="code-line highlight"><span class="code-variable">        $requests</span> = <span class="code-variable">$user</span>-><span class="code-function">leaveRequests</span>()</div>
+                    <div class="code-line highlight">            -><span class="code-function">orderBy</span>(<span class="code-string">'created_at'</span>, <span class="code-string">'desc'</span>)</div>
+                    <div class="code-line highlight">            -><span class="code-function">paginate</span>(<span class="code-string">10</span>);</div>
+                    <div class="code-line highlight"><span class="code-comment">        // Line 32: Pass data to Blade view</span></div>
+                    <div class="code-line highlight"><span class="code-keyword">        return</span> <span class="code-function">view</span>(<span class="code-string">'employee.dashboard'</span>, <span class="code-function">compact</span>(<span class="code-string">'balances'</span>, <span class="code-string">'requests'</span>, <span class="code-string">'user'</span>));</div>
+                    <div class="code-line highlight"><span class="code-keyword">    }</span></div>
+                    <div class="code-line"><span class="code-keyword">}</span></div>
+                </div>
+
+                <div class="explanation">
+                    <h4>Line-by-Line Breakdown:</h4>
+                    <p><strong>Line 16:</strong> <code>public function dashboard()</code> - Public method accessible by routes (no parameters needed for GET)</p>
+                    <p><strong>Line 18:</strong> <code>Auth::user()</code> - Gets the authenticated user from session</p>
+                    <p><strong>Line 22-25:</strong> Uses Model relationship <code>$user->leaveBalances()</code> to query database</p>
+                    <p><strong>Line 28-30:</strong> Gets related data using Eloquent relationship, orders by date, paginates results</p>
+                    <p><strong>Line 32:</strong> <code>compact()</code> creates array: <code>['balances' => $balances, 'requests' => $requests, 'user' => $user]</code></p>
+                    <p><strong>Line 32:</strong> <code>view('employee.dashboard')</code> - Looks for file at <code>resources/views/employee/dashboard.blade.php</code></p>
+                </div>
+
+                <h3>Real Example: EmployeeController@storeRequest (POST Handler)</h3>
+                <div class="code-block">
+                    <h3>app/Http/Controllers/EmployeeController.php (storeRequest method)</h3>
+                    <div class="code-line highlight"><span class="code-comment">    // Line 38: Method receives Request object with form data</span></div>
+                    <div class="code-line highlight"><span class="code-keyword">    public function</span> <span class="code-function">storeRequest</span>(<span class="code-variable">Request</span> <span class="code-variable">$request</span>)</div>
+                    <div class="code-line highlight"><span class="code-keyword">    {</span></div>
+                    <div class="code-line highlight"><span class="code-comment">        // Line 40-41: Get user and year</span></div>
+                    <div class="code-line highlight"><span class="code-variable">        $user</span> = <span class="code-variable">Auth::</span><span class="code-function">user</span>();</div>
+                    <div class="code-line highlight"><span class="code-variable">        $currentYear</span> = <span class="code-function">now</span>()-><span class="code-function">year</span>;</div>
+                    <div class="code-line highlight"><span class="code-comment">        // Line 43-48: Validate form input</span></div>
+                    <div class="code-line highlight"><span class="code-variable">        $validated</span> = <span class="code-variable">$request</span>-><span class="code-function">validate</span>([</div>
+                    <div class="code-line highlight">            <span class="code-string">'leave_type'</span> => <span class="code-string">'required|string'</span>,</div>
+                    <div class="code-line highlight">            <span class="code-string">'start_date'</span> => <span class="code-string">'required|date|after_or_equal:today'</span>,</div>
+                    <div class="code-line highlight">            <span class="code-string">'end_date'</span> => <span class="code-string">'required|date|after_or_equal:start_date'</span>,</div>
+                    <div class="code-line highlight">            <span class="code-string">'reason'</span> => <span class="code-string">'required|string|max:1000'</span>,</div>
+                    <div class="code-line highlight">        ]);</div>
+                    <div class="code-line highlight"><span class="code-comment">        // Line 51-53: Calculate business logic</span></div>
+                    <div class="code-line highlight"><span class="code-variable">        $startDate</span> = <span class="code-variable">Carbon::</span><span class="code-function">parse</span>(<span class="code-variable">$validated</span>[<span class="code-string">'start_date'</span>]);</div>
+                    <div class="code-line highlight"><span class="code-variable">        $endDate</span> = <span class="code-variable">Carbon::</span><span class="code-function">parse</span>(<span class="code-variable">$validated</span>[<span class="code-string">'end_date'</span>]);</div>
+                    <div class="code-line highlight"><span class="code-variable">        $numberOfDays</span> = <span class="code-variable">$this</span>-><span class="code-function">calculateWorkingDays</span>(<span class="code-variable">$startDate</span>, <span class="code-variable">$endDate</span>);</div>
+                    <div class="code-line highlight"><span class="code-comment">        // Line 56: Use Model method to check balance</span></div>
+                    <div class="code-line highlight"><span class="code-variable">        $balance</span> = <span class="code-variable">$user</span>-><span class="code-function">getLeaveBalance</span>(<span class="code-variable">$validated</span>[<span class="code-string">'leave_type'</span>], <span class="code-variable">$currentYear</span>);</div>
+                    <div class="code-line highlight"><span class="code-comment">        // Line 69: Use Model to CREATE database record</span></div>
+                    <div class="code-line highlight"><span class="code-variable">        $leaveRequest</span> = <span class="code-variable">LeaveRequest::</span><span class="code-function">create</span>([</div>
+                    <div class="code-line highlight">            <span class="code-string">'employee_id'</span> => <span class="code-variable">$user</span>-><span class="code-function">id</span>,</div>
+                    <div class="code-line highlight">            <span class="code-string">'leave_type'</span> => <span class="code-variable">$validated</span>[<span class="code-string">'leave_type'</span>],</div>
+                    <div class="code-line highlight">            <span class="code-string">'start_date'</span> => <span class="code-variable">$validated</span>[<span class="code-string">'start_date'</span>],</div>
+                    <div class="code-line highlight">            <span class="code-string">'end_date'</span> => <span class="code-variable">$validated</span>[<span class="code-string">'end_date'</span>],</div>
+                    <div class="code-line highlight">            <span class="code-string">'reason'</span> => <span class="code-variable">$validated</span>[<span class="code-string">'reason'</span>],</div>
+                    <div class="code-line highlight">            <span class="code-string">'number_of_days'</span> => <span class="code-variable">$numberOfDays</span>,</div>
+                    <div class="code-line highlight">            <span class="code-string">'status'</span> => <span class="code-string">'pending'</span>,</div>
+                    <div class="code-line highlight">        ]);</div>
+                    <div class="code-line highlight"><span class="code-comment">        // Line 79-80: Redirect with success message</span></div>
+                    <div class="code-line highlight"><span class="code-keyword">        return</span> <span class="code-function">redirect</span>()-><span class="code-function">route</span>(<span class="code-string">'employee.dashboard'</span>)</div>
+                    <div class="code-line highlight">            -><span class="code-function">with</span>(<span class="code-string">'success'</span>, <span class="code-string">'Leave request submitted successfully.'</span>);</div>
+                    <div class="code-line highlight"><span class="code-keyword">    }</span></div>
+                </div>
+
+                <div class="explanation">
+                    <h4>Key Controller Concepts:</h4>
+                    <p><strong>Request Object ($request):</strong> Contains all form data submitted by user</p>
+                    <p><strong>Validation:</strong> <code>$request->validate()</code> checks if data meets requirements, returns errors if not</p>
+                    <p><strong>Model Usage:</strong> <code>LeaveRequest::create()</code> - Uses Model to insert into database</p>
+                    <p><strong>Redirect:</strong> Sends user to another page (doesn't render view immediately)</p>
+                    <p><strong>Session Flash:</strong> <code>with('success', ...)</code> stores message in session for one-time display</p>
+                </div>
+            </div>
+
+            <!-- Models Section -->
+            <div id="models" class="section">
+                <h2>📦 Models - Database Interface</h2>
+                
+                <div class="anatomy-box">
+                    <h3>Anatomy of a Model</h3>
+                    <div class="anatomy-item">
+                        <strong>Extends Eloquent Model:</strong> Base class for database operations
+                        <br><small>Provides all database query methods</small>
+                    </div>
+                    <div class="anatomy-item">
+                        <strong>$fillable:</strong> Fields that can be mass-assigned
+                        <br><small>Security: prevents unauthorized field updates</small>
+                    </div>
+                    <div class="anatomy-item">
+                        <strong>$casts:</strong> Automatic type conversion
+                        <br><small>Converts strings to dates, booleans, etc.</small>
+                    </div>
+                    <div class="anatomy-item">
+                        <strong>Relationships:</strong> hasMany, belongsTo, etc.
+                        <br><small>Defines connections between tables</small>
+                    </div>
+                    <div class="anatomy-item">
+                        <strong>Methods:</strong> Custom business logic
+                        <br><small>Helper methods for common operations</small>
+                    </div>
+                </div>
+
+                <h3>Real Example: User Model</h3>
+                <div class="code-block">
+                    <h3>app/Models/User.php</h3>
+                    <div class="code-line"><span class="code-comment">// Line 10: Class extends Eloquent Model</span></div>
+                    <div class="code-line"><span class="code-keyword">class</span> <span class="code-variable">User</span> <span class="code-keyword">extends</span> <span class="code-variable">Authenticatable</span></div>
+                    <div class="code-line"><span class="code-keyword">{</span></div>
+                    <div class="code-line highlight"><span class="code-comment">    // Line 20-27: Mass assignable fields</span></div>
+                    <div class="code-line highlight"><span class="code-keyword">    protected</span> <span class="code-variable">$fillable</span> = [</div>
+                    <div class="code-line highlight">        <span class="code-string">'name'</span>,</div>
+                    <div class="code-line highlight">        <span class="code-string">'email'</span>,</div>
+                    <div class="code-line highlight">        <span class="code-string">'password'</span>,</div>
+                    <div class="code-line highlight">        <span class="code-string">'role'</span>,</div>
+                    <div class="code-line highlight">        <span class="code-string">'department_id'</span>,</div>
+                    <div class="code-line highlight">        <span class="code-string">'manager_id'</span>,</div>
+                    <div class="code-line highlight">    ];</div>
+                    <div class="code-line highlight"><span class="code-comment">    // Line 53-56: Relationship - User belongs to Department</span></div>
+                    <div class="code-line highlight"><span class="code-keyword">    public function</span> <span class="code-function">department</span>()</div>
+                    <div class="code-line highlight"><span class="code-keyword">    {</span></div>
+                    <div class="code-line highlight"><span class="code-keyword">        return</span> <span class="code-variable">$this</span>-><span class="code-function">belongsTo</span>(<span class="code-variable">Department</span>::<span class="code-keyword">class</span>);</div>
+                    <div class="code-line highlight"><span class="code-keyword">    }</span></div>
+                    <div class="code-line highlight"><span class="code-comment">    // Line 68-71: Relationship - User has many Leave Requests</span></div>
+                    <div class="code-line highlight"><span class="code-keyword">    public function</span> <span class="code-function">leaveRequests</span>()</div>
+                    <div class="code-line highlight"><span class="code-keyword">    {</span></div>
+                    <div class="code-line highlight"><span class="code-keyword">        return</span> <span class="code-variable">$this</span>-><span class="code-function">hasMany</span>(<span class="code-variable">Request</span>::<span class="code-keyword">class</span>, <span class="code-string">'employee_id'</span>);</div>
+                    <div class="code-line highlight"><span class="code-keyword">    }</span></div>
+                    <div class="code-line highlight"><span class="code-comment">    // Line 100-107: Custom method to get leave balance</span></div>
+                    <div class="code-line highlight"><span class="code-keyword">    public function</span> <span class="code-function">getLeaveBalance</span>(<span class="code-keyword">string</span> <span class="code-variable">$leaveType</span>, <span class="code-keyword">int</span> <span class="code-variable">$year</span> = <span class="code-keyword">null</span>): ?<span class="code-variable">Balance</span></div>
+                    <div class="code-line highlight"><span class="code-keyword">    {</span></div>
+                    <div class="code-line highlight"><span class="code-variable">        $year</span> = <span class="code-variable">$year</span> ?? <span class="code-function">now</span>()-><span class="code-function">year</span>;</div>
+                    <div class="code-line highlight"><span class="code-keyword">        return</span> <span class="code-variable">$this</span>-><span class="code-function">leaveBalances</span>()</div>
+                    <div class="code-line highlight">            -><span class="code-function">where</span>(<span class="code-string">'leave_type'</span>, <span class="code-variable">$leaveType</span>)</div>
+                    <div class="code-line highlight">            -><span class="code-function">where</span>(<span class="code-string">'year'</span>, <span class="code-variable">$year</span>)</div>
+                    <div class="code-line highlight">            -><span class="code-function">first</span>();</div>
+                    <div class="code-line highlight"><span class="code-keyword">    }</span></div>
+                    <div class="code-line"><span class="code-keyword">}</span></div>
+                </div>
+
+                <div class="explanation">
+                    <h4>Line-by-Line Breakdown:</h4>
+                    <p><strong>Line 20-27:</strong> <code>$fillable</code> - Only these fields can be set via <code>create()</code> or <code>update()</code></p>
+                    <p><strong>Line 55:</strong> <code>belongsTo(Department::class)</code> - User belongs to one Department (foreign key: department_id)</p>
+                    <p><strong>Line 70:</strong> <code>hasMany(Request::class, 'employee_id')</code> - User has many Requests (foreign key: employee_id in requests table)</p>
+                    <p><strong>Line 100-107:</strong> Custom method that queries related balances using relationship chain</p>
+                </div>
+
+                <h3>Real Example: Request Model</h3>
+                <div class="code-block">
+                    <h3>app/Models/Request.php</h3>
+                    <div class="code-line highlight"><span class="code-comment">    // Line 14-29: Fields that can be mass-assigned</span></div>
+                    <div class="code-line highlight"><span class="code-keyword">    protected</span> <span class="code-variable">$fillable</span> = [</div>
+                    <div class="code-line highlight">        <span class="code-string">'employee_id'</span>,</div>
+                    <div class="code-line highlight">        <span class="code-string">'leave_type'</span>,</div>
+                    <div class="code-line highlight">        <span class="code-string">'start_date'</span>,</div>
+                    <div class="code-line highlight">        <span class="code-string">'end_date'</span>,</div>
+                    <div class="code-line highlight">        <span class="code-string">'reason'</span>,</div>
+                    <div class="code-line highlight">        <span class="code-string">'number_of_days'</span>,</div>
+                    <div class="code-line highlight">        <span class="code-string">'status'</span>,</div>
+                    <div class="code-line highlight">    ];</div>
+                    <div class="code-line highlight"><span class="code-comment">    // Line 31-40: Automatic type casting</span></div>
+                    <div class="code-line highlight"><span class="code-keyword">    protected function</span> <span class="code-function">casts</span>(): <span class="code-keyword">array</span></div>
+                    <div class="code-line highlight"><span class="code-keyword">    {</span></div>
+                    <div class="code-line highlight"><span class="code-keyword">        return</span> [</div>
+                    <div class="code-line highlight">            <span class="code-string">'start_date'</span> => <span class="code-string">'date'</span>,</div>
+                    <div class="code-line highlight">            <span class="code-string">'end_date'</span> => <span class="code-string">'date'</span>,</div>
+                    <div class="code-line highlight">        ];</div>
+                    <div class="code-line highlight"><span class="code-keyword">    }</span></div>
+                    <div class="code-line highlight"><span class="code-comment">    // Line 43-46: Relationship - Request belongs to User (employee)</span></div>
+                    <div class="code-line highlight"><span class="code-keyword">    public function</span> <span class="code-function">employee</span>()</div>
+                    <div class="code-line highlight"><span class="code-keyword">    {</span></div>
+                    <div class="code-line highlight"><span class="code-keyword">        return</span> <span class="code-variable">$this</span>-><span class="code-function">belongsTo</span>(<span class="code-variable">User</span>::<span class="code-keyword">class</span>, <span class="code-string">'employee_id'</span>);</div>
+                    <div class="code-line highlight"><span class="code-keyword">    }</span></div>
+                    <div class="code-line highlight"><span class="code-comment">    // Line 59-62: Helper method to check status</span></div>
+                    <div class="code-line highlight"><span class="code-keyword">    public function</span> <span class="code-function">isPending</span>(): <span class="code-keyword">bool</span></div>
+                    <div class="code-line highlight"><span class="code-keyword">    {</span></div>
+                    <div class="code-line highlight"><span class="code-keyword">        return</span> <span class="code-variable">$this</span>-><span class="code-variable">status</span> === <span class="code-string">'pending'</span>;</div>
+                    <div class="code-line highlight"><span class="code-keyword">    }</span></div>
+                </div>
+
+                <div class="explanation">
+                    <h4>How Models Work in Controllers:</h4>
+                    <p><strong>Creating Records:</strong> <code>LeaveRequest::create([...])</code> - Inserts new row into database</p>
+                    <p><strong>Querying:</strong> <code>$user->leaveRequests()->get()</code> - Uses relationship to query related records</p>
+                    <strong>Type Casting:</strong> <code>'start_date' => 'date'</code> automatically converts string to Carbon date object</p>
+                    <p><strong>Relationships:</strong> Allow easy access to related data without writing SQL joins</p>
+                </div>
+
+                <div class="highlight-box">
+                    <h3>🔄 Model Relationships Explained</h3>
+                    <p><strong>hasMany:</strong> One User has many Requests</p>
+                    <p><strong>Usage:</strong> <code>$user->leaveRequests()</code> returns query builder for all user's requests</p>
+                    <p><strong>belongsTo:</strong> One Request belongs to one User</p>
+                    <p><strong>Usage:</strong> <code>$request->employee</code> returns the User who made the request</p>
+                </div>
+            </div>
+
+            <!-- Blade Section -->
+            <div id="blade" class="section">
+                <h2>🎨 Blade Files - The View Layer</h2>
+                
+                <div class="anatomy-box">
+                    <h3>Anatomy of a Blade File</h3>
+                    <div class="anatomy-item">
+                        <strong>Blade Directives:</strong> @if, @foreach, @auth, etc.
+                        <br><small>Special syntax that compiles to PHP</small>
+                    </div>
+                    <div class="anatomy-item">
+                        <strong>Variables:</strong> {{ $variable }}
+                        <br><small>Outputs data passed from controller (auto-escaped)</small>
+                    </div>
+                    <div class="anatomy-item">
+                        <strong>Raw PHP:</strong> {!! $html !!}
+                        <br><small>Outputs without escaping (use carefully!)</small>
+                    </div>
+                    <div class="anatomy-item">
+                        <strong>Components:</strong> &lt;x-component-name /&gt;
+                        <br><small>Reusable UI pieces</small>
+                    </div>
+                    <div class="anatomy-item">
+                        <strong>Forms:</strong> route() helper generates URLs
+                        <br><small>Creates form actions pointing to routes</small>
+                    </div>
+                </div>
+
+                <h3>Real Example: employee/dashboard.blade.php</h3>
+                <div class="code-block">
+                    <h3>resources/views/employee/dashboard.blade.php</h3>
+                    <div class="code-line highlight"><span class="code-comment">// Line 1: Use layout component</span></div>
+                    <div class="code-line highlight"><span class="code-string">&lt;x-layout&gt;</span></div>
+                    <div class="code-line highlight"><span class="code-comment">    // Line 9: Access $user variable passed from controller</span></div>
+                    <div class="code-line highlight">    <span class="code-string">&lt;span&gt;</span>{{ <span class="code-variable">$user</span>-><span class="code-function">name</span> }}<span class="code-string">&lt;/span&gt;</span></div>
+                    <div class="code-line highlight"><span class="code-comment">    // Line 11-12: Form action uses route() helper</span></div>
+                    <div class="code-line highlight">    <span class="code-string">&lt;form action="{{ route('logout') }}" method="POST"&gt;</span></div>
+                    <div class="code-line highlight">        <span class="code-string">@csrf</span></div>
+                    <div class="code-line highlight"><span class="code-comment">    // Line 25-28: Display session flash message</span></div>
+                    <div class="code-line highlight">    <span class="code-string">@if</span>(<span class="code-function">session</span>(<span class="code-string">'success'</span>))</div>
+                    <div class="code-line highlight">        <span class="code-string">&lt;div class="alert alert-success"&gt;</span></div>
+                    <div class="code-line highlight">            <span class="code-string">&lt;span&gt;</span>{{ <span class="code-function">session</span>(<span class="code-string">'success'</span>) }}<span class="code-string">&lt;/span&gt;</span></div>
+                    <div class="code-line highlight">        <span class="code-string">&lt;/div&gt;</span></div>
+                    <div class="code-line highlight">    <span class="code-string">@endif</span></div>
+                    <div class="code-line highlight"><span class="code-comment">    // Line 46-50: Loop through $balances from controller</span></div>
+                    <div class="code-line highlight">    <span class="code-string">@forelse</span>(<span class="code-variable">$balances</span> <span class="code-keyword">as</span> <span class="code-variable">$balance</span>)</div>
+                    <div class="code-line highlight">        <span class="code-string">&lt;x-balance-card :balance="$balance" /&gt;</span></div>
+                    <div class="code-line highlight">    <span class="code-string">@empty</span></div>
+                    <div class="code-line highlight">        <span class="code-string">&lt;p&gt;</span>No leave balances found.<span class="code-string">&lt;/p&gt;</span></div>
+                    <div class="code-line highlight">    <span class="code-string">@endforelse</span></div>
+                    <div class="code-line highlight"><span class="code-comment">    // Line 64: Form submits to route defined in routes/employee.php</span></div>
+                    <div class="code-line highlight">    <span class="code-string">&lt;form action="{{ route('employee.store-request') }}" method="POST"&gt;</span></div>
+                    <div class="code-line highlight">        <span class="code-string">@csrf</span></div>
+                    <div class="code-line highlight"><span class="code-comment">    // Line 73-79: Loop through balances in select dropdown</span></div>
+                    <div class="code-line highlight">        <span class="code-string">@foreach</span>(<span class="code-variable">$balances</span> <span class="code-keyword">as</span> <span class="code-variable">$balance</span>)</div>
+                    <div class="code-line highlight">            <span class="code-string">@if</span>(<span class="code-variable">$balance</span>-><span class="code-function">getAvailableBalance</span>() > 0)</div>
+                    <div class="code-line highlight">                <span class="code-string">&lt;option value="{{ $balance->leave_type }}"&gt;</span></div>
+                    <div class="code-line highlight">                    {{ <span class="code-variable">$balance</span>-><span class="code-variable">leave_type</span> }} ({{ <span class="code-function">number_format</span>(<span class="code-variable">$balance</span>-><span class="code-function">getAvailableBalance</span>(), 1) }} days)</div>
+                    <div class="code-line highlight">                <span class="code-string">&lt;/option&gt;</span></div>
+                    <div class="code-line highlight">            <span class="code-string">@endif</span></div>
+                    <div class="code-line highlight">        <span class="code-string">@endforeach</span></div>
+                    <div class="code-line highlight"><span class="code-comment">    // Line 174-197: Display $requests from controller</span></div>
+                    <div class="code-line highlight">        <span class="code-string">@forelse</span>(<span class="code-variable">$requests</span> <span class="code-keyword">as</span> <span class="code-variable">$request</span>)</div>
+                    <div class="code-line highlight">            <span class="code-string">&lt;tr&gt;</span></div>
+                    <div class="code-line highlight">                <span class="code-string">&lt;td&gt;</span>{{ <span class="code-variable">$request</span>-><span class="code-variable">leave_type</span> }}<span class="code-string">&lt;/td&gt;</span></div>
+                    <div class="code-line highlight">                <span class="code-string">&lt;td&gt;</span>{{ <span class="code-variable">$request</span>-><span class="code-variable">start_date</span>-><span class="code-function">format</span>(<span class="code-string">'M d, Y'</span>) }}<span class="code-string">&lt;/td&gt;</span></div>
+                    <div class="code-line highlight">                <span class="code-string">&lt;td&gt;</span>{{ <span class="code-variable">$request</span>-><span class="code-variable">number_of_days</span> }}<span class="code-string">&lt;/td&gt;</span></div>
+                    <div class="code-line highlight">            <span class="code-string">&lt;/tr&gt;</span></div>
+                    <div class="code-line highlight">        <span class="code-string">@endforelse</span></div>
+                    <div class="code-line highlight"><span class="code-string">&lt;/x-layout&gt;</span></div>
+                </div>
+
+                <div class="explanation">
+                    <h4>Line-by-Line Breakdown:</h4>
+                    <p><strong>Line 1:</strong> <code>&lt;x-layout&gt;</code> - Uses Blade component (reusable layout)</p>
+                    <p><strong>Line 9:</strong> <code>{{ $user->name }}</code> - Outputs user's name (passed from controller via <code>compact('user')</code>)</p>
+                    <p><strong>Line 11:</strong> <code>route('logout')</code> - Generates URL from route name (finds route in routes files)</p>
+                    <p><strong>Line 12:</strong> <code>@csrf</code> - Generates CSRF token (required for POST requests)</p>
+                    <p><strong>Line 25:</strong> <code>session('success')</code> - Gets flash message set by controller's <code>with('success', ...)</code></p>
+                    <p><strong>Line 46:</strong> <code>@forelse($balances as $balance)</code> - Loops through array passed from controller</p>
+                    <p><strong>Line 64:</strong> <code>route('employee.store-request')</code> - Points to POST route in routes/employee.php</p>
+                    <p><strong>Line 177:</strong> <code>$request->start_date->format()</code> - Uses Carbon date (cast by Model) to format</p>
+                </div>
+
+                <div class="highlight-box">
+                    <h3>🔄 How Data Flows from Controller to Blade</h3>
+                    <p><strong>Controller:</strong> <code>return view('employee.dashboard', compact('balances', 'requests', 'user'));</code></p>
+                    <p><strong>What compact() does:</strong> Creates array: <code>['balances' => $balances, 'requests' => $requests, 'user' => $user]</code></p>
+                    <p><strong>Blade receives:</strong> All variables become available as <code>$balances</code>, <code>$requests</code>, <code>$user</code></p>
+                    <p><strong>Blade uses:</strong> <code>{{ $user->name }}</code>, <code>@foreach($balances as $balance)</code>, etc.</p>
+                </div>
+            </div>
+
+            <!-- Side-by-Side Comparison -->
+            <div id="comparison" class="section">
+                <h2>⚖️ Side-by-Side Complete Flow Comparison</h2>
+                <div class="workbench">
+                    <div class="scenario-bar">
+                        <div class="scenario-left">
+                            <span style="font-weight:900;">Pick a scenario</span>
+                            <button class="chip active" data-scenario="submit" type="button">Submit request (POST)</button>
+                            <button class="chip" data-scenario="dashboard" type="button">Load dashboard (GET)</button>
+                            <button class="chip" data-scenario="cancel" type="button">Cancel request (PATCH)</button>
+                        </div>
+                        <div class="scenario-right">
+                            <span class="hint">Tip: click a line to link + explain</span>
+                            <span class="kbd">Esc</span>
+                            <span class="hint">clears</span>
+                        </div>
+                    </div>
+
+                    <div class="inspector" id="inspector">
+                        <h3>Inspector</h3>
+                        <div class="hint" id="inspectorHint">Click any highlighted line in the panes below to see: (1) what it does, (2) where it’s used in the other files, (3) how data moves.</div>
+                        <div class="callout" id="inspectorBody" style="display:none;"></div>
+                    </div>
+
+                    <div class="pane-grid" id="paneGrid">
+                        <!-- ROUTE -->
+                        <div class="pane" data-scenarios="submit dashboard cancel">
+                            <div class="pane-header">
+                                <div class="pane-title">Route (Entry point)</div>
+                                <div class="pane-sub">routes/employee.php</div>
+                            </div>
+                            <div class="pane-body">
+                                <div class="code-scroll sync-scroll">
+                                    <div class="code-block">
+                                        <div class="code-line" data-link="mw-auth-role"><span class="code-keyword">Route::</span><span class="code-function">middleware</span>([<span class="code-string">'auth'</span>, <span class="code-string">'role:employee'</span>])</div>
+                                        <div class="code-line"><span class="code-comment">// dashboard (GET)</span></div>
+                                        <div class="code-line" data-link="route-dashboard"><span class="code-keyword">Route::</span><span class="code-function">get</span>(<span class="code-string">'/employee/dashboard'</span>, [<span class="code-variable">EmployeeController</span>::<span class="code-keyword">class</span>, <span class="code-string">'dashboard'</span>])-><span class="code-function">name</span>(<span class="code-string">'employee.dashboard'</span>);</div>
+                                        <div class="code-line"><span class="code-comment">// submit request (POST)</span></div>
+                                        <div class="code-line" data-link="route-submit"><span class="code-keyword">Route::</span><span class="code-function">post</span>(<span class="code-string">'/employee/request'</span>, [<span class="code-variable">EmployeeController</span>::<span class="code-keyword">class</span>, <span class="code-string">'storeRequest'</span>])-><span class="code-function">name</span>(<span class="code-string">'employee.store-request'</span>);</div>
+                                        <div class="code-line"><span class="code-comment">// cancel request (PATCH)</span></div>
+                                        <div class="code-line" data-link="route-cancel"><span class="code-keyword">Route::</span><span class="code-function">patch</span>(<span class="code-string">'/request/{id}/cancel'</span>, [<span class="code-variable">EmployeeController</span>::<span class="code-keyword">class</span>, <span class="code-string">'cancelRequest'</span>])-><span class="code-function">name</span>(<span class="code-string">'request.cancel'</span>);</div>
+                                    </div>
+                                </div>
+                                <div class="pane-anatomy">
+                                    <details>
+                                        <summary>Route anatomy (what you’re seeing)</summary>
+                                        <ul>
+                                            <li><code>HTTP method</code>: GET/POST/PATCH decides when this route matches.</li>
+                                            <li><code>URI</code>: the URL path pattern (example: <code>/request/{id}/cancel</code>).</li>
+                                            <li><code>Action</code>: <code>[Controller::class, 'method']</code> tells Laravel what to execute.</li>
+                                            <li><code>Name</code>: <code>->name('...')</code> lets Blade use <code>route('...')</code> safely.</li>
+                                            <li><code>Middleware</code>: filters that run BEFORE the controller.</li>
+                                        </ul>
+                                    </details>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- CONTROLLER -->
+                        <div class="pane" data-scenarios="submit dashboard cancel">
+                            <div class="pane-header">
+                                <div class="pane-title">Controller (Business logic)</div>
+                                <div class="pane-sub">app/Http/Controllers/EmployeeController.php</div>
+                            </div>
+                            <div class="pane-body">
+                                <div class="code-scroll sync-scroll">
+                                    <div class="code-block">
+                                        <div class="code-line"><span class="code-comment">// dashboard()</span></div>
+                                        <div class="code-line" data-link="ctl-dashboard"><span class="code-keyword">public function</span> <span class="code-function">dashboard</span>()</div>
+                                        <div class="code-line" data-link="auth-user"><span class="code-variable">$user</span> = <span class="code-variable">Auth::</span><span class="code-function">user</span>();</div>
+                                        <div class="code-line" data-link="rel-balances"><span class="code-variable">$balances</span> = <span class="code-variable">$user</span>-><span class="code-function">leaveBalances</span>()</div>
+                                        <div class="code-line" data-link="rel-requests"><span class="code-variable">$requests</span> = <span class="code-variable">$user</span>-><span class="code-function">leaveRequests</span>()</div>
+                                        <div class="code-line" data-link="return-view"><span class="code-keyword">return</span> <span class="code-function">view</span>(<span class="code-string">'employee.dashboard'</span>, <span class="code-function">compact</span>(<span class="code-string">'balances'</span>, <span class="code-string">'requests'</span>, <span class="code-string">'user'</span>));</div>
+
+                                        <div class="code-line"><br></div>
+                                        <div class="code-line"><span class="code-comment">// storeRequest(Request $request)</span></div>
+                                        <div class="code-line" data-link="ctl-submit"><span class="code-keyword">public function</span> <span class="code-function">storeRequest</span>(<span class="code-variable">Request</span> <span class="code-variable">$request</span>)</div>
+                                        <div class="code-line" data-link="validate"><span class="code-variable">$validated</span> = <span class="code-variable">$request</span>-><span class="code-function">validate</span>([ ... ]);</div>
+                                        <div class="code-line" data-link="balance-check"><span class="code-variable">$balance</span> = <span class="code-variable">$user</span>-><span class="code-function">getLeaveBalance</span>(...);</div>
+                                        <div class="code-line" data-link="model-create"><span class="code-variable">LeaveRequest::</span><span class="code-function">create</span>([ ... ]);</div>
+                                        <div class="code-line" data-link="redirect-success"><span class="code-keyword">return</span> <span class="code-function">redirect</span>()-><span class="code-function">route</span>(<span class="code-string">'employee.dashboard'</span>)-><span class="code-function">with</span>(<span class="code-string">'success'</span>, <span class="code-string">'...'</span>);</div>
+
+                                        <div class="code-line"><br></div>
+                                        <div class="code-line"><span class="code-comment">// cancelRequest($id)</span></div>
+                                        <div class="code-line" data-link="ctl-cancel"><span class="code-keyword">public function</span> <span class="code-function">cancelRequest</span>(<span class="code-variable">$id</span>)</div>
+                                        <div class="code-line" data-link="findorfail"><span class="code-variable">$leaveRequest</span> = <span class="code-variable">LeaveRequest::</span><span class="code-function">findOrFail</span>(<span class="code-variable">$id</span>);</div>
+                                        <div class="code-line" data-link="authz"><span class="code-keyword">if</span> (<span class="code-variable">$leaveRequest</span>-><span class="code-variable">employee_id</span> !== <span class="code-variable">$user</span>-><span class="code-variable">id</span>) { <span class="code-function">abort</span>(<span class="code-string">403</span>); }</div>
+                                        <div class="code-line" data-link="pending-check"><span class="code-keyword">if</span> (!<span class="code-variable">$leaveRequest</span>-><span class="code-function">isPending</span>()) { <span class="code-keyword">return</span> <span class="code-function">back</span>(); }</div>
+                                        <div class="code-line" data-link="delete"><span class="code-variable">$leaveRequest</span>-><span class="code-function">delete</span>();</div>
+                                    </div>
+                                </div>
+                                <div class="pane-anatomy">
+                                    <details>
+                                        <summary>Controller anatomy (what you’re seeing)</summary>
+                                        <ul>
+                                            <li><code>Inputs</code>: the HTTP request (often <code>Request $request</code>) + route params (like <code>$id</code>).</li>
+                                            <li><code>Auth</code>: grab the current user (ex: <code>Auth::user()</code>).</li>
+                                            <li><code>Validation</code>: convert untrusted input → trusted <code>$validated</code> data.</li>
+                                            <li><code>Business logic</code>: calculations + permission checks.</li>
+                                            <li><code>Output</code>: <code>view(...)</code> or <code>redirect()->route(...)</code>.</li>
+                                        </ul>
+                                    </details>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- MODEL -->
+                        <div class="pane" data-scenarios="submit dashboard cancel">
+                            <div class="pane-header">
+                                <div class="pane-title">Model (Database rules)</div>
+                                <div class="pane-sub">app/Models/User.php + app/Models/Request.php</div>
+                            </div>
+                            <div class="pane-body">
+                                <div class="code-scroll sync-scroll">
+                                    <div class="code-block">
+                                        <div class="code-line"><span class="code-comment">// User relationships</span></div>
+                                        <div class="code-line" data-link="rel-balances"><span class="code-keyword">public function</span> <span class="code-function">leaveBalances</span>() { <span class="code-keyword">return</span> <span class="code-variable">$this</span>-><span class="code-function">hasMany</span>(<span class="code-variable">Balance</span>::<span class="code-keyword">class</span>); }</div>
+                                        <div class="code-line" data-link="rel-requests"><span class="code-keyword">public function</span> <span class="code-function">leaveRequests</span>() { <span class="code-keyword">return</span> <span class="code-variable">$this</span>-><span class="code-function">hasMany</span>(<span class="code-variable">Request</span>::<span class="code-keyword">class</span>, <span class="code-string">'employee_id'</span>); }</div>
+                                        <div class="code-line" data-link="balance-check"><span class="code-keyword">public function</span> <span class="code-function">getLeaveBalance</span>(...) { <span class="code-keyword">return</span> <span class="code-variable">$this</span>-><span class="code-function">leaveBalances</span>()-><span class="code-function">where</span>(...)-><span class="code-function">first</span>(); }</div>
+
+                                        <div class="code-line"><br></div>
+                                        <div class="code-line"><span class="code-comment">// Request model “rules”</span></div>
+                                        <div class="code-line" data-link="fillable"><span class="code-keyword">protected</span> <span class="code-variable">$fillable</span> = [ <span class="code-string">'employee_id'</span>, <span class="code-string">'leave_type'</span>, <span class="code-string">'start_date'</span>, <span class="code-string">'end_date'</span>, ... ];</div>
+                                        <div class="code-line" data-link="casts"><span class="code-keyword">protected function</span> <span class="code-function">casts</span>(): <span class="code-keyword">array</span> { <span class="code-keyword">return</span> [ <span class="code-string">'start_date'</span> =&gt; <span class="code-string">'date'</span>, <span class="code-string">'end_date'</span> =&gt; <span class="code-string">'date'</span> ]; }</div>
+                                        <div class="code-line" data-link="pending-check"><span class="code-keyword">public function</span> <span class="code-function">isPending</span>(): <span class="code-keyword">bool</span> { <span class="code-keyword">return</span> <span class="code-variable">$this</span>-><span class="code-variable">status</span> === <span class="code-string">'pending'</span>; }</div>
+                                        <div class="code-line" data-link="model-create"><span class="code-variable">Request::</span><span class="code-function">create</span>(...) <span class="code-comment">// allowed ONLY because fields are in $fillable</span></div>
+                                    </div>
+                                </div>
+                                <div class="pane-anatomy">
+                                    <details>
+                                        <summary>Model anatomy (what you’re seeing)</summary>
+                                        <ul>
+                                            <li><code>Relationships</code>: <code>hasMany</code>/<code>belongsTo</code> describe table links and unlock chained queries.</li>
+                                            <li><code>$fillable</code>: mass-assignment allowlist (security for <code>create()</code> / <code>update()</code>).</li>
+                                            <li><code>casts</code>: automatic type conversion (dates → Carbon).</li>
+                                            <li><code>Methods</code>: reusable DB/business helpers (ex: <code>getLeaveBalance()</code>).</li>
+                                        </ul>
+                                    </details>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- BLADE -->
+                        <div class="pane" data-scenarios="submit dashboard cancel">
+                            <div class="pane-header">
+                                <div class="pane-title">Blade (UI that triggers routes)</div>
+                                <div class="pane-sub">resources/views/employee/dashboard.blade.php</div>
+                            </div>
+                            <div class="pane-body">
+                                <div class="code-scroll sync-scroll">
+                                    <div class="code-block">
+                                        <div class="code-line" data-link="blade-form"><span class="code-string">&lt;form action=\"{{ route('employee.store-request') }}\" method=\"POST\"&gt;</span></div>
+                                        <div class="code-line" data-link="csrf"><span class="code-string">@csrf</span> <span class="code-comment">// anti-CSRF token for POST</span></div>
+                                        <div class="code-line" data-link="blade-submit"><span class="code-string">&lt;button type=\"submit\"&gt;</span>Submit Request<span class="code-string">&lt;/button&gt;</span></div>
+
+                                        <div class="code-line"><br></div>
+                                        <div class="code-line" data-link="flash-success"><span class="code-string">@if</span>(<span class="code-function">session</span>(<span class="code-string">'success'</span>)) ... <span class="code-string">@endif</span></div>
+                                        <div class="code-line" data-link="uses-data"><span class="code-string">@forelse</span>(<span class="code-variable">$requests</span> <span class="code-keyword">as</span> <span class="code-variable">$request</span>)</div>
+                                        <div class="code-line" data-link="casts"><span class="code-string">{{</span> <span class="code-variable">$request</span>-><span class="code-variable">start_date</span>-><span class="code-function">format</span>(<span class="code-string">'M d, Y'</span>) <span class="code-string">}}</span> <span class="code-comment">// works because model casts to date</span></div>
+
+                                        <div class="code-line"><br></div>
+                                        <div class="code-line" data-link="blade-cancel-form"><span class="code-string">&lt;form action=\"{{ route('request.cancel', $request-&gt;id) }}\" method=\"POST\"&gt;</span></div>
+                                        <div class="code-line" data-link="blade-method"><span class="code-string">@method('PATCH')</span> <span class="code-comment">// spoof PATCH over POST</span></div>
+                                        <div class="code-line" data-link="pending-check"><span class="code-string">@if</span>(<span class="code-variable">$request</span>-><span class="code-function">isPending</span>()) ... <span class="code-string">@endif</span></div>
+                                    </div>
+                                </div>
+                                <div class="pane-anatomy">
+                                    <details>
+                                        <summary>Blade anatomy (what you’re seeing)</summary>
+                                        <ul>
+                                            <li><code>{{ ... }}</code>: echo output (escaped by default).</li>
+                                            <li><code>@if/@foreach</code>: control flow that compiles into PHP.</li>
+                                            <li><code>route('name')</code>: generate URLs using route names (safer than hard-coded paths).</li>
+                                            <li><code>@csrf</code>: required token for POST/PATCH/DELETE.</li>
+                                            <li><code>@method('PATCH')</code>: method spoofing (HTML forms only support GET/POST).</li>
+                                        </ul>
+                                    </details>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="highlight-box">
+                        <h3>How to “read” this comparison (the concept)</h3>
+                        <p><strong>Routes</strong> answer: “When URL + HTTP method matches, which controller method runs?”</p>
+                        <p><strong>Controller</strong> answers: “What should we do with this request?” (validate, auth, call models, return response)</p>
+                        <p><strong>Model</strong> answers: “How do we talk to the database safely and consistently?” (rules like <code>$fillable</code>, <code>casts</code>, relationships)</p>
+                        <p><strong>Blade</strong> answers: “What HTML do we show, and which routes do the forms/links call?”</p>
+                    </div>
+                </div>
+
+                <div class="highlight-box" style="margin-top: 30px;">
+                    <h3>📋 Complete Data Flow Summary</h3>
+                    <div class="flow-step">
+                        <h4>Step 1: User Interaction (Blade)</h4>
+                        <p>User fills form → Clicks submit → Browser sends POST request</p>
+                        <p><strong>Data:</strong> Form fields (leave_type, start_date, end_date, reason)</p>
+                    </div>
+                    <div class="flow-step">
+                        <h4>Step 2: Route Matching</h4>
+                        <p>Laravel receives POST /employee/request → Finds matching route → Checks middleware</p>
+                        <p><strong>Action:</strong> Routes to EmployeeController@storeRequest</p>
+                    </div>
+                    <div class="flow-step">
+                        <h4>Step 3: Controller Processing</h4>
+                        <p>Validates input → Uses Model to check balance → Uses Model to create record</p>
+                        <p><strong>Data Flow:</strong> $request (form data) → $validated → Model::create()</p>
+                    </div>
+                    <div class="flow-step">
+                        <h4>Step 4: Model Database Operation</h4>
+                        <p>Model receives data → Checks $fillable → Converts types → Executes SQL INSERT</p>
+                        <p><strong>Result:</strong> New row in 'requests' table</p>
+                    </div>
+                    <div class="flow-step">
+                        <h4>Step 5: Response Back to User</h4>
+                        <p>Controller redirects → Route calls dashboard → Controller queries Models → Returns view</p>
+                        <p><strong>Data:</strong> $balances, $requests, $user passed to Blade</p>
+                    </div>
+                    <div class="flow-step">
+                        <h4>Step 6: Blade Rendering</h4>
+                        <p>Blade receives variables → Loops through data → Displays HTML</p>
+                        <p><strong>Output:</strong> User sees success message and updated request list</p>
+                    </div>
+                </div>
+
+                <div class="anatomy-box" style="margin-top: 30px;">
+                    <h3>🔗 Where Each Concept is Used</h3>
+                    <div class="anatomy-item">
+                        <strong>ROUTES:</strong> 
+                        <ul style="margin-left: 20px; margin-top: 10px;">
+                            <li>Defined in: routes/employee.php, routes/web.php</li>
+                            <li>Referenced in Blade: <code>route('employee.dashboard')</code></li>
+                            <li>Called by: Laravel router when URL matches</li>
+                            <li>Calls: Controller methods</li>
+                        </ul>
+                    </div>
+                    <div class="anatomy-item">
+                        <strong>CONTROLLERS:</strong>
+                        <ul style="margin-left: 20px; margin-top: 10px;">
+                            <li>Defined in: app/Http/Controllers/</li>
+                            <li>Called by: Routes</li>
+                            <li>Uses: Models to query database</li>
+                            <li>Returns: Views (Blade files) with data</li>
+                        </ul>
+                    </div>
+                    <div class="anatomy-item">
+                        <strong>MODELS:</strong>
+                        <ul style="margin-left: 20px; margin-top: 10px;">
+                            <li>Defined in: app/Models/</li>
+                            <li>Used by: Controllers</li>
+                            <li>Interacts with: Database tables</li>
+                            <li>Provides: Relationships, methods, type casting</li>
+                        </ul>
+                    </div>
+                    <div class="anatomy-item">
+                        <strong>BLADE FILES:</strong>
+                        <ul style="margin-left: 20px; margin-top: 10px;">
+                            <li>Defined in: resources/views/</li>
+                            <li>Rendered by: Controllers via view() helper</li>
+                            <li>Receives: Variables from controllers</li>
+                            <li>Generates: HTML sent to browser</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const LINK_EXPLANATIONS = {
+            "mw-auth-role": "<strong>Middleware</strong>: runs BEFORE the controller. <code>auth</code> checks the session (logged in). <code>role:employee</code> checks your user role. If either fails, the controller never runs.",
+            "route-dashboard": "<strong>Route (GET)</strong>: when the browser requests the dashboard URL, Laravel calls <code>EmployeeController@dashboard</code>.",
+            "route-submit": "<strong>Route (POST)</strong>: when the form submits, Laravel calls <code>EmployeeController@storeRequest</code> and passes the HTTP request data via the <code>Request $request</code> object.",
+            "route-cancel": "<strong>Route (PATCH)</strong>: when you cancel, Laravel calls <code>EmployeeController@cancelRequest($id)</code>. <code>{id}</code> is captured from the URL and becomes the method parameter.",
+            "auth-user": "<strong>Auth::user()</strong>: fetches the currently logged-in user from the session. That user object is your starting point for relationships (requests, balances).",
+            "rel-balances": "<strong>Relationship</strong>: <code>$user->leaveBalances()</code> builds a query for balances tied to that user. This is how controllers read related rows without writing SQL joins.",
+            "rel-requests": "<strong>Relationship</strong>: <code>$user->leaveRequests()</code> builds a query for that user’s requests (foreign key <code>employee_id</code> in the requests table).",
+            "return-view": "<strong>Return view</strong>: picks a Blade file by name (<code>employee.dashboard</code>) and sends variables to it (<code>balances</code>, <code>requests</code>, <code>user</code>).",
+            "ctl-submit": "<strong>Controller method</strong>: controllers are “traffic controllers” — they receive HTTP input, validate it, call models, then return a response (view/redirect).",
+            "validate": "<strong>Validation</strong>: turns raw user input into trusted data. If validation fails, Laravel redirects back and fills <code>$errors</code> automatically for Blade.",
+            "balance-check": "<strong>Model method call</strong>: <code>getLeaveBalance()</code> lives on the User model. Controllers should prefer calling model methods/relationships instead of embedding SQL logic everywhere.",
+            "model-create": "<strong>Create row</strong>: <code>Request::create(...)</code> inserts into DB using Eloquent. It only works for attributes listed in <code>$fillable</code> (security).",
+            "fillable": "<strong>$fillable</strong>: the “allowed list” for mass assignment. Without this, <code>create()</code> could be used to set fields you didn’t intend (security issue).",
+            "casts": "<strong>Casts</strong>: <code>'start_date' => 'date'</code> means the attribute becomes a Carbon date object. That’s why Blade can do <code>$request->start_date->format(...)</code>.",
+            "redirect-success": "<strong>Redirect + flash</strong>: after storing, controller redirects to dashboard and flashes <code>success</code> to session (available for one request).",
+            "flash-success": "<strong>Flash message</strong>: Blade reads <code>session('success')</code>. That value was set by controller via <code>->with('success', ...)</code>.",
+            "csrf": "<strong>@csrf</strong>: adds a hidden token. Laravel rejects POST/PATCH/DELETE requests without a valid token to prevent cross-site request forgery.",
+            "blade-form": "<strong>Blade → Route name</strong>: <code>route('employee.store-request')</code> converts a route name into a URL. This decouples Blade from hard-coded URLs.",
+            "blade-method": "<strong>@method('PATCH')</strong>: HTML forms only support GET/POST. Laravel uses method spoofing to treat it as PATCH.",
+            "pending-check": "<strong>Status rule</strong>: controller and Blade both check “pending”. Blade hides the cancel button; controller enforces it for security (never trust UI alone).",
+            "findorfail": "<strong>findOrFail</strong>: fetches one row by ID; if not found, Laravel automatically throws a 404 response.",
+            "authz": "<strong>Authorization</strong>: checks ownership (the request belongs to the logged-in user). If not, abort with 403.",
+            "delete": "<strong>Delete</strong>: removes the record from DB. In a real system you might do soft deletes instead.",
+            "uses-data": "<strong>Data arrives in Blade</strong>: <code>$requests</code> exists because controller passed it in <code>view(..., compact(...))</code>."
+        };
+
+        function setSection(sectionId){
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById(sectionId)?.classList.add('active');
+        }
+
+        function setActiveTab(tabEl){
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            tabEl.classList.add('active');
+        }
+
+        function clearLinked(){
+            document.querySelectorAll('.code-line.linked').forEach(l => l.classList.remove('linked'));
+            const hint = document.getElementById('inspectorHint');
+            const body = document.getElementById('inspectorBody');
+            if (hint) hint.style.display = 'block';
+            if (body) body.style.display = 'none';
+        }
+
+        function showExplanation(linkKey){
+            const hint = document.getElementById('inspectorHint');
+            const body = document.getElementById('inspectorBody');
+            if (!body || !hint) return;
+            const html = LINK_EXPLANATIONS[linkKey] ?? "<strong>No explanation yet</strong>: this line is not mapped, but you can still use it as a reference.";
+            body.innerHTML = `<strong>Linked concept:</strong> <code>${linkKey}</code><br><br>${html}`;
+            hint.style.display = 'none';
+            body.style.display = 'block';
+        }
+
+        function highlightLinked(linkKey){
+            clearLinked();
+            document.querySelectorAll(`.code-line[data-link="${linkKey}"]`).forEach(l => l.classList.add('linked'));
+            showExplanation(linkKey);
+        }
+
+        function applyScenario(scenario){
+            document.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.dataset.scenario === scenario));
+            // (All panes contain all scenarios; scenario mainly sets teaching context + search focus)
+            const inspector = document.getElementById('inspector');
+            if (inspector){
+                const map = {
+                    submit: "Scenario focus: <strong>submit request</strong> (Blade form → POST route → storeRequest → Model::create → redirect → flash success).",
+                    dashboard: "Scenario focus: <strong>load dashboard</strong> (GET route → dashboard() → relationships → view → Blade loops).",
+                    cancel: "Scenario focus: <strong>cancel request</strong> (PATCH route → cancelRequest → findOrFail → authorization → isPending → delete)."
+                };
+                const hint = document.getElementById('inspectorHint');
+                if (hint) hint.innerHTML = `Click any highlighted line in the panes below to see: (1) what it does, (2) where it’s used in the other files, (3) how data moves.<br><br>${map[scenario] ?? ""}`;
+            }
+            clearLinked();
+        }
+
+        function applySearch(query){
+            const q = query.trim().toLowerCase();
+            document.querySelectorAll('.code-line').forEach(l => {
+                if (!q){
+                    l.classList.remove('highlight');
+                    return;
+                }
+                const text = l.textContent.toLowerCase();
+                if (text.includes(q)) l.classList.add('highlight');
+                else l.classList.remove('highlight');
+            });
+        }
+
+        function initTabs(){
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const id = tab.dataset.section;
+                    if (!id) return;
+                    setSection(id);
+                    setActiveTab(tab);
+                    clearLinked();
+                });
+            });
+        }
+
+        function initLinkedLines(){
+            document.querySelectorAll('.code-line').forEach(line => {
+                line.addEventListener('click', () => {
+                    const key = line.dataset.link;
+                    if (key){
+                        highlightLinked(key);
+                        return;
+                    }
+                    line.classList.toggle('highlight');
+                });
+            });
+        }
+
+        function initScenarioChips(){
+            document.querySelectorAll('.chip').forEach(chip => {
+                chip.addEventListener('click', () => applyScenario(chip.dataset.scenario || 'submit'));
+            });
+        }
+
+        function initTheme(){
+            const root = document.getElementById('appRoot');
+            const btn = document.getElementById('themeToggle');
+            const saved = localStorage.getItem('studyGuideTheme');
+            const setBtnLabel = () => {
+                if (!btn || !root) return;
+                const isDark = root.getAttribute('data-theme') === 'dark';
+                btn.textContent = isDark ? 'Light mode' : 'Dark mode';
+            };
+            if (saved === 'dark' && root) root.setAttribute('data-theme', 'dark');
+            setBtnLabel();
+            if (btn){
+                btn.addEventListener('click', () => {
+                    const isDark = root?.getAttribute('data-theme') === 'dark';
+                    if (isDark) root?.removeAttribute('data-theme');
+                    else root?.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('studyGuideTheme', isDark ? 'light' : 'dark');
+                    setBtnLabel();
+                });
+            }
+        }
+
+        function initSearch(){
+            const input = document.getElementById('globalSearch');
+            if (!input) return;
+            input.addEventListener('input', () => applySearch(input.value));
+        }
+
+        function initHotkeys(){
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') clearLinked();
+            });
+        }
+
+        function initScrollSync(){
+            const scrollers = Array.from(document.querySelectorAll('.sync-scroll'));
+            let lock = false;
+            scrollers.forEach(s => {
+                s.addEventListener('scroll', () => {
+                    if (lock) return;
+                    lock = true;
+                    const top = s.scrollTop;
+                    scrollers.forEach(o => { if (o !== s) o.scrollTop = top; });
+                    lock = false;
+                });
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initTabs();
+            initLinkedLines();
+            initScenarioChips();
+            initTheme();
+            initSearch();
+            initHotkeys();
+            initScrollSync();
+            applyScenario('submit');
+        });
+    </script>
+</body>
+</html>
