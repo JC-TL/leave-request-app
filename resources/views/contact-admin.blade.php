@@ -7,7 +7,7 @@
     <div class="card bg-base-100 shadow-sm border border-base-300">
         <div class="card-body p-6">
             <div class="flex items-center justify-between mb-6">
-                <h2 class="text-3xl font-semibold">Contact Admin</h2>
+                <h2 class="text-3xl text-[#1C96E1] font-semibold">Contact Admin</h2>
                 <a href="{{ route('login') }}" class="btn btn-sm btn-ghost">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -15,7 +15,7 @@
                 </a>
             </div>
             
-            <p class="text-base-content/70 mb-6">Having trouble signing in? Please submit a ticket below and our admin team will assist you.</p>
+            <p class="text-sm text-[#00194F] mb-6">Having trouble signing in? Please submit a ticket below and our admin team will assist you.</p>
 
             @if(session('success'))
                 <div class="alert alert-success mb-6">
@@ -124,7 +124,8 @@
                         <input 
                             type="checkbox" 
                             name="urgent" 
-                            class="checkbox checkbox-primary"
+                            class="checkbox"
+                            style="accent-color: #1C96E1;"
                             {{ old('urgent') ? 'checked' : '' }}
                         >
                         <span class="label-text">Mark as urgent</span>
@@ -132,13 +133,13 @@
                 </div>
 
                 <div class="flex flex-col sm:flex-row gap-3 mt-6">
-                    <button type="submit" class="btn btn-primary flex-1">
+                    <button type="submit" class="btn bg-[#1C96E1] border-[#1EA1F1] hover:bg-[#00194F] hover:border-[#1C96E1] text-white flex-1">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                         </svg>
                         Submit Ticket
                     </button>
-                    <a href="{{ route('login') }}" class="btn btn-outline flex-1">
+                    <a href="{{ route('login') }}" class="btn border-[#1EA1F1] text-[#1C96E1] hover:bg-[#00194F] hover:border-[#1C96E1] hover:text-white flex-1">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                         </svg>

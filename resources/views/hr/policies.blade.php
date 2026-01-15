@@ -6,7 +6,7 @@
             </div>
             @auth
             <div class="flex items-center gap-4">
-                <a href="{{ route('hr.dashboard') }}" class="btn btn-sm btn-outline">Dashboard</a>
+                <a href="{{ route('hr.dashboard') }}" class="btn btn-sm border-[#1EA1F1] text-[#1C96E1] hover:bg-[#00194F] hover:border-[#1C96E1] hover:text-white">Dashboard</a>
                 <span class="text-sm">{{ auth()->user()->name }}</span>
                 <span class="badge badge-primary">{{ ucfirst(auth()->user()->role) }}</span>
                 <form action="{{ route('logout') }}" method="POST" class="inline">
@@ -16,7 +16,7 @@
             </div>
             @endauth
         </nav>
-        <h2 class="flex justify-center mt-5 text-3xl font-semibold">Leave Policies</h2>
+        <h2 class="flex justify-center mt-5 text-3xl text-[#1C96E1] font-semibold">Leave Policies</h2>
     </x-slot>
 
     <div class="space-y-6">
@@ -38,7 +38,7 @@
 
         <!-- Back Button -->
         <div class="flex justify-start">
-            <a href="{{ route('hr.dashboard') }}" class="btn btn-outline">
+            <a href="{{ route('hr.dashboard') }}" class="btn border-[#1EA1F1] text-[#1C96E1] hover:bg-[#00194F] hover:border-[#1C96E1] hover:text-white">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
@@ -49,7 +49,7 @@
         <!-- Policies Table -->
         <div class="card bg-base-100 shadow-sm border border-base-300">
             <div class="card-body">
-                <h2 class="card-title text-2xl mb-4">Leave Policies</h2>
+                <h2 class="card-title text-2xl text-[#1C96E1] mb-4">Leave Policies</h2>
                 <div class="overflow-x-auto">
                     <table class="table table-zebra">
                         <thead>
@@ -65,7 +65,7 @@
                                     <td>{{ $policy->leave_type }}</td>
                                     <td>{{ $policy->annual_entitlement }}</td>
                                     <td>
-                                        <button onclick="document.getElementById('edit-modal-{{ $policy->id }}').showModal()" class="btn btn-sm btn-primary btn-outline">Edit</button>
+                                        <button onclick="document.getElementById('edit-modal-{{ $policy->id }}').showModal()" class="btn btn-sm border-[#1EA1F1] text-[#1C96E1] hover:bg-[#00194F] hover:border-[#1C96E1] hover:text-white">Edit</button>
                                         
                                         <!-- Edit Modal -->
                                         <dialog id="edit-modal-{{ $policy->id }}" class="modal">
@@ -94,8 +94,8 @@
                                                         @enderror
                                                     </div>
                                                     <div class="modal-action">
-                                                        <button type="button" onclick="document.getElementById('edit-modal-{{ $policy->id }}').close()" class="btn btn-outline">Cancel</button>
-                                                        <button type="submit" class="btn btn-primary">Update</button>
+                                                        <button type="button" onclick="document.getElementById('edit-modal-{{ $policy->id }}').close()" class="btn border-[#1EA1F1] text-[#1C96E1] hover:bg-[#00194F] hover:border-[#1C96E1] hover:text-white">Cancel</button>
+                                                        <button type="submit" class="btn bg-[#1C96E1] border-[#1EA1F1] hover:bg-[#00194F] hover:border-[#1C96E1] text-white">Update</button>
                                                     </div>
                                                 </form>
                                             </div>

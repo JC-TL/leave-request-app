@@ -6,7 +6,7 @@
             </div>
             @auth
             <div class="flex items-center gap-4">
-                <a href="{{ route('hr.policies') }}" class="btn btn-sm btn-outline">Policies</a>
+                <a href="{{ route('hr.policies') }}" class="btn btn-sm border-[#1EA1F1] text-[#1C96E1] hover:bg-[#00194F] hover:border-[#1C96E1] hover:text-white">Policies</a>
                 <span class="text-sm">{{ auth()->user()->name }}</span>
                 <span class="badge badge-primary">{{ ucfirst(auth()->user()->role) }}</span>
                 <form action="{{ route('logout') }}" method="POST" class="inline">
@@ -16,7 +16,7 @@
             </div>
             @endauth
         </nav>
-        <h2 class="flex justify-center mt-5 text-3xl font-semibold">Request Details</h2>
+        <h2 class="flex justify-center mt-5 text-3xl text-[#1C96E1] font-semibold">Request Details</h2>
     </x-slot>
 
     <div class="space-y-6">
@@ -33,7 +33,7 @@
         <!-- Employee Details -->
         <div class="card bg-base-100 shadow-sm border border-base-300">
             <div class="card-body">
-                <h2 class="card-title text-2xl mb-4">Employee Details</h2>
+                <h2 class="card-title text-2xl text-[#1C96E1] mb-4">Employee Details</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <p class="text-sm text-base-content/60">Name</p>
@@ -94,7 +94,7 @@
         <!-- Approval Timeline -->
         <div class="card bg-base-100 shadow-sm border border-base-300">
             <div class="card-body">
-                <h2 class="card-title text-2xl mb-4">Approval Timeline</h2>
+                <h2 class="card-title text-2xl text-[#1C96E1] mb-4">Approval Timeline</h2>
                 <div class="space-y-4">
                     <!-- Manager Approval -->
                     <div>
@@ -136,7 +136,7 @@
         @if(in_array($leaveRequest->status, ['pending', 'dept_manager_approved']))
             <div class="card bg-base-100 shadow-sm border border-base-300">
                 <div class="card-body">
-                    <h2 class="card-title text-2xl mb-4">Actions</h2>
+                    <h2 class="card-title text-2xl text-[#1C96E1] mb-4">Actions</h2>
                     <div class="flex flex-col md:flex-row gap-4">
                         <!-- Approve Form -->
                         <div class="flex-1">
@@ -183,7 +183,7 @@
 
         <!-- Back Button -->
         <div class="flex justify-start">
-            <a href="{{ route('hr.dashboard') }}" class="btn btn-outline">
+            <a href="{{ route('hr.dashboard') }}" class="btn border-[#1EA1F1] text-[#1C96E1] hover:bg-[#00194F] hover:border-[#1C96E1] hover:text-white">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>

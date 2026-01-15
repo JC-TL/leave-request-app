@@ -33,12 +33,39 @@ class HRController extends Controller
             ->count();
         $totalEmployees = User::whereIn('role', ['employee', 'dept_manager'])->count();
 
+        // Get all approved leave requests for calendar with department colors
+        $calendarEvents = LeaveRequest::where('status', 'hr_approved')
+            ->with(['employee', 'employee.department'])
+            ->get()
+            ->map(function ($request) {
+                $department = $request->employee->department;
+                $color = $department && $department->color ? $department->color : '#6b7280'; // Default gray if no department or color
+                
+                return [
+                    'title' => '', // Empty title - will be styled as circle
+                    'start' => $request->start_date->format('Y-m-d'),
+                    'end' => $request->end_date->copy()->addDay()->format('Y-m-d'), // FullCalendar uses exclusive end dates
+                    'color' => $color,
+                    'backgroundColor' => $color,
+                    'borderColor' => $color,
+                    'extendedProps' => [
+                        'employee' => $request->employee->name,
+                        'leave_type' => $request->leave_type,
+                        'days' => $request->number_of_days,
+                        'department' => $department ? $department->name : 'N/A',
+                        'department_id' => $department ? $department->id : null,
+                    ]
+                ];
+            })
+            ->toArray();
+
         return view('hr.dashboard', compact(
             'pendingRequests',
             'totalPending',
             'totalApprovedThisMonth',
             'totalRejectedThisMonth',
-            'totalEmployees'
+            'totalEmployees',
+            'calendarEvents'
         ));
     }
 

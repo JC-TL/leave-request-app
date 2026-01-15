@@ -73,19 +73,22 @@ class DatabaseSeeder extends Seeder
             Policy::create($policy);
         }
 
-        // Create Departments
+        // Create Departments with colors
         $hrDept = Department::create([
             'name' => 'HR',
+            'color' => '#3b82f6', // Blue
             'dept_manager_id' => null,
         ]);
 
         $salesDept = Department::create([
             'name' => 'Sales',
+            'color' => '#10b981', // Green
             'dept_manager_id' => null,
         ]);
 
         $itDept = Department::create([
             'name' => 'IT',
+            'color' => '#8b5cf6', // Purple
             'dept_manager_id' => null,
         ]);
 

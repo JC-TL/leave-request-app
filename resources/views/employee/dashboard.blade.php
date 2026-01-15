@@ -10,18 +10,19 @@
                 <span class="badge badge-primary">{{ ucfirst($user->role) }}</span>
                 <form action="{{ route('logout') }}" method="POST" class="inline">
                     @csrf
-                    <button type="submit" class="cursor-pointer text-blue-600 underline underline-offset-2
-         hover:text-blue-700 hover:underline hover:decoration-2
-         focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400
+                    <button type="submit" class="cursor-pointer text-[#1C96E1] underline underline-offset-2
+         hover:text-[#00194F] hover:underline hover:decoration-2
+         focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1C96E1]
          transition-colors">Logout</button>
                 </form>
             </div>
             @endauth
         </nav>
-        <h2 class="flex justify-center mt-5 text-3xl font-semibold">Employee Dashboard</h2>
+        <h2 class="flex justify-center mt-5 text-3xl text-[#1C96E1] font-semibold">Employee Dashboard</h2>
     </x-slot>
 
-    <div class="space-y-6">
+    <div class="max-w-6xl mx-auto px-4">
+        <div class="space-y-6">
         @if(session('success'))
             <div class="alert alert-success">
                 <span>{{ session('success') }}</span>
@@ -41,7 +42,7 @@
         <!-- Section 1: Leave Balance Display -->
         <div class="card bg-base-100 shadow-sm border border-base-300">
             <div class="card-body">
-                <h2 class="card-title text-2xl mb-4">Leave Balance</h2>
+                <h2 class="card-title text-2xl text-[#1C96E1] mb-4">Leave Balance</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     @forelse($balances as $balance)
                         <x-balance-card :balance="$balance" />
@@ -60,7 +61,7 @@
         @if($hasBalance)
             <div class="card bg-base-100 shadow-sm border border-base-300">
                 <div class="card-body">
-                    <h2 class="card-title text-2xl mb-4">Submit Leave Request</h2>
+                    <h2 class="card-title text-2xl text-[#1C96E1] mb-4">Submit Leave Request</h2>
                     <form action="{{ route('employee.store-request') }}" method="POST" class="space-y-4">
                         @csrf
 
@@ -143,7 +144,7 @@
                         </div>
 
                         <div class="form-control mt-4">
-                            <button type="submit" class="btn btn-primary">Submit Request</button>
+                            <button type="submit" class="btn bg-[#1C96E1] border-[#1EA1F1] hover:bg-[#00194F] hover:border-[#1C96E1] text-white">Submit Request</button>
                         </div>
                     </form>
                 </div>
@@ -157,7 +158,7 @@
         <!-- Section 3: My Leave Requests History -->
         <div class="card bg-base-100 shadow-sm border border-base-300">
             <div class="card-body">
-                <h2 class="card-title text-2xl mb-4">My Leave Requests</h2>
+                <h2 class="card-title text-2xl text-[#1C96E1] mb-4">My Leave Requests</h2>
                 <div class="overflow-x-auto">
                     <table class="table table-zebra">
                         <thead>
@@ -205,6 +206,7 @@
                     </div>
                 @endif
             </div>
+        </div>
         </div>
     </div>
 </x-layout>

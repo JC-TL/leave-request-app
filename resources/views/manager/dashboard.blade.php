@@ -10,16 +10,17 @@
                 <span class="badge badge-primary">{{ ucfirst($user->role) }}</span>
                 <form action="{{ route('logout') }}" method="POST" class="inline">
                     @csrf
-                    <button type="submit" class="cursor-pointer text-black-100 underline underline-offset-2
-         hover:text-red-700 hover:underline hover:decoration-2">Logout</button>
+                    <button type="submit" class="cursor-pointer text-[#1C96E1] underline underline-offset-2
+         hover:text-[#00194F] hover:underline hover:decoration-2 transition-colors">Logout</button>
                 </form>
             </div>
             @endauth
         </nav>
-        <h2 class="flex justify-center mt-5 text-3xl font-semibold">Manager Dashboard</h2>
+        <h2 class="flex justify-center mt-5 text-3xl text-[#1C96E1] font-semibold">Manager Dashboard</h2>
     </x-slot>
 
-    <div class="space-y-6">
+    <div class="max-w-6xl mx-auto px-4">
+        <div class="space-y-6">
         @if(session('success'))
             <div class="alert alert-success">
                 <span>{{ session('success') }}</span>
@@ -59,7 +60,7 @@
 
         <div class="card bg-base-100 shadow-sm border border-base-300">
             <div class="card-body">
-                <h2 class="card-title text-2xl mb-4">Pending Requests from My Team</h2>
+                <h2 class="card-title text-2xl text-[#1C96E1] mb-4">Pending Requests from My Team</h2>
                 <div class="overflow-x-auto">
                     <table class="table table-zebra">
                         <thead>
@@ -86,7 +87,7 @@
                                     <td><span class="badge badge-warning whitespace-nowrap">Pending Your Approval</span></td>
                                     <td>
                                         <div class="flex gap-2">
-                                            <a href="{{ route('manager.show-request', $request->id) }}" class="btn btn-sm btn-info btn-outline">View Details</a>
+                                            <a href="{{ route('manager.show-request', $request->id) }}" class="btn btn-sm border-[#1EA1F1] text-[#1C96E1] hover:bg-[#00194F] hover:border-[#1C96E1] hover:text-white">View Details</a>
                                         </div>
                                     </td>
                                 </tr>
@@ -109,7 +110,7 @@
 
         <div class="card bg-base-100 shadow-sm border border-base-300">
             <div class="card-body">
-                <h2 class="card-title text-2xl mb-4">Team Members</h2>
+                <h2 class="card-title text-2xl text-[#1C96E1] mb-4">Team Members</h2>
                 <div class="overflow-x-auto">
                     <table class="table table-zebra">
                         <thead>
@@ -144,6 +145,7 @@
                     </table>
                 </div>
             </div>
+        </div>
         </div>
     </div>
 </x-layout>
