@@ -2,29 +2,26 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Balance;
+use App\Models\Request as LeaveRequest;
+use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Request as LeaveRequest;
-use App\Models\Balance;
-use Carbon\Carbon;
+use Illuminate\View\View;
 
 class EmployeeController extends Controller
 {
-    /**
-     * Display the employee dashboard.
-     */
-    public function dashboard()
+    public function dashboard(): View
     {
         $user = Auth::user();
         $currentYear = now()->year;
 
-        // Get all leave balances for current year
         $balances = $user->leaveBalances()
             ->where('year', $currentYear)
             ->orderBy('leave_type')
             ->get();
 
-        // Get all leave requests, newest first
         $requests = $user->leaveRequests()
             ->orderBy('created_at', 'desc')
             ->paginate(10);
@@ -32,41 +29,41 @@ class EmployeeController extends Controller
         return view('employee.dashboard', compact('balances', 'requests', 'user'));
     }
 
-    /**
-     * Store a new leave request.
-     */
-    public function storeRequest(Request $request)
+    public function storeRequest(Request $request): RedirectResponse
     {
-        $user = Auth::user();
-        $currentYear = now()->year;
-
         $validated = $request->validate([
-            'leave_type' => 'required|string',
-            'start_date' => 'required|date|after_or_equal:today',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'reason' => 'required|string|max:1000',
+            'leave_type' => ['required', 'string'],
+            'start_date' => ['required', 'date', 'after_or_equal:today'],
+            'end_date' => ['required', 'date', 'after_or_equal:start_date'],
+            'reason' => ['required', 'string', 'max:1000'],
         ]);
 
-        // Calculate number of days (excluding weekends)
+        $user = Auth::user();
+        $currentYear = now()->year;
         $startDate = Carbon::parse($validated['start_date']);
         $endDate = Carbon::parse($validated['end_date']);
         $numberOfDays = $this->calculateWorkingDays($startDate, $endDate);
 
-        // Check if user has sufficient balance
         $balance = $user->getLeaveBalance($validated['leave_type'], $currentYear);
         
         if (!$balance) {
-            return back()->withErrors(['leave_type' => 'Leave balance not found for this leave type.'])->withInput();
+            return back()
+                ->withErrors(['leave_type' => 'Leave balance not found for this leave type.'])
+                ->withInput();
         }
 
         if (!$balance->hasSufficientBalance($numberOfDays)) {
-            return back()->withErrors([
-                'leave_type' => 'Insufficient balance. Available: ' . $balance->getAvailableBalance() . ' days.'
-            ])->withInput();
+            return back()
+                ->withErrors([
+                    'leave_type' => sprintf(
+                        'Insufficient balance. Available: %.1f days.',
+                        $balance->getAvailableBalance()
+                    )
+                ])
+                ->withInput();
         }
 
-        // Create the request
-        $leaveRequest = LeaveRequest::create([
+        LeaveRequest::create([
             'employee_id' => $user->id,
             'leave_type' => $validated['leave_type'],
             'start_date' => $validated['start_date'],
@@ -76,46 +73,39 @@ class EmployeeController extends Controller
             'status' => 'pending',
         ]);
 
-        return redirect()->route('employee.dashboard')
+        return redirect()
+            ->route('employee.dashboard')
             ->with('success', 'Leave request submitted successfully.');
     }
 
-    /**
-     * Cancel a pending leave request.
-     */
-    public function cancelRequest($id)
+    public function cancelRequest(int $id): RedirectResponse
     {
         $user = Auth::user();
-        
         $leaveRequest = LeaveRequest::findOrFail($id);
 
-        // Verify ownership
         if ($leaveRequest->employee_id !== $user->id) {
             abort(403, 'Unauthorized action.');
         }
 
-        // Only allow cancellation if pending
         if (!$leaveRequest->isPending()) {
-            return back()->withErrors(['error' => 'Only pending requests can be cancelled.']);
+            return back()
+                ->withErrors(['error' => 'Only pending requests can be cancelled.']);
         }
 
         $leaveRequest->delete();
 
-        return redirect()->route('employee.dashboard')
+        return redirect()
+            ->route('employee.dashboard')
             ->with('success', 'Leave request cancelled successfully.');
     }
 
-    /**
-     * Calculate working days between two dates (excluding weekends).
-     */
     private function calculateWorkingDays(Carbon $startDate, Carbon $endDate): int
     {
         $days = 0;
         $current = $startDate->copy();
 
         while ($current->lte($endDate)) {
-            // Count only weekdays (Monday = 1, Sunday = 7)
-            if ($current->dayOfWeek !== Carbon::SATURDAY && $current->dayOfWeek !== Carbon::SUNDAY) {
+            if (!in_array($current->dayOfWeek, [Carbon::SATURDAY, Carbon::SUNDAY])) {
                 $days++;
             }
             $current->addDay();

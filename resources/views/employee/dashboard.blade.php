@@ -6,15 +6,40 @@
             </div>
             @auth
             <div class="flex items-center gap-4">
-                <span class="text-sm">{{ $user->name }}</span>
-                <span class="badge badge-primary">{{ ucfirst($user->role) }}</span>
-                <form action="{{ route('logout') }}" method="POST" class="inline">
-                    @csrf
-                    <button type="submit" class="cursor-pointer text-[#1C96E1] underline underline-offset-2
-         hover:text-[#00194F] hover:underline hover:decoration-2
-         focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1C96E1]
-         transition-colors">Logout</button>
-                </form>
+                <details class="dropdown dropdown-end">
+                    <summary class="btn btn-ghost btn-circle avatar">
+                        <div class="w-10 rounded-full bg-primary text-primary-content flex items-center justify-center font-semibold">
+                            {{ strtoupper(substr($user->name, 0, 1)) }}
+                        </div>
+                    </summary>
+                    <ul class="menu dropdown-content bg-base-100 rounded-box z-[1] w-56 p-2 shadow-lg border border-base-300 mt-2">
+                        <li class="menu-title">
+                            <span>{{ $user->name }}</span>
+                            <span class="badge badge-primary badge-sm ml-2">{{ ucfirst($user->role) }}</span>
+                        </li>
+                        <li class="divider my-1"></li>
+                        <li>
+                            <a href="{{ route('employee.dashboard') }}">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+                                </svg>
+                                Dashboard
+                            </a>
+                        </li>
+                        <li class="divider my-1"></li>
+                        <li>
+                            <form action="{{ route('logout') }}" method="POST" class="w-full">
+                                @csrf
+                                <button type="submit" class="w-full text-left">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+                                    </svg>
+                                    Logout
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </details>
             </div>
             @endauth
         </nav>

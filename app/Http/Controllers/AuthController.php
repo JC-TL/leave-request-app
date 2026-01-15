@@ -2,28 +2,24 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
+use Illuminate\View\View;
 
 class AuthController extends Controller
 {
-    /**
-     * Show the login form.
-     */
-    public function showLoginForm()
+    public function showLoginForm(): View
     {
         return view('welcome');
     }
 
-    /**
-     * Login user and redirect based on role.
-     */
-    public function login(Request $request)
+    public function login(Request $request): RedirectResponse
     {
         $request->validate([
-            'email' => 'required|email',
-            'password' => 'required|string',
+            'email' => ['required', 'email'],
+            'password' => ['required', 'string'],
         ]);
 
         $credentials = [
@@ -43,16 +39,12 @@ class AuthController extends Controller
         return match($user->role) {
             'employee' => redirect()->route('employee.dashboard'),
             'dept_manager' => redirect()->route('manager.dashboard'),
-            'hr_admin' => redirect()->route('hr.dashboard'),
-            'ceo' => redirect()->route('hr.dashboard'), // CEO can access HR dashboard
+            'hr_admin', 'ceo' => redirect()->route('hr.dashboard'),
             default => redirect('/'),
         };
     }
 
-    /**
-     * Logout user.
-     */
-    public function logout(Request $request)
+    public function logout(Request $request): RedirectResponse
     {
         Auth::logout();
         $request->session()->invalidate();
@@ -61,9 +53,6 @@ class AuthController extends Controller
         return redirect()->route('login');
     }
 
-    /**
-     * Get authenticated user profile.
-     */
     public function profile(Request $request)
     {
         return response()->json([
@@ -73,10 +62,7 @@ class AuthController extends Controller
         ]);
     }
 
-    /**
-     * Show the contact admin form.
-     */
-    public function showContactAdmin()
+    public function showContactAdmin(): View
     {
         return view('contact-admin');
     }

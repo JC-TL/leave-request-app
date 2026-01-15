@@ -17,13 +17,11 @@ class Balance extends Model
         'year'
     ];
 
-    // Relationships
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    // Methods
     public function getAvailableBalance(): float
     {
         return max(0, $this->balance - $this->used);

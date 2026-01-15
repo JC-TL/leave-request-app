@@ -39,7 +39,6 @@ class Request extends Model
         ];
     }
 
-    // Relationships
     public function employee()
     {
         return $this->belongsTo(User::class, 'employee_id');
@@ -55,7 +54,6 @@ class Request extends Model
         return $this->belongsTo(User::class, 'approved_by_hr_id');
     }
 
-    // Status checking methods
     public function isPending(): bool
     {
         return $this->status === 'pending';
@@ -73,7 +71,7 @@ class Request extends Model
 
     public function isRejected(): bool
     {
-        return in_array($this->status, ['dept_manager_rejected', 'hr_rejected']);
+        return in_array($this->status, ['dept_manager_rejected', 'hr_rejected'], true);
     }
 
     public function getStatusLabel(): string
@@ -88,7 +86,6 @@ class Request extends Model
         };
     }
 
-    // Scopes
     public function scopePending(Builder $query): Builder
     {
         return $query->where('status', 'pending');

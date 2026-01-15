@@ -15,7 +15,6 @@ class Department extends Model
         'dept_manager_id'
     ];
 
-    // Relationships
     public function manager()
     {
         return $this->belongsTo(User::class, 'dept_manager_id');

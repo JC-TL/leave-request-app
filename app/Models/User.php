@@ -27,7 +27,7 @@ class User extends Authenticatable
     ];
 
     /**
-     * Tid (PK)             
+     * The attributes that should be hidden for serialization.
      *
      * @var list<string>
      */
@@ -49,7 +49,6 @@ class User extends Authenticatable
         ];
     }
 
-    // Relationships
     public function department()
     {
         return $this->belongsTo(Department::class);
@@ -75,7 +74,6 @@ class User extends Authenticatable
         return $this->hasMany(Balance::class);
     }
 
-    // Role checking methods
     public function isEmployee(): bool
     {
         return $this->role === 'employee';
@@ -96,10 +94,10 @@ class User extends Authenticatable
         return $this->role === 'ceo';
     }
 
-    // Get leave balance for a specific type and year
-    public function getLeaveBalance(string $leaveType, int $year = null): ?Balance
+    public function getLeaveBalance(string $leaveType, ?int $year = null): ?Balance
     {
-        $year = $year ?? now()->year;
+        $year ??= now()->year;
+        
         return $this->leaveBalances()
             ->where('leave_type', $leaveType)
             ->where('year', $year)
