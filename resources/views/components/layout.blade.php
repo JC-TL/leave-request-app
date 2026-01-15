@@ -11,17 +11,6 @@
     <link href="https://cdn.jsdelivr.net/npm/daisyui@5/themes.css" rel="stylesheet" type="text/css" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.20/index.global.min.js'></script>
-    <script>
-
-      document.addEventListener('DOMContentLoaded', function() {
-        var calendarEl = document.getElementById('calendar');
-        var calendar = new FullCalendar.Calendar(calendarEl, {
-          initialView: 'dayGridMonth'
-        });
-        calendar.render();
-      });
-
-    </script>
 </head>
 
 <body class="min-h-screen flex flex-col bg-base-200 font-sans" 
@@ -35,7 +24,7 @@
         {{ $navigation }}
     @endisset
 
-    <ma class="flex-1 w-full px-6 py-6 {{ !isset($navigation) ? 'max-w-md mx-auto' : '' }}">
+    <main class="flex-1 w-full px-6 py-6 {{ !isset($navigation) ? 'max-w-md mx-auto' : '' }}">
         {{ $slot }}
     </main>
 

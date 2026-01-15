@@ -63,6 +63,7 @@
 </svg>
 
 
+
                         <h3 class="card-title text-lg">Pending Requests</h3>
                         <p class="text-4xl font-bold">{{ $totalPending }}</p>
                     </div>
