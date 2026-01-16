@@ -74,29 +74,32 @@ class User extends Authenticatable
         return $this->hasMany(Balance::class);
     }
 
-    public function isEmployee(): bool
+    public function isEmployee()
     {
         return $this->role === 'employee';
     }
 
-    public function isDeptManager(): bool
+    public function isDeptManager()
     {
         return $this->role === 'dept_manager';
     }
 
-    public function isHRAdmin(): bool
+    public function isHRAdmin()
     {
         return $this->role === 'hr_admin';
     }
 
-    public function isCEO(): bool
+    public function isCEO()
     {
         return $this->role === 'ceo';
     }
 
-    public function getLeaveBalance(string $leaveType, ?int $year = null): ?Balance
+    // Get leave balance for a specific leave type and year
+    public function getLeaveBalance($leaveType, $year = null)
     {
-        $year ??= now()->year;
+        if ($year === null) {
+            $year = now()->year;
+        }
         
         return $this->leaveBalances()
             ->where('leave_type', $leaveType)

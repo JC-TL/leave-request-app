@@ -9,6 +9,7 @@ class Balance extends Model
 {
     use HasFactory;
 
+    // Mass assignable fields
     protected $fillable = [
         'user_id',
         'leave_type',
@@ -22,12 +23,14 @@ class Balance extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function getAvailableBalance(): float
+    // Calculate available balance (total - used)
+    public function getAvailableBalance()
     {
         return max(0, $this->balance - $this->used);
     }
 
-    public function deductDays(float $days): bool
+    // Deduct days from balance
+    public function deductDays($days)
     {
         if (!$this->hasSufficientBalance($days)) {
             return false;
@@ -37,13 +40,15 @@ class Balance extends Model
         return $this->save();
     }
 
-    public function addDays(float $days): bool
+    // Add days back to balance (for cancellations)
+    public function addDays($days)
     {
         $this->used = max(0, $this->used - $days);
         return $this->save();
     }
 
-    public function hasSufficientBalance(float $days): bool
+    // Check if user has enough balance
+    public function hasSufficientBalance($days)
     {
         return $this->getAvailableBalance() >= $days;
     }

@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Leave Request App — Visual Crash Course</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <div class="title">
+          <div class="logo" aria-hidden="true"></div>
+          <div>
+            <h1>Leave Request App — Visual Crash Course</h1>
+            <p>Learn this repo (Laravel MVC) + build a tiny clone (HTML/CSS/JS).</p>
+          </div>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end">
+          <a class="btn" href="./mini-app/index.html">Open mini clone (HTML/JS)</a>
+          <a class="btn" href="./01-code-tour.md">Annotated code tour</a>
+          <a class="btn" href="./02-build-from-scratch-laravel.md">Build from scratch (Laravel)</a>
+          <a class="btn" href="./README.md">README</a>
+        </div>
+      </header>
+
+      <nav>
+        <h2>Table of contents</h2>
+        <div class="toc">
+          <a href="#big-picture">Big picture (MVC + request lifecycle)<small>How data flows through the app</small></a>
+          <a href="#routes">Routes: “URLs → controller methods”<small>routes/*.php</small></a>
+          <a href="#middleware">Middleware: role access control<small>RoleMiddleware</small></a>
+          <a href="#controllers">Controllers: business actions<small>Employee / Manager / HR</small></a>
+          <a href="#models">Models: database + relationships<small>User / Request / Balance / Policy / Department</small></a>
+          <a href="#views">Views: Blade + layout anatomy<small>x-layout, slots, CSRF</small></a>
+          <a href="#db">Database: tables + why casts matter<small>migrations + Eloquent casts</small></a>
+          <a href="#build-from-scratch">Build this from scratch (steps)<small>Beginner checklist</small></a>
+          <a href="#mini-clone">Mini clone (HTML/CSS/JS)<small>Same flow, simpler tech</small></a>
+          <a href="#glossary">Glossary (line-by-line concepts)<small>HTTP, MVC, ORM, sessions…</small></a>
+        </div>
+      </nav>
+
+      <main>
+        <section id="big-picture">
+          <h3>Big picture: what happens when you click a button?</h3>
+          <p>
+            Think of the app as a pipeline: the browser sends an <b>HTTP request</b> to a <b>route</b>, the route calls a
+            <b>controller method</b>, the controller reads/writes the <b>database via models</b>, then returns a <b>Blade view</b>.
+          </p>
+
+          <div class="flow" role="img" aria-label="Request flow diagram">
+            <svg viewBox="0 0 980 220" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="g" x1="0" x2="1">
+                  <stop offset="0" stop-color="#1C96E1" stop-opacity=".9"/>
+                  <stop offset="1" stop-color="#7dd3fc" stop-opacity=".9"/>
+                </linearGradient>
+              </defs>
+              <rect x="10" y="18" width="960" height="184" rx="14" fill="rgba(255,255,255,.03)" stroke="rgba(255,255,255,.10)"/>
+
+              <g font-family="ui-sans-serif,system-ui" fill="#e6eefc" font-size="14">
+                <rect x="32" y="60" width="160" height="98" rx="14" fill="rgba(0,0,0,.25)" stroke="rgba(255,255,255,.10)"/>
+                <text x="52" y="92">Browser (UI)</text>
+                <text x="52" y="116" fill="#a9b7d6" font-size="12">click submit / approve</text>
+
+                <rect x="230" y="60" width="160" height="98" rx="14" fill="rgba(0,0,0,.25)" stroke="rgba(255,255,255,.10)"/>
+                <text x="250" y="92">Route</text>
+                <text x="250" y="116" fill="#a9b7d6" font-size="12">matches URL + method</text>
+
+                <rect x="430" y="60" width="200" height="98" rx="14" fill="rgba(0,0,0,.25)" stroke="rgba(255,255,255,.10)"/>
+                <text x="450" y="92">Middleware + Controller</text>
+                <text x="450" y="116" fill="#a9b7d6" font-size="12">auth, role check, validation</text>
+
+                <rect x="670" y="60" width="150" height="98" rx="14" fill="rgba(0,0,0,.25)" stroke="rgba(255,255,255,.10)"/>
+                <text x="690" y="92">Model (Eloquent)</text>
+                <text x="690" y="116" fill="#a9b7d6" font-size="12">read/write DB rows</text>
+
+                <rect x="840" y="60" width="110" height="98" rx="14" fill="rgba(0,0,0,.25)" stroke="rgba(255,255,255,.10)"/>
+                <text x="856" y="92">View</text>
+                <text x="856" y="116" fill="#a9b7d6" font-size="12">HTML response</text>
+
+                <path d="M192 109 L230 109" stroke="url(#g)" stroke-width="3" />
+                <path d="M390 109 L430 109" stroke="url(#g)" stroke-width="3" />
+                <path d="M630 109 L670 109" stroke="url(#g)" stroke-width="3" />
+                <path d="M820 109 L840 109" stroke="url(#g)" stroke-width="3" />
+              </g>
+            </svg>
+          </div>
+
+          <div class="grid two">
+            <div class="card">
+              <h4>Roles in this app</h4>
+              <div class="pill"><span class="dot"></span>Employee: submits leave requests</div><br/>
+              <div class="pill"><span class="dot warn"></span>Dept Manager: approves/rejects first</div><br/>
+              <div class="pill"><span class="dot ok"></span>HR Admin: final approval + deduct balance</div>
+            </div>
+            <div class="card">
+              <h4>Request status lifecycle (state machine)</h4>
+              <p>
+                A leave request is basically a row in the database with a <code>status</code>. The status moves through a controlled path:
+              </p>
+              <pre><code>pending
+  ├─(manager approves)→ dept_manager_approved
+  │    ├─(HR approves)→ hr_approved
+  │    └─(HR rejects) → hr_rejected
+  └─(manager rejects) → dept_manager_rejected</code></pre>
+            </div>
+          </div>
+        </section>
+
+        <section id="routes">
+          <h3>Routes: “URLs → controller methods”</h3>
+          <p>
+            Routes are defined in <code>routes/*.php</code>. This repo uses a “loader” route file:
+            <code>routes/web.php</code> includes the others.
+          </p>
+          <div class="grid two">
+            <div class="card">
+              <h4>Route loading</h4>
+              <pre><code>// routes/web.php
+require __DIR__.'/auth.php';
+require __DIR__.'/employee.php';
+require __DIR__.'/manager.php';
+require __DIR__.'/hr.php';</code></pre>
+              <p>
+                This is just PHP: it literally includes those files at runtime.
+              </p>
+            </div>
+            <div class="card">
+              <h4>What a route line means</h4>
+              <pre><code>// routes/manager.php
+Route::get('/manager/dashboard', [ManagerController::class, 'dashboard'])
+  ->name('manager.dashboard');</code></pre>
+              <p>
+                In English: “When a GET request hits <code>/manager/dashboard</code>, run
+                <code>ManagerController::dashboard()</code>.”
+              </p>
+            </div>
+          </div>
+
+          <div class="callout">
+            <strong>Important beginner idea:</strong> the browser does not “call controllers”. It only sends HTTP requests (GET/POST/PATCH).
+            Laravel matches those requests to routes, and routes call controller methods.
+          </div>
+        </section>
+
+        <section id="middleware">
+          <h3>Middleware: role-based access control</h3>
+          <p>
+            Middleware is code that runs <b>before</b> your controller method. In this app, routes are protected by:
+            <code>auth</code> (must be logged in) and <code>role:...</code> (must have a role).
+          </p>
+          <div class="grid two">
+            <div class="card">
+              <h4>Where it’s applied</h4>
+              <pre><code>// routes/hr.php
+Route::middleware(['auth', 'role:hr_admin'])->group(function () {
+  // ...
+});</code></pre>
+            </div>
+            <div class="card">
+              <h4>What it does (simplified)</h4>
+              <pre><code>// app/Http/Middleware/RoleMiddleware.php
+if (!Auth::check()) redirect(login);
+if (!in_array(Auth::user()->role, $roles)) abort(403);
+return $next($request);</code></pre>
+              <p>So your controllers can assume “the user is allowed to be here”.</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="controllers">
+          <h3>Controllers: business actions</h3>
+          <p>
+            Controllers are where you implement “what the app does”. In this repo, each role has its own controller.
+          </p>
+          <div class="grid two">
+            <div class="card">
+              <h4>Employee submits a request</h4>
+              <pre><code>// EmployeeController::storeRequest()
+// 1) validate input
+// 2) calculate business number_of_days
+// 3) check leave balance
+// 4) create Request row with status = pending</code></pre>
+              <p>
+                Notice: the employee request does <b>not</b> deduct balance yet. Deduction happens on final HR approval.
+              </p>
+            </div>
+            <div class="card">
+              <h4>Manager approves (first gate)</h4>
+              <pre><code>// ManagerController::approveRequest()
+if (!$leaveRequest->isPending()) error
+update status to dept_manager_approved
+set approved_by_dept_manager_id + approved_by_dept_at</code></pre>
+              <p>
+                This creates an audit trail: “who approved” + “when”.
+              </p>
+            </div>
+          </div>
+          <div class="card">
+            <h4>HR approves (final gate + balance deduction)</h4>
+            <pre><code>// HRController::approveRequest()
+if (status !== dept_manager_approved) block
+balance->deductDays(number_of_days)
+update status to hr_approved
+set approved_by_hr_id + approved_by_hr_at</code></pre>
+            <p>
+              This is the “business invariant”: only HR can finalize approval and subtract time.
+            </p>
+          </div>
+        </section>
+
+        <section id="models">
+          <h3>Models: database + relationships (Eloquent)</h3>
+          <p>
+            Eloquent models represent tables. Relationships let you navigate between records (like “request → employee → department”).
+          </p>
+          <div class="grid two">
+            <div class="card">
+              <h4>Request model anatomy</h4>
+              <pre><code>// app/Models/Request.php
+protected $fillable = [ ... ]; // columns allowed for mass assignment
+protected function casts(): array { ... } // turn DB strings into date/datetime objects
+
+public function employee() { return $this->belongsTo(User::class, 'employee_id'); }
+
+// “Scopes” are reusable query filters:
+public function scopePending($q) { return $q->where('status', 'pending'); }</code></pre>
+            </div>
+            <div class="card">
+              <h4>Why casts matter</h4>
+              <p>
+                Because with casts, you can do:
+              </p>
+              <pre><code>$leaveRequest->start_date->format('M d, Y')</code></pre>
+              <p>
+                Without casts, <code>start_date</code> would be a string and would not have date methods.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section id="views">
+          <h3>Views: Blade templates + the layout shell</h3>
+          <p>
+            Blade lets you write HTML with server-side directives like <code>@if</code>, <code>@foreach</code>,
+            and components like <code>&lt;x-layout&gt;</code>.
+          </p>
+
+          <div class="grid two">
+            <div class="card">
+              <h4>Layout component (global page shell)</h4>
+              <pre><code>// resources/views/components/layout.blade.php
+&lt;body class="bg-base-200"&gt;
+  {{ $navigation ?? '' }}
+  &lt;main&gt;{{ $slot }}&lt;/main&gt;
+&lt;/body&gt;</code></pre>
+              <p>
+                Any page using <code>&lt;x-layout&gt;</code> gets wrapped inside this HTML.
+              </p>
+            </div>
+            <div class="card">
+              <h4>CSRF and forms</h4>
+              <p>
+                In Blade, <code>@csrf</code> injects a hidden token. Laravel checks it to prevent “cross-site request forgery”.
+              </p>
+              <pre><code>&lt;form method="POST"&gt;
+  @csrf
+  &lt;button&gt;Submit&lt;/button&gt;
+&lt;/form&gt;</code></pre>
+            </div>
+          </div>
+        </section>
+
+        <section id="db">
+          <h3>Database: tables + schema mental model</h3>
+          <p>
+            The database is the source of truth. Models map to tables. Migrations define tables.
+          </p>
+          <div class="card">
+            <h4>Core tables (conceptual)</h4>
+            <pre><code>users
+  id, name, email, password, role, department_id, manager_id
+
+departments
+  id, name, color, dept_manager_id
+
+policies
+  id, leave_type, annual_entitlement
+
+balances
+  id, user_id, leave_type, balance, used, year
+
+requests
+  id, employee_id, leave_type, start_date, end_date, number_of_days,
+  status,
+  approved_by_dept_manager_id, approved_by_dept_at,
+  approved_by_hr_id, approved_by_hr_at,
+  ...comments + rejected_at</code></pre>
+          </div>
+        </section>
+
+        <section id="build-from-scratch">
+          <h3>Build this from scratch (beginner checklist)</h3>
+          <div class="grid two">
+            <div class="card">
+              <h4>Step-by-step (what to implement first)</h4>
+              <ol style="color: var(--muted); line-height: 1.7; margin: 0; padding-left: 18px">
+                <li>Define roles + status lifecycle (write it on paper first)</li>
+                <li>Create DB tables (migrations): users, departments, policies, balances, requests</li>
+                <li>Implement auth (login/logout) + sessions</li>
+                <li>Add middleware for role checks</li>
+                <li>Build dashboards (views)</li>
+                <li>Employee: submit request (validate + calculate days)</li>
+                <li>Manager: approve/reject (only pending)</li>
+                <li>HR: approve/reject (only after manager) + deduct balance</li>
+                <li>Calendar: query hr_approved requests and render per day</li>
+              </ol>
+            </div>
+            <div class="card">
+              <h4>Rules (“invariants”) that prevent bugs</h4>
+              <ul style="color: var(--muted); line-height: 1.7; margin: 0; padding-left: 18px">
+                <li>Only <b>manager</b> can change <code>pending</code> → <code>dept_manager_approved</code></li>
+                <li>Only <b>HR</b> can change <code>dept_manager_approved</code> → <code>hr_approved/hr_rejected</code></li>
+                <li>Balance is only deducted when status becomes <code>hr_approved</code></li>
+                <li>Every approval stores “who” + “when”</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section id="mini-clone">
+          <h3>Mini clone (HTML/CSS/JS)</h3>
+          <p>
+            Open <a href="./mini-app/index.html">mini-app/index.html</a>. It demonstrates the same core concepts:
+          </p>
+          <div class="grid two">
+            <div class="card">
+              <h4>What it teaches</h4>
+              <ul style="color: var(--muted); line-height: 1.7; margin: 0; padding-left: 18px">
+                <li>State machine statuses (pending → manager → HR)</li>
+                <li>Role gating (a “middleware-like” guard in JS)</li>
+                <li>Basic “database” (localStorage) + querying/filtering</li>
+                <li>A simple calendar view (badges per date)</li>
+              </ul>
+            </div>
+            <div class="card">
+              <h4>How it maps to Laravel</h4>
+              <pre><code>JS route guard  ≈ Laravel middleware
+JS data store   ≈ DB + Eloquent models
+JS render()     ≈ Blade views
+JS handlers     ≈ Controller methods</code></pre>
+            </div>
+          </div>
+        </section>
+
+        <section id="glossary">
+          <h3>Glossary (concepts used “line-by-line”)</h3>
+          <div class="grid two">
+            <div class="card">
+              <h4>HTTP methods</h4>
+              <p>
+                <code>GET</code> = fetch a page/data, <code>POST</code> = create, <code>PATCH</code> = update.
+                In Blade you’ll see <code>@method('PATCH')</code> because browsers only support GET/POST forms natively.
+              </p>
+            </div>
+            <div class="card">
+              <h4>Validation</h4>
+              <p>
+                <code>$request->validate([...])</code> rejects bad input early and returns errors back to the form.
+              </p>
+            </div>
+            <div class="card">
+              <h4>Mass assignment</h4>
+              <p>
+                <code>Model::create([...])</code> only works for keys listed in <code>$fillable</code>.
+                This prevents accidentally writing unexpected fields.
+              </p>
+            </div>
+            <div class="card">
+              <h4>Relationships</h4>
+              <p>
+                <code>belongsTo</code> / <code>hasMany</code> let you do <code>$request->employee->department</code>.
+              </p>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
+

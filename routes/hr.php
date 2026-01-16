@@ -11,5 +11,8 @@ Route::middleware(['auth', 'role:hr_admin'])->group(function () {
     Route::patch('/hr/request/{id}/reject', [HRController::class, 'rejectRequest'])->name('hr.reject-request');
     Route::get('/hr/policies', [HRController::class, 'policies'])->name('hr.policies');
     Route::patch('/hr/policy/{id}', [HRController::class, 'updatePolicy'])->name('hr.update-policy');
+    Route::get('/hr/employees', [HRController::class, 'employees'])->name('hr.employees');
+    Route::get('/hr/employees/create', [HRController::class, 'createEmployee'])->name('hr.create-employee');
+    Route::post('/hr/employees', [HRController::class, 'storeEmployee'])->name('hr.store-employee');
 });
 

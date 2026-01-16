@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mini Leave App (HTML/JS) — Crash Course Demo</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <aside class="panel sidebar">
+        <div class="brand">
+          <div class="logo" aria-hidden="true"></div>
+          <div>
+            <h1>Mini Leave App</h1>
+            <p>Same workflow, simpler stack</p>
+          </div>
+        </div>
+
+        <div class="stack">
+          <div class="card">
+            <h3>Navigation</h3>
+            <div class="row">
+              <button class="btn small" data-nav="login">Login</button>
+              <button class="btn small" data-nav="employee">Employee</button>
+              <button class="btn small" data-nav="manager">Manager</button>
+              <button class="btn small" data-nav="hr">HR</button>
+            </div>
+            <div class="hr"></div>
+            <div class="row">
+              <button class="btn small" id="reset">Reset demo data</button>
+              <a class="btn small" href="../index.html" style="text-decoration:none">Back to guide</a>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Logged in as</h3>
+            <div id="who" class="muted">Not logged in</div>
+            <div class="hr"></div>
+            <button class="btn danger" id="logout">Logout</button>
+          </div>
+
+          <div class="card">
+            <h3>Legend</h3>
+            <div class="badge"><span class="dot" style="background:#1C96E1"></span> pending</div><br/>
+            <div class="badge"><span class="dot" style="background:#f59e0b"></span> dept_manager_approved</div><br/>
+            <div class="badge"><span class="dot" style="background:#22c55e"></span> hr_approved</div><br/>
+            <div class="badge"><span class="dot" style="background:#ef4444"></span> rejected</div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="panel main">
+        <div id="view"></div>
+      </main>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script src="./app.js"></script>
+  </body>
+</html>
+

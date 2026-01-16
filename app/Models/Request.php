@@ -11,6 +11,7 @@ class Request extends Model
 {
     use HasFactory;
 
+    // Fields that can be mass assigned
     protected $fillable = [
         'employee_id',
         'leave_type',
@@ -54,27 +55,28 @@ class Request extends Model
         return $this->belongsTo(User::class, 'approved_by_hr_id');
     }
 
-    public function isPending(): bool
+    public function isPending()
     {
         return $this->status === 'pending';
     }
 
-    public function isDeptManagerApproved(): bool
+    public function isDeptManagerApproved()
     {
         return $this->status === 'dept_manager_approved';
     }
 
-    public function isApproved(): bool
+    public function isApproved()
     {
         return $this->status === 'hr_approved';
     }
 
-    public function isRejected(): bool
+    public function isRejected()
     {
         return in_array($this->status, ['dept_manager_rejected', 'hr_rejected'], true);
     }
 
-    public function getStatusLabel(): string
+    // Get human-readable status label
+    public function getStatusLabel()
     {
         return match($this->status) {
             'pending' => 'Pending',

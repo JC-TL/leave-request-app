@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
     <link href="https://cdn.jsdelivr.net/npm/daisyui@5/themes.css" rel="stylesheet" type="text/css" />
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.20/index.global.min.css" rel="stylesheet" type="text/css" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.20/index.global.min.js'></script>
 </head>
@@ -29,11 +30,9 @@
         {{ $slot }}
     </main>
 
-    <footer class="footer footer-center p-5 bg-base-300 text-base-content text-xs mt-5 opacity-50">
-        <div>
+        <div class="text-center text-xs mt-5 opacity-50">
             <p>© Vertex Global 2026</p>
         </div>
-    </footer>
 </body>
 
 </html>

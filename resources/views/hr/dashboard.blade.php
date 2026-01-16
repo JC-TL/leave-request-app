@@ -36,6 +36,14 @@
                                 Policies
                             </a>
                         </li>
+                        <li>
+                            <a href="{{ route('hr.employees') }}">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                                </svg>
+                                Employees
+                            </a>
+                        </li>
                         <li class="divider my-1"></li>
                         <li>
                             <form action="{{ route('logout') }}" method="POST" class="w-full">
@@ -118,7 +126,7 @@
                 </div>
             </div>
 
-            <!-- Section 2: Pending Requests Awaiting HR Approval -->
+        
             <div class="card bg-base-100 shadow-sm border border-base-300">
                 <div class="card-body">
                     <h2 class="card-title text-2xl text-[#1C96E1] mb-4">Pending Requests Awaiting HR Approval</h2>
@@ -181,7 +189,7 @@
                 <div class="card bg-base-100 shadow-sm border border-base-300 sticky top-6">
                     <div class="card-body">
                         <h2 class="card-title text-xl text-[#1C96E1] mb-4">Leave Calendar</h2>
-                        <div id="calendar" class="min-h-[400px]"></div>
+                        <div id="calendar" class="min-h-[400px] overflow-visible"></div>
                     </div>
                 </div>
             </div>
@@ -189,99 +197,124 @@
     </div>
 
     <style>
-        /* Style calendar events as small circles */
-        .fc-event {
-            border-radius: 50% !important;
-            width: 10px !important;
-            height: 10px !important;
-            border: none !important;
-            padding: 0 !important;
-            margin: 2px !important;
-            display: inline-block !important;
-            font-size: 0 !important;
-            line-height: 0 !important;
-            min-height: 10px !important;
-            overflow: hidden !important;
-        }
-        
-        .fc-event-title {
-            display: none !important;
-            visibility: hidden !important;
-        }
-        
-        .fc-event-title-container {
-            display: none !important;
-        }
-        
-        .fc-daygrid-event {
-            margin: 2px !important;
-            padding: 0 !important;
-        }
-        
-        .fc-daygrid-day-events {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            align-items: center;
-            min-height: 20px;
-            gap: 2px;
-        }
-        
-        .fc-daygrid-day-frame {
+        /* Render leaves as compact badges inside each day cell */
+        .fc .leave-badges {
+            margin-top: 4px;
             display: flex;
             flex-direction: column;
+            gap: 4px;
+        }
+        .fc .leave-badge {
+            display: inline-flex;
+            align-items: center;
+            max-width: 100%;
+            padding: 2px 6px;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 600;
+            line-height: 1.2;
+            color: white;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
     </style>
-    
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             var calendarEl = document.getElementById('calendar');
             if (calendarEl) {
+                if (!window.FullCalendar || !window.FullCalendar.Calendar) {
+                    console.error('FullCalendar is not loaded. Check the CDN script include in the layout.');
+                    return;
+                }
+
+                // We render leave badges per-day ourselves (instead of relying on FullCalendar's event rendering).
+                var leaveEvents = @json($calendarEvents);
+                
+                function parseYmd(ymd) {
+                    var parts = String(ymd).split('-').map(function(n){ return parseInt(n, 10); });
+                    return new Date(parts[0], parts[1] - 1, parts[2]);
+                }
+
+                function toYmd(date) {
+                    var y = date.getFullYear();
+                    var m = String(date.getMonth() + 1).padStart(2, '0');
+                    var d = String(date.getDate()).padStart(2, '0');
+                    return y + '-' + m + '-' + d;
+                }
+
+                // Build a map: YYYY-MM-DD -> [{ name, color }, ...]
+                var leaveByDate = {};
+                (leaveEvents || []).forEach(function(ev) {
+                    if (!ev || !ev.start || !ev.end) return;
+                    var start = parseYmd(ev.start);
+                    var endExclusive = parseYmd(ev.end);
+                    var color = ev.backgroundColor || ev.color || '#3b82f6';
+                    var name = ev.title || 'Leave';
+
+                    for (var d = new Date(start); d < endExclusive; d.setDate(d.getDate() + 1)) {
+                        var key = toYmd(d);
+                        if (!leaveByDate[key]) leaveByDate[key] = [];
+                        leaveByDate[key].push({ name: name, color: color });
+                    }
+                });
+
+                function renderLeaveBadges() {
+                    // Clear previous badges (FullCalendar reuses DOM on navigation)
+                    calendarEl.querySelectorAll('.leave-badges').forEach(function(node) { node.remove(); });
+
+                    // Only render into dayGrid month cells (badges requirement)
+                    var dayCells = calendarEl.querySelectorAll('.fc-daygrid-day[data-date]');
+                    dayCells.forEach(function(cell) {
+                        var date = cell.getAttribute('data-date');
+                        var items = leaveByDate[date];
+                        if (!items || items.length === 0) return;
+
+                        var host =
+                            cell.querySelector('.fc-daygrid-day-events') ||
+                            cell.querySelector('.fc-daygrid-day-frame') ||
+                            cell;
+
+                        var wrap = document.createElement('div');
+                        wrap.className = 'leave-badges';
+
+                        items.forEach(function(item) {
+                            var badge = document.createElement('div');
+                            badge.className = 'leave-badge';
+                            badge.style.backgroundColor = item.color;
+                            badge.textContent = item.name;
+                            wrap.appendChild(badge);
+                        });
+
+                        host.appendChild(wrap);
+                    });
+                }
+
                 var calendar = new FullCalendar.Calendar(calendarEl, {
                     initialView: 'dayGridMonth',
+                    initialDate: new Date(),
                     headerToolbar: {
                         left: 'prev,next today',
                         center: 'title',
                         right: 'dayGridMonth,timeGridWeek,listWeek'
                     },
-                    events: @json($calendarEvents),
-                    eventDisplay: 'block',
-                    height: 'auto',
-                    dayMaxEvents: false, // Show all events
-                    eventDidMount: function(info) {
-                        // Ensure events appear as small circles
-                        info.el.style.borderRadius = '50%';
-                        info.el.style.width = '10px';
-                        info.el.style.height = '10px';
-                        info.el.style.border = 'none';
-                        info.el.style.padding = '0';
-                        info.el.style.margin = '2px';
-                        info.el.style.display = 'inline-block';
-                        info.el.style.fontSize = '0';
-                        info.el.style.lineHeight = '0';
-                        info.el.style.minHeight = '10px';
-                        
-                        // Set tooltip
-                        info.el.title = info.event.extendedProps.employee + ' - ' + 
-                                       info.event.extendedProps.leave_type + 
-                                       ' (' + info.event.extendedProps.days + ' days)';
-                        
-                        // Hide text content
-                        var titleEl = info.el.querySelector('.fc-event-title');
-                        if (titleEl) {
-                            titleEl.style.display = 'none';
-                        }
+                    // Keep FullCalendar events empty; we inject badges into each day cell.
+                    events: [],
+                    displayEventTime: false,
+                    datesSet: function() {
+                        // Wait one tick so FullCalendar has finished laying out the grid
+                        setTimeout(renderLeaveBadges, 0);
                     },
-                    eventClick: function(info) {
-                        // Show event details on click
-                        alert('Employee: ' + info.event.extendedProps.employee + '\n' +
-                              'Department: ' + info.event.extendedProps.department + '\n' +
-                              'Leave Type: ' + info.event.extendedProps.leave_type + '\n' +
-                              'Days: ' + info.event.extendedProps.days);
-                        info.jsEvent.preventDefault();
-                    }
+                    height: 'auto',
+                    dayMaxEvents: true
                 });
+
                 calendar.render();
+                // Initial paint
+                setTimeout(renderLeaveBadges, 0);
+            } else {
+                console.error('Calendar element not found');
             }
         });
     </script>
