@@ -3,7 +3,6 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ManagerController;
 
-// Manager routes
 Route::middleware(['auth', 'role:dept_manager'])->group(function () {
     Route::get('/manager/dashboard', [ManagerController::class, 'dashboard'])->name('manager.dashboard');
     Route::get('/manager/request/{id}', [ManagerController::class, 'showRequest'])->name('manager.show-request');

@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5-Hour Relearning Checklist - Leave Request App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .header .time {
+            font-size: 1.2em;
+            opacity: 0.95;
+        }
+
+        .progress-bar-container {
+            background: #f0f0f0;
+            padding: 20px 30px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .phase {
+            margin-bottom: 40px;
+            border: 2px solid #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .phase-header {
+            background: #f8f9fa;
+            padding: 20px;
+            border-bottom: 2px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .phase-header h2 {
+            color: #667eea;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .phase-time {
+            background: #667eea;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        .phase-content {
+            padding: 20px;
+        }
+
+        .task {
+            padding: 15px;
+            margin: 10px 0;
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            border-radius: 5px;
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .task:hover {
+            background: #f0f0f0;
+            transform: translateX(5px);
+        }
+
+        .task.completed {
+            background: #d4edda;
+            border-left-color: #28a745;
+        }
+
+        .task input[type="checkbox"] {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .task-content {
+            flex: 1;
+        }
+
+        .task-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 1.05em;
+        }
+
+        .task-description {
+            color: #666;
+            font-size: 0.95em;
+            line-height: 1.6;
+            margin-top: 5px;
+        }
+
+        .file-link {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 0.85em;
+            margin: 5px 5px 0 0;
+            transition: background 0.3s;
+        }
+
+        .file-link:hover {
+            background: #5568d3;
+        }
+
+        .command-box {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 12px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+
+        .tip {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+
+        .warning {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+
+        .success-box {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            text-align: center;
+            display: none;
+        }
+
+        .success-box.show {
+            display: block;
+        }
+
+        .emoji {
+            font-size: 1.2em;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid #e0e0e0;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 5-Hour Relearning Checklist</h1>
+            <p class="time">Leave Request App - Get Back Up to Speed</p>
+        </div>
+
+        <div class="progress-bar-container">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill">0%</div>
+            </div>
+            <div class="stats" style="margin-top: 15px;">
+                <div class="stat-card">
+                    <div class="stat-number" id="completedTasks">0</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalTasks">42</div>
+                    <div class="stat-label">Total Tasks</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="timeRemaining">5:00</div>
+                    <div class="stat-label">Hours Remaining</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- PHASE 1 -->
+            <div class="phase">
+                <div class="phase-header">
+                    <h2><span class="emoji">🚀</span> Phase 1: Quick Setup & Overview (45 min)</h2>
+                    <span class="phase-time">45 min</span>
+                </div>
+                <div class="phase-content">
+                    <div class="task" data-phase="1">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <div class="task-content">
+                            <div class="task-title">1. Start the application</div>
+                            <div class="task-description">
+                                Open terminal in project folder and run:
+                                <div class="command-box">php artisan serve</div>
+                                Visit <strong>http://localhost:8000</strong> in your browser
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task" data-phase="1">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <div class="task-content">
+                            <div class="task-title">2. Test login with different roles</div>
+                            <div class="task-description">
+                                Log in as employee, manager, and HR admin. Click around and remember what each role can do.
+                                <div class="tip">💡 Don't code yet - just explore the UI!</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task" data-phase="1">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <div class="task-content">
+                            <div class="task-title">3. Read the mental model</div>
+                            <div class="task-description">
+                                Open and read: <a href="docs/roles-views-study-guide.md" class="file-link" target="_blank">docs/roles-views-study-guide.md</a>
+                                <br>Focus on <strong>Section 1</strong> - understand the entities and status flow
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task" data-phase="1">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <div class="task-content">
+                            <div class="task-title">4. Understand the status flow</div>
+                            <div class="task-description">
+                                Memorize: pending → dept_manager_approved/rejected → hr_approved/rejected
+                                <br>Remember: Balance is only deducted when HR approves!
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PHASE 2 -->
+            <div class="phase">
+                <div class="phase-header">
+                    <h2><span class="emoji">🗺️</span> Phase 2: Routes & Middleware (60 min)</h2>
+                    <span class="phase-time">60 min</span>
+                </div>
+                <div class="phase-content">
+                    <div class="task" data-phase="2">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <div class="task-content">
+                            <div class="task-title">5. Read main route file</div>
+                            <div class="task-description">
+                                Open: <a href="routes/web.php" class="file-link" target="_blank">routes/web.php</a>
+                                <br>See how it loads separate route files for each role
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task" data-phase="2">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <div class="task-content">
+                            <div class="task-title">6. Study employee routes</div>
+                            <div class="task-description">
+                                Open: <a href="routes/employee.php" class="file-link" target="_blank">routes/employee.php</a>
+                                <br>Notice: <code>Route::middleware(['auth', 'role:employee'])</code>
+                                <br>Understand: GET = view page, POST = submit form, PATCH = update
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task" data-phase="2">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <div class="task-content">
+                            <div class="task-title">7. Study manager routes</div>
+                            <div class="task-description">
+                                Open: <a href="routes/manager.php" class="file-link" target="_blank">routes/manager.php</a>
+                                <br>See the pattern: dashboard, show request, approve, reject
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task" data-phase="2">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <div class="task-content">
+                            <div class="task-title">8. Study HR routes</div>
+                            <div class="task-description">
+                                Open: <a href="routes/hr.php" class="file-link" target="_blank">routes/hr.php</a>
+                                <br>Notice all routes require <code>role:hr_admin</code>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task" data-phase="2">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <div class="task-content">
+                            <div class="task-title">9. Understand middleware</div>
+                            <div class="task-description">
+                                Open: <a href="app/Http/Middleware/RoleMiddleware.php" class="file-link" target="_blank">app/Http/Middleware/RoleMiddleware.php</a>
+                                <br>Read how it checks if user has the right role
+                                <br>Check: <a href="bootstrap/app.php" class="file-link" target="_blank">bootstrap/app.php</a> to see how it's registered
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task" data-phase="2">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <div class="task-content">
+                            <div class="task-title">10. Test route list</div>
+                            <div class="task-description">
+                                Run: <div class="command-box">php artisan route:list</div>
+                                See all available routes. Notice the route names (e.g., hr.dashboard)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PHASE 3 -->
+            <div class="phase">
+                <div class="phase-header">
+                    <h2><span class="emoji">📦</span> Phase 3: Models & Relationships (75 min)</h2>
+                    <span class="phase-time">75 min</span>
+                </div>
+                <div class="phase-content">
+                    <div class="task" data-phase="3">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <div class="task-content">
+                            <div class="task-title">11. Study User model</div>
+                            <div class="task-description">
+                                Open: <a href="app/Models/User.php" class="file-link" target="_blank">app/Models/User.php</a>
+                                <br>Find: <code>leaveRequests()</code>, <code>leaveBalances()</code>, <code>department()</code>
+                                <br>Understand: hasMany vs belongsTo relationships
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task" data-phase="3">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <div class="task-content">
+                            <div class="task-title">12. Study Request model</div>
+                            <div class="task-description">
+                                Open: <a href="app/Models/Request.php" class="file-link" target="_blank">app/Models/Request.php</a>
+                                <br>Find: <code>employee()</code>, <code>departmentManager()</code>, <code>hrApprover()</code>
+                                <br>Notice: Helper methods like <code>isPending()</code>, <code>isApproved()</code>
+                                <br>Study: Query scopes like <code>scopePending()</code>, <code>scopeApproved()</code>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task" data-phase="3">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <div class="task-content">
+                            <div class="task-title">13. Study Balance model</div>
+                            <div class="task-description">
+                                Open: <a href="app/Models/Balance.php" class="file-link" target="_blank">app/Models/Balance.php</a>
+                                <br>Find: <code>hasSufficientBalance()</code>, <code>deductDays()</code>
+                                <br>Understand how balance calculations work
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task" data-phase="3">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <div class="task-content">
+                            <div class="task-title">14. Check database migrations</div>
+                            <div class="task-description">
+                                Open: <a href="database/migrations" class="file-link" target="_blank">database/migrations/</a>
+                                <br>Look at table structures:
+                                <br>- users table (roles, department_id, manager_id)
+                                <br>- requests table (status enum, foreign keys)
+                                <br>- balances table (user_id, leave_type, balance, used)
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task" data-phase="3">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <div class="task-content">
+                            <div class="task-title">15. Test relationships in Tinker</div>
+                            <div class="task-description">
+                                Run: <div class="command-box">php artisan tinker</div>
+                                <br>Try: <code>$user = User::first();</code>
+                                <br>Then: <code>$user->leaveRequests;</code>
+                                <br>Then: <code>$user->leaveBalances;</code>
+                                <br>Type <code>exit</code> when done
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PHASE 4 -->
+            <div class="phase">
+                <div class="phase-header">
+                    <h2><span class="emoji">🎮</span> Phase 4: Controllers - Employee Flow (60 min)</h2>
+                    <span class="phase-time">60 min</span>
+                </div>
+                <div class="phase-content">
+                    <div class="task" data-phase="4">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <div class="task-content">
+                            <div class="task-title">16. Read EmployeeController dashboard</div>
+                            <div class="task-description">
+                                Open: <a href="app/Http/Controllers/EmployeeController.php" class="file-link" target="_blank">app/Http/Controllers/EmployeeController.php</a>
+                                <br>Read <code>dashboard()</code> method (lines 13-30)
+                                <br>Understand: It loads balances and requests, then returns a view
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task" data-phase="4">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <div class="task-content">
+                            <div class="task-title">17. Trace storeRequest method</div>
+                            <div class="task-description">
+                                Read <code>storeRequest()</code> method (lines 32-83)
+                                <br>Follow step-by-step:
+                                <br>1. Validate input
+                                <br>2. Parse dates with Carbon
+                                <br>3. Calculate working days
+                                <br>4. Check balance
+                                <br>5. Create request
+                                <br>6. Redirect with message
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task" data-phase="4">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <div class="task-content">
+                            <div class="task-title">18. Understand cancelRequest</div>
+                            <div class="task-description">
+                                Read <code>cancelRequest()</code> method (lines 85-106)
+                                <br>Notice: Security check (own request only)
+                                <br>Notice: Status check (pending only)
+                                <br>Understand: Why balance isn't refunded
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task" data-phase="4">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <div class="task-content">
+                            <div class="task-title">19. View employee dashboard</div>
+                            <div class="task-description">
+                                Open: <a href="resources/views/employee/dashboard.blade.php" class="file-link" target="_blank">resources/views/employee/dashboard.blade.php</a>
+                                <br>See how it displays balances and requests
+                                <br>Notice: Uses components like <code>&lt;x-balance-card&gt;</code>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task" data-phase="4">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <div class="task-content">
+                            <div class="task-title">20. Test employee flow</div>
+                            <div class="task-description">
+                                In browser: Log in as employee → Create a leave request → Cancel it
+                                <br>While doing this, think about which controller method is being called
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PHASE 5 -->
+            <div class="phase">
+                <div class="phase-header">
+                    <h2><span class="emoji">👔</span> Phase 5: Controllers - Manager Flow (60 min)</h2>
+                    <span class="phase-time">60 min</span>
+                </div>
+                <div class="phase-content">
+                    <div class="task" data-phase="5">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <div class="task-content">
+                            <div class="task-title">21. Read ManagerController dashboard</div>
+                            <div class="task-description">
+                                Open: <a href="app/Http/Controllers/ManagerController.php" class="file-link" target="_blank">app/Http/Controllers/ManagerController.php</a>
+                                <br>Read <code>dashboard()</code> method
+                                <br>Understand: How it finds team members (same department)
+                                <br>Understand: How it loads pending requests
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task" data-phase="5">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <div class="task-content">
+                            <div class="task-title">22. Study showRequest method</div>
+                            <div class="task-description">
+                                Read <code>showRequest()</code> method
+                                <br>Notice: Security check - department must match
+                                <br>Notice: Loads employee balance for the leave type
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task" data-phase="5">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <div class="task-content">
+                            <div class="task-title">23. Trace approveRequest method</div>
+                            <div class="task-description">
+                                Read <code>approveRequest()</code> method
+                                <br>Steps:
+                                <br>1. Load request + employee
+                                <br>2. Check department (security)
+                                <br>3. Check status is pending
+                                <br>4. Check balance
+                                <br>5. Update status to dept_manager_approved
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task" data-phase="5">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <div class="task-content">
+                            <div class="task-title">24. Study rejectRequest method</div>
+                            <div class="task-description">
+                                Read <code>rejectRequest()</code> method
+                                <br>Notice: Requires rejection reason (validation)
+                                <br>Notice: Sets status to dept_manager_rejected
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task" data-phase="5">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <div class="task-content">
+                            <div class="task-title">25. View manager dashboard</div>
+                            <div class="task-description">
+                                Open: <a href="resources/views/manager/dashboard.blade.php" class="file-link" target="_blank">resources/views/manager/dashboard.blade.php</a>
+                                <br>See how it displays pending requests and team members
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task" data-phase="5">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <div class="task-content">
+                            <div class="task-title">26. Test manager flow</div>
+                            <div class="task-description">
+                                In browser: Log in as manager → View pending requests → Approve one → Reject one
+                                <br>Think about which methods are being called
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PHASE 6 -->
+            <div class="phase">
+                <div class="phase-header">
+                    <h2><span class="emoji">💼</span> Phase 6: Controllers - HR Flow (60 min)</h2>
+                    <span class="phase-time">60 min</span>
+                </div>
+                <div class="phase-content">
+                    <div class="task" data-phase="6">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <div class="task-content">
+                            <div class="task-title">27. Read HRController dashboard</div>
+                            <div class="task-description">
+                                Open: <a href="app/Http/Controllers/HRController.php" class="file-link" target="_blank">app/Http/Controllers/HRController.php</a>
+                                <br>Read <code>dashboard()</code> method (lines 18-71)
+                                <br>Understand: Loads requests needing HR attention
+                                <br>Understand: Builds calendar events for approved requests
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task" data-phase="6">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <div class="task-content">
+                            <div class="task-title">28. Study approveRequest - THE KEY METHOD</div>
+                            <div class="task-description">
+                                Read <code>approveRequest()</code> method (lines 88-122)
+                                <br>This is CRITICAL - it's where balance is deducted!
+                                <br>Steps:
+                                <br>1. Check status is dept_manager_approved
+                                <br>2. Check balance
+                                <br>3. <strong>Deduct days: $balance->deductDays()</strong>
+                                <br>4. Update status to hr_approved
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task" data-phase="6">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <div class="task-content">
+                            <div class="task-title">29. Study rejectRequest</div>
+                            <div class="task-description">
+                                Read <code>rejectRequest()</code> method (lines 124-147)
+                                <br>Notice: Requires rejection reason
+                                <br>Notice: Sets status to hr_rejected
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task" data-phase="6">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <div class="task-content">
+                            <div class="task-title">30. Study employee management</div>
+                            <div class="task-description">
+                                Read <code>createEmployee()</code> and <code>storeEmployee()</code> methods
+                                <br>Notice: Creates leave balances for new employee
+                                <br>Notice: Password hashing with Hash::make()
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task" data-phase="6">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <div class="task-content">
+                            <div class="task-title">31. Study policy management</div>
+                            <div class="task-description">
+                                Read <code>policies()</code> and <code>updatePolicy()</code> methods
+                                <br>Understand: Policies define annual entitlements
+                                <br>Understand: Used to initialize balances for new employees
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task" data-phase="6">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <div class="task-content">
+                            <div class="task-title">32. View HR dashboard</div>
+                            <div class="task-description">
+                                Open: <a href="resources/views/hr/dashboard.blade.php" class="file-link" target="_blank">resources/views/hr/dashboard.blade.php</a>
+                                <br>See how it displays stats and calendar
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task" data-phase="6">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <div class="task-content">
+                            <div class="task-title">33. Test HR flow</div>
+                            <div class="task-description">
+                                In browser: Log in as HR → View pending requests → Approve one
+                                <br>Check: Employee's balance should decrease!
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PHASE 7 -->
+            <div class="phase">
+                <div class="phase-header">
+                    <h2><span class="emoji">🎨</span> Phase 7: Views & Components (30 min)</h2>
+                    <span class="phase-time">30 min</span>
+                </div>
+                <div class="phase-content">
+                    <div class="task" data-phase="7">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <div class="task-content">
+                            <div class="task-title">34. Study layout component</div>
+                            <div class="task-description">
+                                Open: <a href="resources/views/components/layout.blade.php" class="file-link" target="_blank">resources/views/components/layout.blade.php</a>
+                                <br>Understand: How global layout works
+                                <br>Notice: Uses DaisyUI, includes navigation slot
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task" data-phase="7">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <div class="task-content">
+                            <div class="task-title">35. Study status badge component</div>
+                            <div class="task-description">
+                                Open: <a href="resources/views/components/status-badge.blade.php" class="file-link" target="_blank">resources/views/components/status-badge.blade.php</a>
+                                <br>See how status strings map to badge colors
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task" data-phase="7">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <div class="task-content">
+                            <div class="task-title">36. Study balance card component</div>
+                            <div class="task-description">
+                                Open: <a href="resources/views/components/balance-card.blade.php" class="file-link" target="_blank">resources/views/components/balance-card.blade.php</a>
+                                <br>Understand: How it calculates percentage and picks colors
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task" data-phase="7">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <div class="task-content">
+                            <div class="task-title">37. Understand Blade syntax</div>
+                            <div class="task-description">
+                                In any view file, notice:
+                                <br>- <code>@if</code>, <code>@foreach</code> for logic
+                                <br>- <code>{{ $variable }}</code> for output
+                                <br>- <code>@csrf</code> for forms
+                                <br>- <code>route('name')</code> for URLs
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PHASE 8 -->
+            <div class="phase">
+                <div class="phase-header">
+                    <h2><span class="emoji">✅</span> Phase 8: Final Test & Review (30 min)</h2>
+                    <span class="phase-time">30 min</span>
+                </div>
+                <div class="phase-content">
+                    <div class="task" data-phase="8">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <div class="task-content">
+                            <div class="task-title">38. Trace complete flow mentally</div>
+                            <div class="task-description">
+                                Without looking at code, explain:
+                                <br>1. Employee creates leave request
+                                <br>2. Manager approves it
+                                <br>3. HR approves it
+                                <br>4. Balance is deducted
+                                <br>Then verify by reading the code!
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task" data-phase="8">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <div class="task-content">
+                            <div class="task-title">39. Test all three roles</div>
+                            <div class="task-description">
+                                Create a complete leave request flow:
+                                <br>1. Employee submits request
+                                <br>2. Manager approves
+                                <br>3. HR approves
+                                <br>4. Verify balance decreased
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task" data-phase="8">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <div class="task-content">
+                            <div class="task-title">40. Make a small change</div>
+                            <div class="task-description">
+                                Try adding a simple feature:
+                                <br>- Add a "Notes" field to leave requests
+                                <br>- Or change a status badge color
+                                <br>- Or add a new stat to dashboard
+                                <br>This proves you understand the structure!
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task" data-phase="8">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <div class="task-content">
+                            <div class="task-title">41. Review your study guide</div>
+                            <div class="task-description">
+                                Re-read: <a href="docs/roles-views-study-guide.md" class="file-link" target="_blank">docs/roles-views-study-guide.md</a>
+                                <br>Now it should all make sense!
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task" data-phase="8">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <div class="task-content">
+                            <div class="task-title">42. Celebrate! 🎉</div>
+                            <div class="task-description">
+                                You've completed the relearning checklist!
+                                <br>You should now understand:
+                                <br>✅ Routes and middleware
+                                <br>✅ Models and relationships
+                                <br>✅ Controllers and validation
+                                <br>✅ Views and Blade components
+                                <br>✅ The complete request flow
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="success-box" id="successBox">
+                <h2>🎉 Congratulations!</h2>
+                <p>You've completed all tasks! You're back up to speed on the Leave Request App.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function updateProgress() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            const completed = document.querySelectorAll('input[type="checkbox"]:checked').length;
+            const total = checkboxes.length;
+            const percentage = Math.round((completed / total) * 100);
+            
+            // Update progress bar
+            const progressFill = document.getElementById('progressFill');
+            progressFill.style.width = percentage + '%';
+            progressFill.textContent = percentage + '%';
+            
+            // Update stats
+            document.getElementById('completedTasks').textContent = completed;
+            document.getElementById('totalTasks').textContent = total;
+            
+            // Update time remaining (rough estimate)
+            const hoursRemaining = Math.max(0, (5 - (completed / total * 5)).toFixed(1));
+            document.getElementById('timeRemaining').textContent = hoursRemaining;
+            
+            // Update task styling
+            checkboxes.forEach(checkbox => {
+                const task = checkbox.closest('.task');
+                if (checkbox.checked) {
+                    task.classList.add('completed');
+                } else {
+                    task.classList.remove('completed');
+                }
+            });
+            
+            // Show success message if all done
+            if (completed === total) {
+                document.getElementById('successBox').classList.add('show');
+            }
+            
+            // Save progress to localStorage
+            const progress = [];
+            checkboxes.forEach((cb, index) => {
+                if (cb.checked) {
+                    progress.push(index);
+                }
+            });
+            localStorage.setItem('relearningProgress', JSON.stringify(progress));
+        }
+        
+        // Load saved progress
+        window.addEventListener('DOMContentLoaded', function() {
+            const saved = localStorage.getItem('relearningProgress');
+            if (saved) {
+                const progress = JSON.parse(saved);
+                const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+                progress.forEach(index => {
+                    if (checkboxes[index]) {
+                        checkboxes[index].checked = true;
+                    }
+                });
+                updateProgress();
+            }
+        });
+    </script>
+</body>
+</html>

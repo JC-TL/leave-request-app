@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frontend (Vue + Inertia) - Study Guide</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="index.html" class="nav-brand">Leave Request App - Study Guide</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Overview</a></li>
+                <li><a href="tech-stack.html">Tech Stack</a></li>
+                <li><a href="backend.html">Backend</a></li>
+                <li><a href="frontend.html" class="active">Frontend</a></li>
+                <li><a href="database.html">Database</a></li>
+                <li><a href="flows.html">App Flows</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1 style="margin-bottom: 2rem;">Frontend - Vue.js + Inertia.js</h1>
+
+        <!-- Entry Point -->
+        <div class="card">
+            <h2>1. Application Entry Point</h2>
+            <p>The app starts with a Blade template that bootstraps Vue.js.</p>
+
+            <h3>Root Template (resources/views/app.blade.php)</h3>
+<pre>
+<span class="tag">&lt;!DOCTYPE html&gt;</span>
+<span class="tag">&lt;html&gt;</span>
+<span class="tag">&lt;head&gt;</span>
+    <span class="tag">&lt;title</span> <span class="attr">inertia</span><span class="tag">&gt;</span>{{ config('app.name') }}<span class="tag">&lt;/title&gt;</span>
+    
+    <span class="comment">&lt;!-- Load CSS and JS via Vite --&gt;</span>
+    @vite(['resources/js/app.js', "resources/js/Pages/{$page['component']}.vue"])
+    
+    <span class="comment">&lt;!-- Inertia head management --&gt;</span>
+    @inertiaHead
+<span class="tag">&lt;/head&gt;</span>
+<span class="tag">&lt;body</span> <span class="attr">class</span>=<span class="string">"font-sans antialiased app-background"</span><span class="tag">&gt;</span>
+    <span class="comment">&lt;!-- This is where Vue app mounts --&gt;</span>
+    @inertia
+<span class="tag">&lt;/body&gt;</span>
+<span class="tag">&lt;/html&gt;</span>
+</pre>
+
+            <h3>Vue Initialization (resources/js/app.js)</h3>
+<pre>
+<span class="keyword">import</span> { createApp, h } <span class="keyword">from</span> <span class="string">'vue'</span>;
+<span class="keyword">import</span> { createInertiaApp } <span class="keyword">from</span> <span class="string">'@inertiajs/vue3'</span>;
+<span class="keyword">import</span> { resolvePageComponent } <span class="keyword">from</span> <span class="string">'laravel-vite-plugin/inertia-helpers'</span>;
+<span class="keyword">import</span> { ZiggyVue } <span class="keyword">from</span> <span class="string">'../../vendor/tightenco/ziggy'</span>;
+
+<span class="function">createInertiaApp</span>({
+    <span class="comment">// Page title format</span>
+    <span class="attr">title</span>: (title) => title || <span class="string">'Leave Request App'</span>,
+    
+    <span class="comment">// Dynamically load Vue page components</span>
+    <span class="attr">resolve</span>: (name) =>
+        <span class="function">resolvePageComponent</span>(
+            <span class="string">`./Pages/${name}.vue`</span>,  <span class="comment">// e.g., ./Pages/Employee/Dashboard.vue</span>
+            <span class="keyword">import</span>.meta.<span class="function">glob</span>(<span class="string">'./Pages/**/*.vue'</span>)
+        ),
+    
+    <span class="comment">// Setup Vue app with plugins</span>
+    <span class="attr">setup</span>({ el, App, props, plugin }) {
+        <span class="keyword">return</span> <span class="function">createApp</span>({ render: () => <span class="function">h</span>(App, props) })
+            .<span class="function">use</span>(plugin)        <span class="comment">// Inertia plugin</span>
+            .<span class="function">use</span>(ZiggyVue)      <span class="comment">// Laravel route() helper</span>
+            .<span class="function">mount</span>(el);
+    },
+});
+</pre>
+
+            <div class="callout callout-info">
+                <strong>Key Insight:</strong> The <code class="inline-code">resolve</code> function maps Laravel's <code class="inline-code">Inertia::render('Employee/Dashboard')</code> to the Vue file at <code class="inline-code">resources/js/Pages/Employee/Dashboard.vue</code>
+            </div>
+        </div>
+
+        <!-- Layouts -->
+        <div class="card">
+            <h2>2. Layouts - Page Structure</h2>
+            <p>Layouts wrap pages with common elements like navigation and flash messages.</p>
+
+            <h3>AuthenticatedLayout (for logged-in users)</h3>
+<pre>
+<span class="tag">&lt;script setup&gt;</span>
+<span class="keyword">import</span> { ref, computed } <span class="keyword">from</span> <span class="string">'vue'</span>;
+<span class="keyword">import</span> { Link, usePage } <span class="keyword">from</span> <span class="string">'@inertiajs/vue3'</span>;
+<span class="keyword">import</span> Dropdown <span class="keyword">from</span> <span class="string">'@/Components/Dropdown.vue'</span>;
+<span class="keyword">import</span> NavLink <span class="keyword">from</span> <span class="string">'@/Components/NavLink.vue'</span>;
+
+<span class="comment">// Get shared data from Laravel middleware</span>
+<span class="keyword">const</span> page = <span class="function">usePage</span>();
+<span class="keyword">const</span> user = <span class="function">computed</span>(() => page.props.auth.user);
+<span class="keyword">const</span> flash = <span class="function">computed</span>(() => page.props.flash);
+
+<span class="comment">// Determine dashboard route based on role</span>
+<span class="keyword">const</span> dashboardRoute = <span class="function">computed</span>(() => {
+    <span class="keyword">switch</span> (user.value?.role) {
+        <span class="keyword">case</span> <span class="string">'employee'</span>: <span class="keyword">return</span> <span class="string">'employee.dashboard'</span>;
+        <span class="keyword">case</span> <span class="string">'dept_manager'</span>: <span class="keyword">return</span> <span class="string">'manager.dashboard'</span>;
+        <span class="keyword">case</span> <span class="string">'hr_admin'</span>: <span class="keyword">return</span> <span class="string">'hr.dashboard'</span>;
+    }
+});
+<span class="tag">&lt;/script&gt;</span>
+
+<span class="tag">&lt;template&gt;</span>
+    <span class="tag">&lt;div</span> <span class="attr">class</span>=<span class="string">"min-h-screen bg-gray-100/85"</span><span class="tag">&gt;</span>
+        <span class="comment">&lt;!-- Navigation Bar --&gt;</span>
+        <span class="tag">&lt;nav</span> <span class="attr">class</span>=<span class="string">"border-b border-gray-100 bg-white"</span><span class="tag">&gt;</span>
+            <span class="tag">&lt;NavLink</span> <span class="attr">:href</span>=<span class="string">"route(dashboardRoute)"</span><span class="tag">&gt;</span>Dashboard<span class="tag">&lt;/NavLink&gt;</span>
+            
+            <span class="comment">&lt;!-- User dropdown with logout --&gt;</span>
+            <span class="tag">&lt;Dropdown&gt;</span>
+                <span class="tag">&lt;template</span> <span class="attr">#trigger</span><span class="tag">&gt;</span>{{ user.name }}<span class="tag">&lt;/template&gt;</span>
+                <span class="tag">&lt;template</span> <span class="attr">#content</span><span class="tag">&gt;</span>
+                    <span class="tag">&lt;DropdownLink</span> <span class="attr">:href</span>=<span class="string">"route('logout')"</span> <span class="attr">method</span>=<span class="string">"post"</span><span class="tag">&gt;</span>
+                        Log Out
+                    <span class="tag">&lt;/DropdownLink&gt;</span>
+                <span class="tag">&lt;/template&gt;</span>
+            <span class="tag">&lt;/Dropdown&gt;</span>
+        <span class="tag">&lt;/nav&gt;</span>
+
+        <span class="comment">&lt;!-- Flash Messages --&gt;</span>
+        <span class="tag">&lt;div</span> <span class="attr">v-if</span>=<span class="string">"flash?.success"</span> <span class="attr">class</span>=<span class="string">"bg-green-50 p-4"</span><span class="tag">&gt;</span>
+            {{ flash.success }}
+        <span class="tag">&lt;/div&gt;</span>
+
+        <span class="comment">&lt;!-- Page Header Slot --&gt;</span>
+        <span class="tag">&lt;header</span> <span class="attr">v-if</span>=<span class="string">"$slots.header"</span><span class="tag">&gt;</span>
+            <span class="tag">&lt;slot</span> <span class="attr">name</span>=<span class="string">"header"</span> <span class="tag">/&gt;</span>
+        <span class="tag">&lt;/header&gt;</span>
+
+        <span class="comment">&lt;!-- Main Content Slot --&gt;</span>
+        <span class="tag">&lt;main&gt;</span>
+            <span class="tag">&lt;slot /&gt;</span>
+        <span class="tag">&lt;/main&gt;</span>
+    <span class="tag">&lt;/div&gt;</span>
+<span class="tag">&lt;/template&gt;</span>
+</pre>
+
+            <h3>Using a Layout in a Page</h3>
+<pre>
+<span class="tag">&lt;script setup&gt;</span>
+<span class="keyword">import</span> AuthenticatedLayout <span class="keyword">from</span> <span class="string">'@/Layouts/AuthenticatedLayout.vue'</span>;
+<span class="keyword">import</span> { Head } <span class="keyword">from</span> <span class="string">'@inertiajs/vue3'</span>;
+<span class="tag">&lt;/script&gt;</span>
+
+<span class="tag">&lt;template&gt;</span>
+    <span class="comment">&lt;!-- Set page title --&gt;</span>
+    <span class="tag">&lt;Head</span> <span class="attr">title</span>=<span class="string">"Employee Dashboard"</span> <span class="tag">/&gt;</span>
+
+    <span class="comment">&lt;!-- Wrap content in layout --&gt;</span>
+    <span class="tag">&lt;AuthenticatedLayout&gt;</span>
+        <span class="comment">&lt;!-- Fill the header slot --&gt;</span>
+        <span class="tag">&lt;template</span> <span class="attr">#header</span><span class="tag">&gt;</span>
+            <span class="tag">&lt;h2&gt;</span>Employee Dashboard<span class="tag">&lt;/h2&gt;</span>
+        <span class="tag">&lt;/template&gt;</span>
+
+        <span class="comment">&lt;!-- Main content goes here --&gt;</span>
+        <span class="tag">&lt;div</span> <span class="attr">class</span>=<span class="string">"py-12"</span><span class="tag">&gt;</span>
+            ...page content...
+        <span class="tag">&lt;/div&gt;</span>
+    <span class="tag">&lt;/AuthenticatedLayout&gt;</span>
+<span class="tag">&lt;/template&gt;</span>
+</pre>
+        </div>
+
+        <!-- Props -->
+        <div class="card">
+            <h2>3. Props - Data from Laravel</h2>
+            <p>Props are data passed from Laravel controllers to Vue components.</p>
+
+            <h3>Defining Props</h3>
+<pre>
+<span class="tag">&lt;script setup&gt;</span>
+<span class="comment">// Define what data this component receives</span>
+<span class="keyword">const</span> props = <span class="function">defineProps</span>({
+    balances: Array,      <span class="comment">// Array of leave balances</span>
+    requests: Object,     <span class="comment">// Paginated requests object</span>
+    user: Object,         <span class="comment">// Current user data</span>
+});
+
+<span class="comment">// Now you can use props.balances, props.requests, etc.</span>
+<span class="tag">&lt;/script&gt;</span>
+
+<span class="tag">&lt;template&gt;</span>
+    <span class="comment">&lt;!-- Loop through balances --&gt;</span>
+    <span class="tag">&lt;div</span> <span class="attr">v-for</span>=<span class="string">"balance in balances"</span> <span class="attr">:key</span>=<span class="string">"balance.id"</span><span class="tag">&gt;</span>
+        {{ balance.leave_type }}: {{ balance.balance }} days
+    <span class="tag">&lt;/div&gt;</span>
+    
+    <span class="comment">&lt;!-- Access paginated data --&gt;</span>
+    <span class="tag">&lt;tr</span> <span class="attr">v-for</span>=<span class="string">"request in requests.data"</span><span class="tag">&gt;</span>
+        {{ request.leave_type }}
+    <span class="tag">&lt;/tr&gt;</span>
+<span class="tag">&lt;/template&gt;</span>
+</pre>
+        </div>
+
+        <!-- Forms -->
+        <div class="card">
+            <h2>4. Forms - useForm()</h2>
+            <p>Inertia's <code class="inline-code">useForm</code> helper manages form state, submission, and validation errors.</p>
+
+            <h3>Complete Form Example</h3>
+<pre>
+<span class="tag">&lt;script setup&gt;</span>
+<span class="keyword">import</span> { useForm } <span class="keyword">from</span> <span class="string">'@inertiajs/vue3'</span>;
+<span class="keyword">import</span> PrimaryButton <span class="keyword">from</span> <span class="string">'@/Components/PrimaryButton.vue'</span>;
+<span class="keyword">import</span> TextInput <span class="keyword">from</span> <span class="string">'@/Components/TextInput.vue'</span>;
+<span class="keyword">import</span> InputLabel <span class="keyword">from</span> <span class="string">'@/Components/InputLabel.vue'</span>;
+<span class="keyword">import</span> InputError <span class="keyword">from</span> <span class="string">'@/Components/InputError.vue'</span>;
+
+<span class="comment">// Create form with initial values</span>
+<span class="keyword">const</span> form = <span class="function">useForm</span>({
+    leave_type: <span class="string">''</span>,
+    start_date: <span class="string">''</span>,
+    end_date: <span class="string">''</span>,
+    reason: <span class="string">''</span>,
+});
+
+<span class="comment">// Submit function</span>
+<span class="keyword">function</span> <span class="function">submit</span>() {
+    <span class="comment">// POST to Laravel route</span>
+    form.<span class="function">post</span>(<span class="function">route</span>(<span class="string">'employee.store-request'</span>), {
+        <span class="comment">// Reset form on success</span>
+        onSuccess: () => form.<span class="function">reset</span>(),
+    });
+}
+<span class="tag">&lt;/script&gt;</span>
+
+<span class="tag">&lt;template&gt;</span>
+    <span class="tag">&lt;form</span> <span class="attr">@submit.prevent</span>=<span class="string">"submit"</span><span class="tag">&gt;</span>
+        <span class="comment">&lt;!-- Leave Type --&gt;</span>
+        <span class="tag">&lt;div&gt;</span>
+            <span class="tag">&lt;InputLabel</span> <span class="attr">value</span>=<span class="string">"Leave Type"</span> <span class="tag">/&gt;</span>
+            <span class="tag">&lt;select</span> <span class="attr">v-model</span>=<span class="string">"form.leave_type"</span><span class="tag">&gt;</span>
+                <span class="tag">&lt;option</span> <span class="attr">value</span>=<span class="string">""</span><span class="tag">&gt;</span>Select...<span class="tag">&lt;/option&gt;</span>
+                <span class="tag">&lt;option</span> <span class="attr">value</span>=<span class="string">"Vacation Leave"</span><span class="tag">&gt;</span>Vacation Leave<span class="tag">&lt;/option&gt;</span>
+            <span class="tag">&lt;/select&gt;</span>
+            <span class="comment">&lt;!-- Show validation error if exists --&gt;</span>
+            <span class="tag">&lt;InputError</span> <span class="attr">:message</span>=<span class="string">"form.errors.leave_type"</span> <span class="tag">/&gt;</span>
+        <span class="tag">&lt;/div&gt;</span>
+
+        <span class="comment">&lt;!-- Start Date --&gt;</span>
+        <span class="tag">&lt;div&gt;</span>
+            <span class="tag">&lt;InputLabel</span> <span class="attr">value</span>=<span class="string">"Start Date"</span> <span class="tag">/&gt;</span>
+            <span class="tag">&lt;TextInput</span> <span class="attr">type</span>=<span class="string">"date"</span> <span class="attr">v-model</span>=<span class="string">"form.start_date"</span> <span class="tag">/&gt;</span>
+            <span class="tag">&lt;InputError</span> <span class="attr">:message</span>=<span class="string">"form.errors.start_date"</span> <span class="tag">/&gt;</span>
+        <span class="tag">&lt;/div&gt;</span>
+
+        <span class="comment">&lt;!-- Reason --&gt;</span>
+        <span class="tag">&lt;div&gt;</span>
+            <span class="tag">&lt;InputLabel</span> <span class="attr">value</span>=<span class="string">"Reason"</span> <span class="tag">/&gt;</span>
+            <span class="tag">&lt;textarea</span> <span class="attr">v-model</span>=<span class="string">"form.reason"</span><span class="tag">&gt;&lt;/textarea&gt;</span>
+            <span class="tag">&lt;InputError</span> <span class="attr">:message</span>=<span class="string">"form.errors.reason"</span> <span class="tag">/&gt;</span>
+        <span class="tag">&lt;/div&gt;</span>
+
+        <span class="comment">&lt;!-- Submit Button --&gt;</span>
+        <span class="tag">&lt;PrimaryButton</span> <span class="attr">:disabled</span>=<span class="string">"form.processing"</span><span class="tag">&gt;</span>
+            <span class="comment">&lt;!-- Show loading state --&gt;</span>
+            <span class="tag">&lt;span</span> <span class="attr">v-if</span>=<span class="string">"form.processing"</span><span class="tag">&gt;</span>Submitting...<span class="tag">&lt;/span&gt;</span>
+            <span class="tag">&lt;span</span> <span class="attr">v-else</span><span class="tag">&gt;</span>Submit Request<span class="tag">&lt;/span&gt;</span>
+        <span class="tag">&lt;/PrimaryButton&gt;</span>
+    <span class="tag">&lt;/form&gt;</span>
+<span class="tag">&lt;/template&gt;</span>
+</pre>
+
+            <h3>useForm Properties & Methods</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Property/Method</th>
+                        <th>Purpose</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><code class="inline-code">form.field_name</code></td><td>Access/set form field value</td></tr>
+                    <tr><td><code class="inline-code">form.errors.field_name</code></td><td>Validation error for field</td></tr>
+                    <tr><td><code class="inline-code">form.processing</code></td><td>True while form is submitting</td></tr>
+                    <tr><td><code class="inline-code">form.post(url)</code></td><td>Submit as POST request</td></tr>
+                    <tr><td><code class="inline-code">form.patch(url)</code></td><td>Submit as PATCH request</td></tr>
+                    <tr><td><code class="inline-code">form.reset()</code></td><td>Reset all fields to initial values</td></tr>
+                    <tr><td><code class="inline-code">form.reset('field')</code></td><td>Reset specific field</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Computed & Reactive -->
+        <div class="card">
+            <h2>5. Computed Properties & Reactivity</h2>
+
+            <h3>ref() - Reactive Variables</h3>
+<pre>
+<span class="keyword">import</span> { ref } <span class="keyword">from</span> <span class="string">'vue'</span>;
+
+<span class="comment">// Create a reactive variable</span>
+<span class="keyword">const</span> showModal = <span class="function">ref</span>(<span class="keyword">false</span>);
+<span class="keyword">const</span> selectedType = <span class="function">ref</span>(<span class="string">'Vacation Leave'</span>);
+
+<span class="comment">// Read value</span>
+console.<span class="function">log</span>(showModal.<span class="variable">value</span>);  <span class="comment">// false</span>
+
+<span class="comment">// Set value (UI will auto-update)</span>
+showModal.<span class="variable">value</span> = <span class="keyword">true</span>;
+</pre>
+
+            <h3>computed() - Derived Values</h3>
+<pre>
+<span class="keyword">import</span> { computed } <span class="keyword">from</span> <span class="string">'vue'</span>;
+
+<span class="keyword">const</span> props = <span class="function">defineProps</span>({ balances: Array });
+
+<span class="comment">// Computed: auto-updates when balances change</span>
+<span class="keyword">const</span> totalDays = <span class="function">computed</span>(() => {
+    <span class="keyword">return</span> props.balances.<span class="function">reduce</span>((sum, b) => sum + b.balance, 0);
+});
+
+<span class="comment">// Filter balances with available days</span>
+<span class="keyword">const</span> availableBalances = <span class="function">computed</span>(() => {
+    <span class="keyword">return</span> props.balances.<span class="function">filter</span>(b => b.balance - b.used > 0);
+});
+</pre>
+
+            <h3>watch() - React to Changes</h3>
+<pre>
+<span class="keyword">import</span> { watch } <span class="keyword">from</span> <span class="string">'vue'</span>;
+
+<span class="comment">// Watch form.department_id and react when it changes</span>
+<span class="function">watch</span>(() => form.department_id, (newValue) => {
+    <span class="comment">// Clear manager when department changes</span>
+    form.manager_id = <span class="string">''</span>;
+});
+</pre>
+        </div>
+
+        <!-- Inertia Navigation -->
+        <div class="card">
+            <h2>6. Navigation</h2>
+
+            <h3>Link Component (SPA Navigation)</h3>
+<pre>
+<span class="keyword">import</span> { Link } <span class="keyword">from</span> <span class="string">'@inertiajs/vue3'</span>;
+
+<span class="comment">&lt;!-- Simple link --&gt;</span>
+<span class="tag">&lt;Link</span> <span class="attr">:href</span>=<span class="string">"route('employee.dashboard')"</span><span class="tag">&gt;</span>Dashboard<span class="tag">&lt;/Link&gt;</span>
+
+<span class="comment">&lt;!-- Link with parameter --&gt;</span>
+<span class="tag">&lt;Link</span> <span class="attr">:href</span>=<span class="string">"route('manager.show-request', request.id)"</span><span class="tag">&gt;</span>
+    View Details
+<span class="tag">&lt;/Link&gt;</span>
+
+<span class="comment">&lt;!-- POST link (like logout) --&gt;</span>
+<span class="tag">&lt;Link</span> <span class="attr">:href</span>=<span class="string">"route('logout')"</span> <span class="attr">method</span>=<span class="string">"post"</span> <span class="attr">as</span>=<span class="string">"button"</span><span class="tag">&gt;</span>
+    Log Out
+<span class="tag">&lt;/Link&gt;</span>
+</pre>
+
+            <h3>Programmatic Navigation</h3>
+<pre>
+<span class="keyword">import</span> { router } <span class="keyword">from</span> <span class="string">'@inertiajs/vue3'</span>;
+
+<span class="comment">// Navigate to a page</span>
+router.<span class="function">visit</span>(<span class="function">route</span>(<span class="string">'employee.dashboard'</span>));
+
+<span class="comment">// Navigate with data preservation</span>
+router.<span class="function">get</span>(<span class="function">route</span>(<span class="string">'manager.dashboard'</span>), { leave_type: <span class="string">'Sick Leave'</span> }, {
+    preserveState: <span class="keyword">true</span>,
+});
+
+<span class="comment">// PATCH request (like canceling a request)</span>
+router.<span class="function">patch</span>(<span class="function">route</span>(<span class="string">'request.cancel'</span>, id));
+</pre>
+        </div>
+
+        <!-- Conditional Rendering -->
+        <div class="card">
+            <h2>7. Conditional Rendering</h2>
+
+            <h3>v-if / v-else</h3>
+<pre>
+<span class="comment">&lt;!-- Show only if condition is true --&gt;</span>
+<span class="tag">&lt;div</span> <span class="attr">v-if</span>=<span class="string">"requests.data.length > 0"</span><span class="tag">&gt;</span>
+    <span class="comment">&lt;!-- Show table --&gt;</span>
+<span class="tag">&lt;/div&gt;</span>
+<span class="tag">&lt;div</span> <span class="attr">v-else</span><span class="tag">&gt;</span>
+    <span class="tag">&lt;p&gt;</span>No requests found.<span class="tag">&lt;/p&gt;</span>
+<span class="tag">&lt;/div&gt;</span>
+
+<span class="comment">&lt;!-- Multiple conditions --&gt;</span>
+<span class="tag">&lt;span</span> <span class="attr">v-if</span>=<span class="string">"status === 'pending'"</span> <span class="attr">class</span>=<span class="string">"bg-yellow-100"</span><span class="tag">&gt;</span>Pending<span class="tag">&lt;/span&gt;</span>
+<span class="tag">&lt;span</span> <span class="attr">v-else-if</span>=<span class="string">"status === 'hr_approved'"</span> <span class="attr">class</span>=<span class="string">"bg-green-100"</span><span class="tag">&gt;</span>Approved<span class="tag">&lt;/span&gt;</span>
+<span class="tag">&lt;span</span> <span class="attr">v-else</span> <span class="attr">class</span>=<span class="string">"bg-red-100"</span><span class="tag">&gt;</span>Rejected<span class="tag">&lt;/span&gt;</span>
+</pre>
+
+            <h3>Dynamic Classes</h3>
+<pre>
+<span class="comment">&lt;!-- Object syntax --&gt;</span>
+<span class="tag">&lt;div</span> <span class="attr">:class</span>=<span class="string">"{ 'bg-green-50': isApproved, 'bg-red-50': isRejected }"</span><span class="tag">&gt;</span>
+
+<span class="comment">&lt;!-- Array syntax --&gt;</span>
+<span class="tag">&lt;span</span> <span class="attr">:class</span>=<span class="string">"['px-2 py-1 rounded-full', getStatusColor(status)]"</span><span class="tag">&gt;</span>
+</pre>
+        </div>
+
+        <!-- File Structure -->
+        <div class="card">
+            <h2>8. Page File Structure</h2>
+            
+            <div class="file-tree">
+<span class="folder">resources/js/Pages/</span>
+├── <span class="folder">Auth/</span>
+│   ├── <span class="file">Login.vue</span>           <span class="comment"># Login page</span>
+│   └── <span class="file">ContactAdmin.vue</span>    <span class="comment"># Contact form</span>
+├── <span class="folder">Employee/</span>
+│   └── <span class="file">Dashboard.vue</span>       <span class="comment"># Employee dashboard</span>
+├── <span class="folder">Manager/</span>
+│   ├── <span class="file">Dashboard.vue</span>       <span class="comment"># Manager dashboard</span>
+│   └── <span class="file">ShowRequest.vue</span>    <span class="comment"># View/approve request</span>
+└── <span class="folder">HR/</span>
+    ├── <span class="file">Dashboard.vue</span>       <span class="comment"># HR dashboard with calendar</span>
+    ├── <span class="file">ShowRequest.vue</span>    <span class="comment"># View/approve request</span>
+    ├── <span class="file">Policies.vue</span>       <span class="comment"># Manage leave policies</span>
+    ├── <span class="file">Employees.vue</span>      <span class="comment"># List employees</span>
+    └── <span class="file">CreateEmployee.vue</span> <span class="comment"># Add new employee</span>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="card">
+            <h2>Continue Learning</h2>
+            <div class="grid grid-2">
+                <a href="database.html" class="tech-card" style="text-decoration: none;">
+                    <div class="icon">🗄️</div>
+                    <h3>Database</h3>
+                    <p>Tables, Migrations, Seeders</p>
+                </a>
+                <a href="flows.html" class="tech-card" style="text-decoration: none;">
+                    <div class="icon">🔄</div>
+                    <h3>App Flows</h3>
+                    <p>Authentication, Leave Request Flow</p>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>Leave Request App - Presentation Study Guide</p>
+    </footer>
+</body>
+</html>

@@ -2,31 +2,45 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Request as LeaveRequest;
+use App\Models\LeaveRequest;
+use App\Models\Policy;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class ManagerController extends Controller
 {
-    // Could add caching here for team members list if needed
-    public function dashboard()
+    public function dashboard(Request $request)
     {
         $user = Auth::user();
-        
-        // Get all employees in manager's department
+
+        // Leave type for team balance card (default: Vacation Leave)
+        $leaveTypes = Policy::orderBy('leave_type')->pluck('leave_type');
+        $selectedLeaveType = $request->input('leave_type', 'Vacation Leave');
+        if (!$leaveTypes->contains($selectedLeaveType)) {
+            $selectedLeaveType = $leaveTypes->first() ?? 'Vacation Leave';
+        }
+
+        $currentYear = now()->year;
+
+        // get all employees in manager's department with their leave balances
         $teamMembers = User::where('department_id', $user->department_id)
             ->where('role', 'employee')
+            ->with(['leaveBalances' => function ($query) use ($currentYear) {
+                $query->where('year', $currentYear);
+            }])
             ->get();
 
         $employeeIds = $teamMembers->pluck('id');
         
-        // Get pending requests from team members
+        // get pending requests from team members (preserve leave_type when paginating)
         $pendingRequests = LeaveRequest::whereIn('employee_id', $employeeIds)
             ->pending()
             ->with('employee')
             ->orderBy('created_at', 'desc')
-            ->paginate(10);
+            ->paginate(10)
+            ->withQueryString();
 
         $pendingCount = LeaveRequest::whereIn('employee_id', $employeeIds)
             ->pending()
@@ -42,14 +56,16 @@ class ManagerController extends Controller
 
         $teamCount = $teamMembers->count();
 
-        return view('manager.dashboard', compact(
-            'pendingRequests',
-            'teamMembers',
-            'pendingCount',
-            'approvedThisMonth',
-            'teamCount',
-            'user'
-        ));
+        return Inertia::render('Manager/Dashboard', [
+            'pendingRequests' => $pendingRequests,
+            'teamMembers' => $teamMembers,
+            'pendingCount' => $pendingCount,
+            'approvedThisMonth' => $approvedThisMonth,
+            'teamCount' => $teamCount,
+            'leaveTypes' => $leaveTypes,
+            'selectedLeaveType' => $selectedLeaveType,
+            'user' => $user,
+        ]);
     }
 
     public function showRequest($id)
@@ -67,7 +83,10 @@ class ManagerController extends Controller
         $currentYear = now()->year;
         $balance = $leaveRequest->employee->getLeaveBalance($leaveRequest->leave_type, $currentYear);
 
-        return view('manager.show-request', compact('leaveRequest', 'balance'));
+        return Inertia::render('Manager/ShowRequest', [
+            'leaveRequest' => $leaveRequest,
+            'balance' => $balance,
+        ]);
     }
 
     public function approveRequest(Request $request, $id)
@@ -86,11 +105,11 @@ class ManagerController extends Controller
                 ->withErrors(['error' => 'This request cannot be approved.']);
         }
 
-        // Check balance
+        // Check that total reserved (pending + manager-approved) does not exceed balance - used
         $currentYear = now()->year;
         $balance = $leaveRequest->employee->getLeaveBalance($leaveRequest->leave_type, $currentYear);
-        
-        if (!$balance || !$balance->hasSufficientBalance($leaveRequest->number_of_days)) {
+        $pendingDays = $leaveRequest->employee->getPendingLeaveDays($leaveRequest->leave_type, $currentYear);
+        if (!$balance || $balance->getAvailableBalance() < $pendingDays) {
             return back()
                 ->withErrors(['error' => 'Employee has insufficient balance for this request.']);
         }
@@ -127,6 +146,7 @@ class ManagerController extends Controller
             'reason' => 'required|string|max:500',
         ]);
 
+        // Balance is only deducted when HR approves, so nothing to restore
         $leaveRequest->update([
             'status' => 'dept_manager_rejected',
             'dept_manager_comment' => $validated['reason'],

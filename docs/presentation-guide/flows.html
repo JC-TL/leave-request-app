@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Flows - Study Guide</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="index.html" class="nav-brand">Leave Request App - Study Guide</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Overview</a></li>
+                <li><a href="tech-stack.html">Tech Stack</a></li>
+                <li><a href="backend.html">Backend</a></li>
+                <li><a href="frontend.html">Frontend</a></li>
+                <li><a href="database.html">Database</a></li>
+                <li><a href="flows.html" class="active">App Flows</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1 style="margin-bottom: 2rem;">Application Flows</h1>
+
+        <!-- Authentication Flow -->
+        <div class="card">
+            <h2>1. Authentication Flow</h2>
+            
+            <h3>Login Process</h3>
+            <div class="flow">
+                <div class="flow-box">User visits /</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">Login.vue displayed</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">User enters credentials</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">form.post('/login')</div>
+            </div>
+            <div class="flow">
+                <div class="flow-box">AuthController@login</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">Validate credentials</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">Create session</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">Redirect to dashboard</div>
+            </div>
+
+            <h3>Code: Login Controller</h3>
+<pre>
+<span class="comment">// AuthController.php</span>
+<span class="keyword">public function</span> <span class="function">login</span>(Request <span class="variable">$request</span>)
+{
+    <span class="comment">// 1. Validate input</span>
+    <span class="variable">$credentials</span> = <span class="variable">$request</span>-><span class="function">validate</span>([
+        <span class="string">'email'</span> => <span class="string">'required|email'</span>,
+        <span class="string">'password'</span> => <span class="string">'required'</span>,
+    ]);
+
+    <span class="comment">// 2. Attempt authentication</span>
+    <span class="keyword">if</span> (Auth::<span class="function">attempt</span>(<span class="variable">$credentials</span>, <span class="variable">$request</span>-><span class="variable">remember</span>)) {
+        <span class="variable">$request</span>-><span class="function">session</span>()-><span class="function">regenerate</span>();
+        
+        <span class="comment">// 3. Redirect based on role</span>
+        <span class="variable">$user</span> = Auth::<span class="function">user</span>();
+        
+        <span class="keyword">return match</span>(<span class="variable">$user</span>-><span class="variable">role</span>) {
+            <span class="string">'employee'</span> => <span class="function">redirect</span>()-><span class="function">route</span>(<span class="string">'employee.dashboard'</span>),
+            <span class="string">'dept_manager'</span> => <span class="function">redirect</span>()-><span class="function">route</span>(<span class="string">'manager.dashboard'</span>),
+            <span class="string">'hr_admin'</span>, <span class="string">'ceo'</span> => <span class="function">redirect</span>()-><span class="function">route</span>(<span class="string">'hr.dashboard'</span>),
+        };
+    }
+
+    <span class="comment">// 4. Return error if failed</span>
+    <span class="keyword">return</span> <span class="function">back</span>()-><span class="function">withErrors</span>([
+        <span class="string">'email'</span> => <span class="string">'Invalid credentials.'</span>,
+    ]);
+}
+</pre>
+
+            <h3>Code: Login Form (Vue)</h3>
+<pre>
+<span class="tag">&lt;script setup&gt;</span>
+<span class="keyword">import</span> { useForm } <span class="keyword">from</span> <span class="string">'@inertiajs/vue3'</span>;
+
+<span class="keyword">const</span> form = <span class="function">useForm</span>({
+    email: <span class="string">''</span>,
+    password: <span class="string">''</span>,
+    remember: <span class="keyword">false</span>,
+});
+
+<span class="keyword">const</span> <span class="function">submit</span> = () => {
+    form.<span class="function">post</span>(<span class="function">route</span>(<span class="string">'login.store'</span>), {
+        onFinish: () => form.<span class="function">reset</span>(<span class="string">'password'</span>),
+    });
+};
+<span class="tag">&lt;/script&gt;</span>
+
+<span class="tag">&lt;template&gt;</span>
+    <span class="tag">&lt;form</span> <span class="attr">@submit.prevent</span>=<span class="string">"submit"</span><span class="tag">&gt;</span>
+        <span class="tag">&lt;input</span> <span class="attr">v-model</span>=<span class="string">"form.email"</span> <span class="attr">type</span>=<span class="string">"email"</span> <span class="tag">/&gt;</span>
+        <span class="tag">&lt;input</span> <span class="attr">v-model</span>=<span class="string">"form.password"</span> <span class="attr">type</span>=<span class="string">"password"</span> <span class="tag">/&gt;</span>
+        <span class="tag">&lt;button</span> <span class="attr">:disabled</span>=<span class="string">"form.processing"</span><span class="tag">&gt;</span>Sign In<span class="tag">&lt;/button&gt;</span>
+    <span class="tag">&lt;/form&gt;</span>
+<span class="tag">&lt;/template&gt;</span>
+</pre>
+        </div>
+
+        <!-- Leave Request Flow -->
+        <div class="card">
+            <h2>2. Leave Request Submission Flow</h2>
+            
+            <h3>Step-by-Step Process</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Step</th>
+                        <th>What Happens</th>
+                        <th>Where (Code)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>1. Display Form</strong></td>
+                        <td>Employee sees their balances and request form</td>
+                        <td>Employee/Dashboard.vue</td>
+                    </tr>
+                    <tr>
+                        <td><strong>2. Fill Form</strong></td>
+                        <td>Select leave type, dates, enter reason</td>
+                        <td>useForm() in Vue</td>
+                    </tr>
+                    <tr>
+                        <td><strong>3. Submit</strong></td>
+                        <td>form.post() sends data to Laravel</td>
+                        <td>Inertia POST request</td>
+                    </tr>
+                    <tr>
+                        <td><strong>4. Validate</strong></td>
+                        <td>Check all fields, dates, balance</td>
+                        <td>EmployeeController@storeRequest</td>
+                    </tr>
+                    <tr>
+                        <td><strong>5. Calculate Days</strong></td>
+                        <td>Count working days (exclude weekends)</td>
+                        <td>calculateWorkingDays()</td>
+                    </tr>
+                    <tr>
+                        <td><strong>6. Create Record</strong></td>
+                        <td>Insert into leave_requests with status='pending'</td>
+                        <td>LeaveRequest::create()</td>
+                    </tr>
+                    <tr>
+                        <td><strong>7. Redirect</strong></td>
+                        <td>Back to dashboard with success message</td>
+                        <td>redirect()->with('success')</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Visual Flow</h3>
+            <div class="flow">
+                <div class="flow-box">Employee fills form</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">Validate input</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">Check balance</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">Create request</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">Status: PENDING</div>
+            </div>
+
+            <h3>Code: Store Request</h3>
+<pre>
+<span class="keyword">public function</span> <span class="function">storeRequest</span>(Request <span class="variable">$request</span>)
+{
+    <span class="comment">// 1. Validate input</span>
+    <span class="variable">$validated</span> = <span class="variable">$request</span>-><span class="function">validate</span>([
+        <span class="string">'leave_type'</span> => <span class="string">'required|string'</span>,
+        <span class="string">'start_date'</span> => <span class="string">'required|date|after_or_equal:today'</span>,
+        <span class="string">'end_date'</span>   => <span class="string">'required|date|after_or_equal:start_date'</span>,
+        <span class="string">'reason'</span>     => <span class="string">'required|string|max:1000'</span>,
+    ]);
+
+    <span class="variable">$user</span> = Auth::<span class="function">user</span>();
+    
+    <span class="comment">// 2. Calculate working days</span>
+    <span class="variable">$numberOfDays</span> = <span class="variable">$this</span>-><span class="function">calculateWorkingDays</span>(
+        Carbon::<span class="function">parse</span>(<span class="variable">$validated</span>[<span class="string">'start_date'</span>]),
+        Carbon::<span class="function">parse</span>(<span class="variable">$validated</span>[<span class="string">'end_date'</span>])
+    );
+
+    <span class="comment">// 3. Check balance (including pending requests)</span>
+    <span class="variable">$balance</span> = <span class="variable">$user</span>-><span class="function">getLeaveBalance</span>(<span class="variable">$validated</span>[<span class="string">'leave_type'</span>]);
+    <span class="variable">$pendingDays</span> = <span class="variable">$user</span>-><span class="function">getPendingLeaveDays</span>(<span class="variable">$validated</span>[<span class="string">'leave_type'</span>]);
+    <span class="variable">$available</span> = <span class="variable">$balance</span>-><span class="function">getAvailableBalance</span>() - <span class="variable">$pendingDays</span>;
+
+    <span class="keyword">if</span> (<span class="variable">$available</span> < <span class="variable">$numberOfDays</span>) {
+        <span class="keyword">return</span> <span class="function">back</span>()-><span class="function">withErrors</span>([...]);
+    }
+
+    <span class="comment">// 4. Create the request (status = pending)</span>
+    LeaveRequest::<span class="function">create</span>([
+        <span class="string">'employee_id'</span>    => <span class="variable">$user</span>-><span class="variable">id</span>,
+        <span class="string">'leave_type'</span>     => <span class="variable">$validated</span>[<span class="string">'leave_type'</span>],
+        <span class="string">'start_date'</span>     => <span class="variable">$validated</span>[<span class="string">'start_date'</span>],
+        <span class="string">'end_date'</span>       => <span class="variable">$validated</span>[<span class="string">'end_date'</span>],
+        <span class="string">'reason'</span>         => <span class="variable">$validated</span>[<span class="string">'reason'</span>],
+        <span class="string">'number_of_days'</span> => <span class="variable">$numberOfDays</span>,
+        <span class="string">'status'</span>         => <span class="string">'pending'</span>,
+    ]);
+
+    <span class="comment">// 5. Redirect with success</span>
+    <span class="keyword">return</span> <span class="function">redirect</span>()
+        -><span class="function">route</span>(<span class="string">'employee.dashboard'</span>)
+        -><span class="function">with</span>(<span class="string">'success'</span>, <span class="string">'Leave request submitted!'</span>);
+}
+</pre>
+        </div>
+
+        <!-- Approval Flow -->
+        <div class="card">
+            <h2>3. Approval Workflow</h2>
+            
+            <h3>Two-Level Approval</h3>
+            <div style="display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+                <div style="background: #fef3c7; padding: 1rem; border-radius: 8px; text-align: center;">
+                    <h4 style="margin: 0 0 0.5rem; color: #92400e;">Step 1: Manager Review</h4>
+                    <p style="margin: 0; font-size: 0.9rem; color: #92400e;">
+                        Dept Manager reviews team requests<br>
+                        Status: pending → dept_manager_approved
+                    </p>
+                </div>
+                <div style="background: #dbeafe; padding: 1rem; border-radius: 8px; text-align: center;">
+                    <h4 style="margin: 0 0 0.5rem; color: #1e40af;">Step 2: HR Review</h4>
+                    <p style="margin: 0; font-size: 0.9rem; color: #1e40af;">
+                        HR Admin gives final approval<br>
+                        Status: dept_manager_approved → hr_approved
+                    </p>
+                </div>
+            </div>
+
+            <h3>Status Values</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Status</th>
+                        <th>Meaning</th>
+                        <th>Balance Deducted?</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="badge badge-warning">pending</span></td>
+                        <td>Waiting for manager approval</td>
+                        <td>No (reserved only)</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-primary">dept_manager_approved</span></td>
+                        <td>Manager approved, waiting for HR</td>
+                        <td>No (reserved only)</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-danger">dept_manager_rejected</span></td>
+                        <td>Manager rejected</td>
+                        <td>No</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-success">hr_approved</span></td>
+                        <td>Fully approved!</td>
+                        <td><strong>Yes!</strong></td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-danger">hr_rejected</span></td>
+                        <td>HR rejected</td>
+                        <td>No</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="callout callout-success">
+                <strong>Key Point:</strong> Balance is only deducted from the <code class="inline-code">used</code> column when HR approves. Until then, pending requests "reserve" days but don't actually deduct them.
+            </div>
+
+            <h3>Code: HR Approve (with balance deduction)</h3>
+<pre>
+<span class="comment">// HRController.php</span>
+<span class="keyword">public function</span> <span class="function">approveRequest</span>(Request <span class="variable">$request</span>, <span class="variable">$id</span>)
+{
+    <span class="variable">$leaveRequest</span> = LeaveRequest::<span class="function">findOrFail</span>(<span class="variable">$id</span>);
+
+    <span class="comment">// Only approve if manager already approved</span>
+    <span class="keyword">if</span> (<span class="variable">$leaveRequest</span>-><span class="variable">status</span> !== <span class="string">'dept_manager_approved'</span>) {
+        <span class="keyword">return</span> <span class="function">back</span>()-><span class="function">withErrors</span>([...]);
+    }
+
+    <span class="comment">// NOW deduct balance (only when HR approves)</span>
+    <span class="variable">$balance</span> = <span class="variable">$leaveRequest</span>-><span class="variable">employee</span>-><span class="function">getLeaveBalance</span>(...);
+    <span class="variable">$balance</span>-><span class="function">deductDays</span>(<span class="variable">$leaveRequest</span>-><span class="variable">number_of_days</span>);
+
+    <span class="comment">// Update status</span>
+    <span class="variable">$leaveRequest</span>-><span class="function">update</span>([
+        <span class="string">'status'</span> => <span class="string">'hr_approved'</span>,
+        <span class="string">'approved_by_hr_id'</span> => Auth::<span class="function">id</span>(),
+        <span class="string">'approved_by_hr_at'</span> => <span class="function">now</span>(),
+    ]);
+
+    <span class="keyword">return</span> <span class="function">redirect</span>()
+        -><span class="function">route</span>(<span class="string">'hr.dashboard'</span>)
+        -><span class="function">with</span>(<span class="string">'success'</span>, <span class="string">'Request approved!'</span>);
+}
+</pre>
+        </div>
+
+        <!-- Balance Calculation -->
+        <div class="card">
+            <h2>4. Balance Calculation Logic</h2>
+            
+            <h3>Available Days Formula</h3>
+            <div style="background: #f8fafc; padding: 1.5rem; border-radius: 8px; text-align: center; margin: 1rem 0;">
+                <code style="font-size: 1.2rem; color: var(--primary);">
+                    Available = Balance - Used - Pending Days
+                </code>
+            </div>
+
+            <ul>
+                <li><strong>Balance:</strong> Total entitled days (from policy)</li>
+                <li><strong>Used:</strong> Days already deducted (HR approved requests)</li>
+                <li><strong>Pending Days:</strong> Days in pending/manager-approved requests</li>
+            </ul>
+
+            <h3>Code: Calculate Available Balance</h3>
+<pre>
+<span class="comment">// User.php model</span>
+<span class="keyword">public function</span> <span class="function">getPendingLeaveDays</span>(<span class="keyword">string</span> <span class="variable">$leaveType</span>): <span class="keyword">int</span>
+{
+    <span class="keyword">return</span> (<span class="keyword">int</span>) <span class="variable">$this</span>-><span class="function">leaveRequests</span>()
+        -><span class="function">where</span>(<span class="string">'leave_type'</span>, <span class="variable">$leaveType</span>)
+        -><span class="function">whereIn</span>(<span class="string">'status'</span>, [<span class="string">'pending'</span>, <span class="string">'dept_manager_approved'</span>])
+        -><span class="function">sum</span>(<span class="string">'number_of_days'</span>);
+}
+
+<span class="comment">// In controller</span>
+<span class="variable">$balance</span> = <span class="variable">$user</span>-><span class="function">getLeaveBalance</span>(<span class="variable">$leaveType</span>);
+<span class="variable">$pendingDays</span> = <span class="variable">$user</span>-><span class="function">getPendingLeaveDays</span>(<span class="variable">$leaveType</span>);
+<span class="variable">$available</span> = <span class="variable">$balance</span>-><span class="function">getAvailableBalance</span>() - <span class="variable">$pendingDays</span>;
+</pre>
+        </div>
+
+        <!-- Data Flow Diagram -->
+        <div class="card">
+            <h2>5. Complete Request Lifecycle</h2>
+            
+            <div style="overflow-x: auto;">
+                <pre style="text-align: left; display: inline-block; background: #f8fafc; padding: 1.5rem; border-radius: 8px; font-size: 0.85rem;">
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                         LEAVE REQUEST LIFECYCLE                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+EMPLOYEE                    MANAGER                     HR ADMIN
+────────                    ───────                     ────────
+    │                           │                           │
+    │  Submit Request           │                           │
+    │  ─────────────►           │                           │
+    │                           │                           │
+    │  [status: pending]        │                           │
+    │                           │                           │
+    │                    View & Review                      │
+    │                    ─────────────►                     │
+    │                           │                           │
+    │                    ┌──────┴──────┐                    │
+    │                    │             │                    │
+    │                 Approve       Reject                  │
+    │                    │             │                    │
+    │          [status: dept_     [status: dept_            │
+    │           manager_approved]  manager_rejected]        │
+    │                    │             │                    │
+    │                    │             └──► Request Closed  │
+    │                    │                                  │
+    │                    │                     View & Review│
+    │                    │                     ◄────────────│
+    │                    │                           │      │
+    │                    │                    ┌──────┴──────┐
+    │                    │                    │             │
+    │                    │                 Approve       Reject
+    │                    │                    │             │
+    │                    │          [status: hr_      [status: hr_
+    │                    │           approved]         rejected]
+    │                    │                    │             │
+    │                    │             Balance Deducted     │
+    │                    │                    │             │
+    │  ◄─────────────────┴────────────────────┴─────────────┘
+    │
+    │  Request Complete / Closed
+    │
+                </pre>
+            </div>
+        </div>
+
+        <!-- Commands Reference -->
+        <div class="card">
+            <h2>6. Useful Artisan Commands</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Command</th>
+                        <th>Purpose</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><code class="inline-code">php artisan serve</code></td><td>Start development server</td></tr>
+                    <tr><td><code class="inline-code">npm run dev</code></td><td>Start Vite dev server (hot reload)</td></tr>
+                    <tr><td><code class="inline-code">npm run build</code></td><td>Build frontend for production</td></tr>
+                    <tr><td><code class="inline-code">php artisan migrate</code></td><td>Run database migrations</td></tr>
+                    <tr><td><code class="inline-code">php artisan migrate:fresh --seed</code></td><td>Reset DB and seed data</td></tr>
+                    <tr><td><code class="inline-code">php artisan route:list</code></td><td>List all routes</td></tr>
+                    <tr><td><code class="inline-code">php artisan cache:clear</code></td><td>Clear application cache</td></tr>
+                    <tr><td><code class="inline-code">php artisan config:clear</code></td><td>Clear config cache</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Back to Start -->
+        <div class="card">
+            <h2>Review Complete!</h2>
+            <p>You've covered all major aspects of the Leave Request App. Go back to review any section:</p>
+            
+            <div class="grid grid-3">
+                <a href="index.html" class="tech-card" style="text-decoration: none;">
+                    <div class="icon">🏠</div>
+                    <h3>Overview</h3>
+                </a>
+                <a href="tech-stack.html" class="tech-card" style="text-decoration: none;">
+                    <div class="icon">🛠️</div>
+                    <h3>Tech Stack</h3>
+                </a>
+                <a href="backend.html" class="tech-card" style="text-decoration: none;">
+                    <div class="icon">⚙️</div>
+                    <h3>Backend</h3>
+                </a>
+                <a href="frontend.html" class="tech-card" style="text-decoration: none;">
+                    <div class="icon">🎨</div>
+                    <h3>Frontend</h3>
+                </a>
+                <a href="database.html" class="tech-card" style="text-decoration: none;">
+                    <div class="icon">🗄️</div>
+                    <h3>Database</h3>
+                </a>
+                <a href="flows.html" class="tech-card" style="text-decoration: none;">
+                    <div class="icon">🔄</div>
+                    <h3>App Flows</h3>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>Leave Request App - Presentation Study Guide</p>
+    </footer>
+</body>
+</html>

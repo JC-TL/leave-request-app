@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database - Study Guide</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="index.html" class="nav-brand">Leave Request App - Study Guide</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Overview</a></li>
+                <li><a href="tech-stack.html">Tech Stack</a></li>
+                <li><a href="backend.html">Backend</a></li>
+                <li><a href="frontend.html">Frontend</a></li>
+                <li><a href="database.html" class="active">Database</a></li>
+                <li><a href="flows.html">App Flows</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1 style="margin-bottom: 2rem;">Database Design</h1>
+
+        <!-- ERD -->
+        <div class="card">
+            <h2>Entity Relationship Diagram</h2>
+            <p>Visual representation of database tables and their relationships:</p>
+
+            <div style="text-align: center; padding: 2rem; background: white; border-radius: 8px; margin: 1rem 0;">
+                <pre style="text-align: left; display: inline-block; background: #f8fafc; padding: 1.5rem; border-radius: 8px;">
+┌─────────────────┐       ┌─────────────────────┐       ┌─────────────────┐
+│     USERS       │       │   LEAVE_REQUESTS    │       │   DEPARTMENTS   │
+├─────────────────┤       ├─────────────────────┤       ├─────────────────┤
+│ id              │◄──┐   │ id                  │       │ id              │
+│ name            │   │   │ employee_id ────────┼───────┤ name            │
+│ email           │   │   │ leave_type          │       │ color           │
+│ password        │   │   │ start_date          │   ┌───┤ dept_manager_id │
+│ role            │   │   │ end_date            │   │   └─────────────────┘
+│ department_id ──┼───┼───│ reason              │   │
+│ manager_id ─────┼───┘   │ number_of_days      │   │
+└─────────────────┘       │ status              │   │
+        │                 │ approved_by_dept_   │   │
+        │                 │   manager_id ───────┼───┘
+        │                 │ approved_by_hr_id ──┼───┐
+        ▼                 └─────────────────────┘   │
+┌─────────────────┐                                 │
+│  LEAVE_BALANCES │       ┌─────────────────┐       │
+├─────────────────┤       │    POLICIES     │       │
+│ id              │       ├─────────────────┤       │
+│ user_id ────────┼───────│ id              │       │
+│ leave_type      │       │ leave_type      │       │
+│ balance         │       │ annual_         │       │
+│ used            │       │   entitlement   │       │
+│ year            │       └─────────────────┘       │
+└─────────────────┘                                 │
+                                                    │
+                          ┌─────────────────────────┘
+                          │ (HR Admin approver)
+                          ▼
+                    ┌─────────────────┐
+                    │     USERS       │
+                    │  (hr_admin)     │
+                    └─────────────────┘
+                </pre>
+            </div>
+        </div>
+
+        <!-- Tables -->
+        <div class="card">
+            <h2>Database Tables</h2>
+
+            <h3>users</h3>
+            <p>Stores all users (employees, managers, HR admins, CEO)</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Column</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>id</td><td>bigint</td><td>Primary key</td></tr>
+                    <tr><td>name</td><td>varchar</td><td>User's full name</td></tr>
+                    <tr><td>email</td><td>varchar</td><td>Unique email address</td></tr>
+                    <tr><td>password</td><td>varchar</td><td>Hashed password</td></tr>
+                    <tr><td>role</td><td>enum</td><td>'employee', 'dept_manager', 'hr_admin', 'ceo'</td></tr>
+                    <tr><td>department_id</td><td>bigint</td><td>FK → departments.id</td></tr>
+                    <tr><td>manager_id</td><td>bigint</td><td>FK → users.id (their manager)</td></tr>
+                </tbody>
+            </table>
+
+            <h3>departments</h3>
+            <p>Company departments</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Column</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>id</td><td>bigint</td><td>Primary key</td></tr>
+                    <tr><td>name</td><td>varchar</td><td>Department name</td></tr>
+                    <tr><td>color</td><td>varchar</td><td>Color for calendar events</td></tr>
+                    <tr><td>dept_manager_id</td><td>bigint</td><td>FK → users.id (department manager)</td></tr>
+                </tbody>
+            </table>
+
+            <h3>leave_requests</h3>
+            <p>Leave request submissions and their approval status</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Column</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>id</td><td>bigint</td><td>Primary key</td></tr>
+                    <tr><td>employee_id</td><td>bigint</td><td>FK → users.id (who submitted)</td></tr>
+                    <tr><td>leave_type</td><td>enum</td><td>'Vacation Leave', 'Sick Leave', etc.</td></tr>
+                    <tr><td>start_date</td><td>date</td><td>Leave start date</td></tr>
+                    <tr><td>end_date</td><td>date</td><td>Leave end date</td></tr>
+                    <tr><td>reason</td><td>text</td><td>Reason for leave</td></tr>
+                    <tr><td>number_of_days</td><td>integer</td><td>Working days (excludes weekends)</td></tr>
+                    <tr><td>status</td><td>enum</td><td>'pending', 'dept_manager_approved', 'hr_approved', etc.</td></tr>
+                    <tr><td>approved_by_dept_manager_id</td><td>bigint</td><td>FK → users.id</td></tr>
+                    <tr><td>approved_by_hr_id</td><td>bigint</td><td>FK → users.id</td></tr>
+                </tbody>
+            </table>
+
+            <h3>leave_balances</h3>
+            <p>Each user's leave balance per leave type per year</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Column</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>id</td><td>bigint</td><td>Primary key</td></tr>
+                    <tr><td>user_id</td><td>bigint</td><td>FK → users.id</td></tr>
+                    <tr><td>leave_type</td><td>enum</td><td>'Vacation Leave', 'Sick Leave', etc.</td></tr>
+                    <tr><td>balance</td><td>integer</td><td>Total entitled days</td></tr>
+                    <tr><td>used</td><td>integer</td><td>Days already used (HR approved)</td></tr>
+                    <tr><td>year</td><td>integer</td><td>Year (e.g., 2026)</td></tr>
+                </tbody>
+            </table>
+
+            <h3>policies</h3>
+            <p>Company-wide leave policies (annual entitlements)</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Column</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>id</td><td>bigint</td><td>Primary key</td></tr>
+                    <tr><td>leave_type</td><td>enum</td><td>'Vacation Leave', 'Sick Leave', etc.</td></tr>
+                    <tr><td>annual_entitlement</td><td>integer</td><td>Days per year</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Migrations -->
+        <div class="card">
+            <h2>Migrations - Database Version Control</h2>
+            <p>Migrations are PHP files that define database schema. They allow you to version control your database structure.</p>
+
+            <h3>Migration Example: leave_balances</h3>
+<pre>
+<span class="keyword">&lt;?php</span>
+
+<span class="keyword">use</span> Illuminate\Database\Migrations\Migration;
+<span class="keyword">use</span> Illuminate\Database\Schema\Blueprint;
+<span class="keyword">use</span> Illuminate\Support\Facades\Schema;
+
+<span class="keyword">return new class extends</span> Migration
+{
+    <span class="comment">/**
+     * Run the migration (create table)
+     */</span>
+    <span class="keyword">public function</span> <span class="function">up</span>(): <span class="keyword">void</span>
+    {
+        Schema::<span class="function">create</span>(<span class="string">'leave_balances'</span>, <span class="keyword">function</span> (Blueprint <span class="variable">$table</span>) {
+            <span class="comment">// Primary key</span>
+            <span class="variable">$table</span>-><span class="function">id</span>();
+            
+            <span class="comment">// Foreign key to users table</span>
+            <span class="variable">$table</span>-><span class="function">foreignId</span>(<span class="string">'user_id'</span>)
+                  -><span class="function">constrained</span>()
+                  -><span class="function">onDelete</span>(<span class="string">'cascade'</span>);
+            
+            <span class="comment">// Enum column for leave type</span>
+            <span class="variable">$table</span>-><span class="function">enum</span>(<span class="string">'leave_type'</span>, [
+                <span class="string">'Vacation Leave'</span>,
+                <span class="string">'Sick Leave'</span>,
+                <span class="string">'Emergency Leave'</span>,
+                <span class="comment">// ... more types</span>
+            ]);
+            
+            <span class="comment">// Integer columns</span>
+            <span class="variable">$table</span>-><span class="function">integer</span>(<span class="string">'balance'</span>)-><span class="function">default</span>(0);
+            <span class="variable">$table</span>-><span class="function">integer</span>(<span class="string">'used'</span>)-><span class="function">default</span>(0);
+            <span class="variable">$table</span>-><span class="function">integer</span>(<span class="string">'year'</span>);
+            
+            <span class="comment">// Created/updated timestamps</span>
+            <span class="variable">$table</span>-><span class="function">timestamps</span>();
+            
+            <span class="comment">// Unique constraint: one balance per user/type/year</span>
+            <span class="variable">$table</span>-><span class="function">unique</span>([<span class="string">'user_id'</span>, <span class="string">'leave_type'</span>, <span class="string">'year'</span>]);
+        });
+    }
+
+    <span class="comment">/**
+     * Reverse the migration (drop table)
+     */</span>
+    <span class="keyword">public function</span> <span class="function">down</span>(): <span class="keyword">void</span>
+    {
+        Schema::<span class="function">dropIfExists</span>(<span class="string">'leave_balances'</span>);
+    }
+};
+</pre>
+
+            <h3>Common Column Types</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Method</th>
+                        <th>SQL Type</th>
+                        <th>Example</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><code class="inline-code">id()</code></td><td>BIGINT AUTO_INCREMENT</td><td>Primary key</td></tr>
+                    <tr><td><code class="inline-code">string('name')</code></td><td>VARCHAR(255)</td><td>Short text</td></tr>
+                    <tr><td><code class="inline-code">text('reason')</code></td><td>TEXT</td><td>Long text</td></tr>
+                    <tr><td><code class="inline-code">integer('days')</code></td><td>INT</td><td>Whole numbers</td></tr>
+                    <tr><td><code class="inline-code">date('start_date')</code></td><td>DATE</td><td>Date only</td></tr>
+                    <tr><td><code class="inline-code">datetime('created_at')</code></td><td>DATETIME</td><td>Date and time</td></tr>
+                    <tr><td><code class="inline-code">enum('status', [...])</code></td><td>ENUM</td><td>Predefined values</td></tr>
+                    <tr><td><code class="inline-code">foreignId('user_id')</code></td><td>BIGINT</td><td>Foreign key</td></tr>
+                    <tr><td><code class="inline-code">timestamps()</code></td><td>DATETIME x2</td><td>created_at, updated_at</td></tr>
+                </tbody>
+            </table>
+
+            <h3>Running Migrations</h3>
+<pre>
+<span class="comment"># Run all pending migrations</span>
+php artisan migrate
+
+<span class="comment"># Rollback last migration</span>
+php artisan migrate:rollback
+
+<span class="comment"># Reset and re-run all migrations</span>
+php artisan migrate:fresh
+
+<span class="comment"># Reset, migrate, and seed</span>
+php artisan migrate:fresh --seed
+</pre>
+        </div>
+
+        <!-- Seeders -->
+        <div class="card">
+            <h2>Seeders - Test Data</h2>
+            <p>Seeders populate the database with initial or test data.</p>
+
+            <h3>Policy Seeder Example</h3>
+<pre>
+<span class="keyword">&lt;?php</span>
+
+<span class="keyword">namespace</span> Database\Seeders;
+
+<span class="keyword">use</span> App\Models\Policy;
+<span class="keyword">use</span> Illuminate\Database\Seeder;
+
+<span class="keyword">class</span> <span class="function">PolicySeeder</span> <span class="keyword">extends</span> Seeder
+{
+    <span class="keyword">public function</span> <span class="function">run</span>(): <span class="keyword">void</span>
+    {
+        <span class="variable">$policies</span> = [
+            [<span class="string">'leave_type'</span> => <span class="string">'Vacation Leave'</span>, <span class="string">'annual_entitlement'</span> => 15],
+            [<span class="string">'leave_type'</span> => <span class="string">'Sick Leave'</span>, <span class="string">'annual_entitlement'</span> => 10],
+            [<span class="string">'leave_type'</span> => <span class="string">'Emergency Leave'</span>, <span class="string">'annual_entitlement'</span> => 5],
+            [<span class="string">'leave_type'</span> => <span class="string">'Maternity Leave'</span>, <span class="string">'annual_entitlement'</span> => 90],
+        ];
+
+        <span class="keyword">foreach</span> (<span class="variable">$policies</span> <span class="keyword">as</span> <span class="variable">$policy</span>) {
+            Policy::<span class="function">create</span>(<span class="variable">$policy</span>);
+        }
+    }
+}
+</pre>
+
+            <h3>Running Seeders</h3>
+<pre>
+<span class="comment"># Run all seeders</span>
+php artisan db:seed
+
+<span class="comment"># Run specific seeder</span>
+php artisan db:seed --class=PolicySeeder
+</pre>
+        </div>
+
+        <!-- Eloquent Queries -->
+        <div class="card">
+            <h2>Eloquent Query Examples</h2>
+            <p>Eloquent is Laravel's ORM for interacting with the database.</p>
+
+            <h3>Basic Queries</h3>
+<pre>
+<span class="comment">// Get all records</span>
+<span class="variable">$users</span> = User::<span class="function">all</span>();
+
+<span class="comment">// Find by ID</span>
+<span class="variable">$user</span> = User::<span class="function">find</span>(1);
+
+<span class="comment">// Find or fail (throws 404 if not found)</span>
+<span class="variable">$user</span> = User::<span class="function">findOrFail</span>(1);
+
+<span class="comment">// Where clause</span>
+<span class="variable">$employees</span> = User::<span class="function">where</span>(<span class="string">'role'</span>, <span class="string">'employee'</span>)-><span class="function">get</span>();
+
+<span class="comment">// Multiple conditions</span>
+<span class="variable">$balances</span> = LeaveBalance::<span class="function">where</span>(<span class="string">'user_id'</span>, <span class="variable">$id</span>)
+    -><span class="function">where</span>(<span class="string">'year'</span>, 2026)
+    -><span class="function">get</span>();
+
+<span class="comment">// Order by</span>
+<span class="variable">$requests</span> = LeaveRequest::<span class="function">orderBy</span>(<span class="string">'created_at'</span>, <span class="string">'desc'</span>)-><span class="function">get</span>();
+
+<span class="comment">// Pagination</span>
+<span class="variable">$requests</span> = LeaveRequest::<span class="function">paginate</span>(10);
+</pre>
+
+            <h3>Relationships</h3>
+<pre>
+<span class="comment">// Eager loading (prevents N+1 problem)</span>
+<span class="variable">$requests</span> = LeaveRequest::<span class="function">with</span>(<span class="string">'employee'</span>)-><span class="function">get</span>();
+
+<span class="comment">// Multiple relationships</span>
+<span class="variable">$requests</span> = LeaveRequest::<span class="function">with</span>([<span class="string">'employee'</span>, <span class="string">'employee.department'</span>])-><span class="function">get</span>();
+
+<span class="comment">// Access related data</span>
+<span class="variable">$request</span>-><span class="variable">employee</span>-><span class="variable">name</span>;          <span class="comment">// Employee's name</span>
+<span class="variable">$request</span>-><span class="variable">employee</span>-><span class="variable">department</span>-><span class="variable">name</span>;  <span class="comment">// Department name</span>
+
+<span class="comment">// Get user's leave requests</span>
+<span class="variable">$user</span>-><span class="function">leaveRequests</span>()-><span class="function">where</span>(<span class="string">'status'</span>, <span class="string">'pending'</span>)-><span class="function">get</span>();
+</pre>
+
+            <h3>Creating & Updating</h3>
+<pre>
+<span class="comment">// Create new record</span>
+<span class="variable">$request</span> = LeaveRequest::<span class="function">create</span>([
+    <span class="string">'employee_id'</span> => <span class="variable">$user</span>-><span class="variable">id</span>,
+    <span class="string">'leave_type'</span> => <span class="string">'Vacation Leave'</span>,
+    <span class="string">'start_date'</span> => <span class="string">'2026-02-01'</span>,
+    <span class="string">'status'</span> => <span class="string">'pending'</span>,
+]);
+
+<span class="comment">// Update existing record</span>
+<span class="variable">$request</span>-><span class="function">update</span>([
+    <span class="string">'status'</span> => <span class="string">'hr_approved'</span>,
+    <span class="string">'approved_by_hr_id'</span> => Auth::<span class="function">id</span>(),
+]);
+
+<span class="comment">// Delete</span>
+<span class="variable">$request</span>-><span class="function">delete</span>();
+</pre>
+        </div>
+
+        <!-- Navigation -->
+        <div class="card">
+            <h2>Continue Learning</h2>
+            <div class="grid grid-2">
+                <a href="flows.html" class="tech-card" style="text-decoration: none;">
+                    <div class="icon">🔄</div>
+                    <h3>App Flows</h3>
+                    <p>Authentication, Leave Request Flow</p>
+                </a>
+                <a href="index.html" class="tech-card" style="text-decoration: none;">
+                    <div class="icon">🏠</div>
+                    <h3>Back to Overview</h3>
+                    <p>Return to main guide</p>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>Leave Request App - Presentation Study Guide</p>
+    </footer>
+</body>
+</html>

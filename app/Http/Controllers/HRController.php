@@ -2,16 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Balance;
 use App\Models\Department;
+use App\Models\LeaveBalance;
+use App\Models\LeaveRequest;
 use App\Models\Policy;
-use App\Models\Request as LeaveRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Inertia\Inertia;
 
-// TODO: Add email notifications for approvals/rejections
+
 
 class HRController extends Controller
 {
@@ -60,14 +62,14 @@ class HRController extends Controller
             ->values()
             ->toArray();
 
-        return view('hr.dashboard', compact(
-            'pendingRequests',
-            'totalPending',
-            'totalApprovedThisMonth',
-            'totalRejectedThisMonth',
-            'totalEmployees',
-            'calendarEvents'
-        ));
+        return Inertia::render('HR/Dashboard', [
+            'pendingRequests' => $pendingRequests,
+            'totalPending' => $totalPending,
+            'totalApprovedThisMonth' => $totalApprovedThisMonth,
+            'totalRejectedThisMonth' => $totalRejectedThisMonth,
+            'totalEmployees' => $totalEmployees,
+            'calendarEvents' => $calendarEvents,
+        ]);
     }
 
     public function showRequest($id)
@@ -82,7 +84,10 @@ class HRController extends Controller
         $currentYear = now()->year;
         $balance = $leaveRequest->employee->getLeaveBalance($leaveRequest->leave_type, $currentYear);
 
-        return view('hr.show-request', compact('leaveRequest', 'balance'));
+        return Inertia::render('HR/ShowRequest', [
+            'leaveRequest' => $leaveRequest,
+            'balance' => $balance,
+        ]);
     }
 
     public function approveRequest(Request $request, $id)
@@ -96,19 +101,13 @@ class HRController extends Controller
                 ->withErrors(['error' => 'This request cannot be approved yet. It is still pending manager approval.']);
         }
 
+        // Deduct balance only when HR approves (after manager approval)
         $currentYear = now()->year;
         $balance = $leaveRequest->employee->getLeaveBalance($leaveRequest->leave_type, $currentYear);
-        
-        // Check balance before approving
-        if (!$balance || !$balance->hasSufficientBalance($leaveRequest->number_of_days)) {
-            return back()
-                ->withErrors(['error' => 'Employee has insufficient balance for this request.']);
+        if ($balance) {
+            $balance->deductDays($leaveRequest->number_of_days);
         }
 
-        // Deduct the days from balance
-        $balance->deductDays($leaveRequest->number_of_days);
-
-        // Update request status
         $leaveRequest->update([
             'status' => 'hr_approved',
             'approved_by_hr_id' => $user->id,
@@ -123,7 +122,7 @@ class HRController extends Controller
 
     public function rejectRequest(Request $request, $id)
     {
-        $leaveRequest = LeaveRequest::findOrFail($id);
+        $leaveRequest = LeaveRequest::with('employee')->findOrFail($id);
 
         // Must be manager approved before HR can reject
         if ($leaveRequest->status !== 'dept_manager_approved') {
@@ -135,6 +134,7 @@ class HRController extends Controller
             'reason' => 'required|string|max:500',
         ]);
 
+        // Balance was never deducted (only deducted when HR approves), so nothing to restore
         $leaveRequest->update([
             'status' => 'hr_rejected',
             'hr_comment' => $validated['reason'],
@@ -150,21 +150,47 @@ class HRController extends Controller
     {
         $policies = Policy::orderBy('leave_type')->get();
 
-        return view('hr.policies', compact('policies'));
+        return Inertia::render('HR/Policies', [
+            'policies' => $policies,
+        ]);
     }
 
     public function updatePolicy(Request $request, $id)
     {
         $validated = $request->validate([
-            'annual_entitlement' => 'required|integer|min:0|max:365',
+            'annual_entitlement' => [
+                'required',
+                'integer',
+                'min:0',
+                'max:365',
+            ],
+        ], [
+            'annual_entitlement.required' => 'Annual entitlement is required.',
+            'annual_entitlement.integer' => 'Annual entitlement must be a whole number.',
+            'annual_entitlement.min' => 'Annual entitlement cannot be less than 0.',
+            'annual_entitlement.max' => 'Annual entitlement cannot exceed 365 days.',
         ]);
 
         $policy = Policy::findOrFail($id);
-        $policy->update($validated);
+
+        DB::transaction(function () use ($policy, $validated) {
+            $policy->update(['annual_entitlement' => $validated['annual_entitlement']]);
+
+            // Propagate to current-year leave balances so the policy change reflects for all employees
+            $currentYear = now()->year;
+            LeaveBalance::where('leave_type', $policy->leave_type)
+                ->where('year', $currentYear)
+                ->get()
+                ->each(function (LeaveBalance $balance) use ($validated) {
+                    // Never set balance below already-used days (avoid negative available)
+                    $newBalance = max($validated['annual_entitlement'], $balance->used);
+                    $balance->update(['balance' => $newBalance]);
+                });
+        });
 
         return redirect()
             ->route('hr.policies')
-            ->with('success', 'Policy updated successfully.');
+            ->with('success', 'Policy updated successfully. Current year leave balances have been updated.');
     }
 
     public function employees()
@@ -174,16 +200,20 @@ class HRController extends Controller
             ->orderBy('name')
             ->paginate(15);
 
-        return view('hr.employees', compact('employees'));
+        return Inertia::render('HR/Employees', [
+            'employees' => $employees,
+        ]);
     }
 
     public function createEmployee()
     {
         $departments = Department::with('manager')->get();
-        $managers = User::where('role', 'dept_manager')->get();
         $roles = ['employee', 'dept_manager'];
 
-        return view('hr.create-employee', compact('departments', 'managers', 'roles'));
+        return Inertia::render('HR/CreateEmployee', [
+            'departments' => $departments,
+            'roles' => $roles,
+        ]);
     }
 
     public function storeEmployee(Request $request)
@@ -194,11 +224,13 @@ class HRController extends Controller
             'password' => 'required|string|min:8|confirmed',
             'role' => 'required|in:employee,dept_manager',
             'department_id' => 'required|exists:departments,id',
-            'manager_id' => 'nullable|exists:users,id',
         ]);
 
-        // Managers don't have managers
-        if ($validated['role'] === 'dept_manager') {
+        // Automatically assign manager: employees get their department's manager; dept managers have none
+        if ($validated['role'] === 'employee') {
+            $department = Department::find($validated['department_id']);
+            $validated['manager_id'] = $department->dept_manager_id;
+        } else {
             $validated['manager_id'] = null;
         }
 
@@ -212,7 +244,7 @@ class HRController extends Controller
         $policies = Policy::all();
         
         foreach ($policies as $policy) {
-            Balance::create([
+            LeaveBalance::create([
                 'user_id' => $user->id,
                 'leave_type' => $policy->leave_type,
                 'balance' => $policy->annual_entitlement,

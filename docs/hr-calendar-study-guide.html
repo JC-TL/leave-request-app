@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>HR Calendar Study Guide (Line-by-line)</title>
+    <style>
+      :root{
+        --bg:#0b1020; --panel:#121a33; --panel2:#0f1730; --text:#e6e9f5; --muted:#aab3d6;
+        --border:rgba(255,255,255,.14); --code:#0a0f1f; --accent:#63b3ff; --ok:#40c057; --warn:#ffd43b;
+      }
+      *{box-sizing:border-box}
+      body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.55}
+      a{color:var(--accent);text-decoration:none} a:hover{text-decoration:underline}
+      .wrap{max-width:1100px;margin:0 auto;padding:28px 18px 60px}
+      header{border:1px solid var(--border);border-radius:14px;background:linear-gradient(180deg,var(--panel),var(--panel2));padding:18px}
+      h1{margin:0 0 6px;font-size:22px} p{margin:6px 0;color:var(--muted)}
+      .pill{display:inline-block;padding:2px 10px;border:1px solid var(--border);border-radius:999px;background:rgba(255,255,255,.03);margin:6px 8px 0 0;font-size:13px;color:var(--muted)}
+      .toc{margin-top:14px;display:grid;gap:10px}
+      .toc a{border:1px solid var(--border);border-radius:12px;background:rgba(255,255,255,.03);padding:10px 12px;display:block}
+      section{margin-top:16px}
+      .card{border:1px solid var(--border);border-radius:14px;background:rgba(18,26,51,.65);padding:16px}
+      h2{margin:0 0 10px;font-size:18px}
+      h3{margin:14px 0 8px;font-size:15px}
+      pre{margin:10px 0 0;padding:12px;border-radius:12px;border:1px solid var(--border);background:var(--code);overflow:auto;font-size:13px}
+      code{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
+      details{margin-top:10px;border:1px solid var(--border);border-radius:12px;background:rgba(255,255,255,.03);padding:10px 12px}
+      summary{cursor:pointer;font-weight:700}
+      .line{color:var(--muted);font-size:12px;font-weight:600;margin-left:6px}
+      .note{margin-top:10px;padding:10px 12px;border-radius:12px;border:1px dashed var(--border);background:rgba(255,255,255,.02);color:var(--muted)}
+      .flow{margin-top:10px;padding:12px;border-radius:12px;border:1px solid var(--border);background:rgba(10,15,31,.7);font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:13px;overflow:auto}
+      .ok{color:var(--ok);font-weight:800} .warn{color:var(--warn);font-weight:800}
+      .two{display:grid;grid-template-columns:1fr;gap:12px}
+      @media (min-width:960px){.two{grid-template-columns:1fr 1fr}}
+      footer{margin-top:20px;color:var(--muted);font-size:13px}
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <h1>HR Calendar Study Guide (Line-by-line)</h1>
+        <p>
+          Goal: explain how the HR calendar works end-to-end: what the controller returns, how Blade passes it into JS,
+          and how the HR dashboard script injects leave badges into FullCalendar day cells.
+        </p>
+        <div>
+          <span class="pill">Controller: <code>app/Http/Controllers/HRController.php</code></span>
+          <span class="pill">View: <code>resources/views/hr/dashboard.blade.php</code></span>
+          <span class="pill">FullCalendar loaded in: <code>resources/views/components/layout.blade.php</code></span>
+        </div>
+        <div class="toc">
+          <a href="#flow"><b>1) Big picture flow</b></a>
+          <a href="#layout"><b>2) Where FullCalendar is loaded</b></a>
+          <a href="#controller"><b>3) Controller line-by-line: building <code>$calendarEvents</code></b></a>
+          <a href="#view"><b>4) View line-by-line: turning <code>$calendarEvents</code> into badges</b></a>
+          <a href="#debug"><b>5) Debug checklist</b></a>
+        </div>
+      </header>
+
+      <section id="flow">
+        <div class="card">
+          <h2>1) Big picture flow</h2>
+          <div class="flow">
+GET /hr/dashboard
+  → routes/hr.php calls HRController::dashboard()
+  → controller queries requests with status = 'hr_approved'
+  → controller maps each request into a plain array (title/start/end/color...)
+  → controller passes $calendarEvents into the Blade view
+  → Blade prints JS: var leaveEvents = @json($calendarEvents)
+  → JS expands each event into per-day items: leaveByDate['YYYY-MM-DD'] = [...]
+  → FullCalendar renders the month grid
+  → JS injects "leave-badge" DOM elements into each day cell
+          </div>
+          <div class="note">
+            <span class="ok">Important design choice:</span> FullCalendar is used for the calendar UI/navigation, but your code
+            sets <code>events: []</code> and renders badges manually inside day cells.
+          </div>
+        </div>
+      </section>
+
+      <section id="layout">
+        <div class="card">
+          <h2>2) Where FullCalendar is loaded</h2>
+          <p>Source: <code>resources/views/components/layout.blade.php</code> (head section)</p>
+          <pre><code>&lt;link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.20/index.global.min.css" rel="stylesheet" type="text/css" /&gt;
+&lt;script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.20/index.global.min.js'&gt;&lt;/script&gt;</code></pre>
+
+          <details open>
+            <summary>Line-by-line meaning</summary>
+            <ul>
+              <li>
+                <b>CSS link:</b> loads FullCalendar’s default styles (grid, toolbar, spacing).
+              </li>
+              <li>
+                <b>Script:</b> loads the global build, which exposes <code>window.FullCalendar</code>.
+              </li>
+              <li>
+                That’s why the dashboard JS uses:
+                <pre><code>new FullCalendar.Calendar(calendarEl, options)</code></pre>
+              </li>
+            </ul>
+          </details>
+
+          <div class="note">
+            If the script fails to load, the HR dashboard JS prints:
+            <code>FullCalendar is not loaded. Check the CDN script include in the layout.</code>
+          </div>
+        </div>
+      </section>
+
+      <section id="controller">
+        <div class="card">
+          <h2>3) Controller line-by-line: building <code>$calendarEvents</code></h2>
+          <p>Source: <code>app/Http/Controllers/HRController.php</code> inside <code>dashboard()</code></p>
+
+          <pre><code>// Build calendar events from approved requests
+$calendarEvents = LeaveRequest::where('status', 'hr_approved')
+    -&gt;with(['employee', 'employee.department'])
+    -&gt;get()
+    -&gt;map(function ($request) {
+        $color = optional($request-&gt;employee-&gt;department)-&gt;color ?? '#3b82f6';
+
+        return [
+            'title' =&gt; $request-&gt;employee-&gt;name,
+            'start' =&gt; $request-&gt;start_date-&gt;format('Y-m-d'),
+            'end' =&gt; $request-&gt;end_date-&gt;copy()-&gt;addDay()-&gt;format('Y-m-d'),
+            'color' =&gt; $color,
+            'backgroundColor' =&gt; $color,
+            'borderColor' =&gt; $color,
+            'allDay' =&gt; true,
+        ];
+    })
+    -&gt;values()
+    -&gt;toArray();</code></pre>
+
+          <div class="two">
+            <div>
+              <details open>
+                <summary><code>LeaveRequest::where('status', 'hr_approved')</code> <span class="line">HRController.php:43</span></summary>
+                <p>
+                  Query the database for requests where <code>status</code> is exactly <code>hr_approved</code>.
+                  <span class="ok">Only HR-approved leave shows on the calendar.</span>
+                </p>
+              </details>
+
+              <details>
+                <summary><code>-&gt;with(['employee', 'employee.department'])</code> <span class="line">HRController.php:44</span></summary>
+                <p>
+                  Eager-load related models to avoid extra queries when mapping:
+                </p>
+                <ul>
+                  <li><code>employee</code>: the user who requested leave</li>
+                  <li><code>employee.department</code>: that user’s department (used for color)</li>
+                </ul>
+              </details>
+
+              <details>
+                <summary><code>-&gt;get()</code> <span class="line">HRController.php:45</span></summary>
+                <p>Executes the SQL and returns a Laravel Collection of <code>Request</code> models.</p>
+              </details>
+            </div>
+
+            <div>
+              <details open>
+                <summary><code>-&gt;map(function ($request) { ... })</code> <span class="line">HRController.php:46–59</span></summary>
+                <p>
+                  Converts each Eloquent model into a plain PHP array (so it can be JSON-encoded for JavaScript).
+                </p>
+              </details>
+
+              <details>
+                <summary><code>$color = optional(...)-&gt;color ?? '#3b82f6'</code> <span class="line">HRController.php:48</span></summary>
+                <p>
+                  Safe department color lookup:
+                </p>
+                <ul>
+                  <li><code>optional(...)</code> prevents errors if department is missing.</li>
+                  <li><code>?? '#3b82f6'</code> uses blue as fallback.</li>
+                </ul>
+              </details>
+
+              <details>
+                <summary><code>'start' =&gt; ...-&gt;format('Y-m-d')</code> <span class="line">HRController.php:52</span></summary>
+                <p>Formats start date as <code>YYYY-MM-DD</code> for the JS parsing logic.</p>
+              </details>
+
+              <details>
+                <summary><code>'end' =&gt; end_date-&gt;copy()-&gt;addDay()</code> <span class="line">HRController.php:53</span></summary>
+                <p>
+                  This creates an <b>end-exclusive</b> date so the leave includes the last day.
+                  Your JS uses <code>d &lt; endExclusive</code> when expanding days.
+                </p>
+              </details>
+
+              <details>
+                <summary><code>-&gt;values()-&gt;toArray()</code> <span class="line">HRController.php:60–61</span></summary>
+                <p>
+                  <code>values()</code> reindexes the collection (0..n). <code>toArray()</code> makes it a plain array
+                  so Blade can safely JSON-encode it.
+                </p>
+              </details>
+            </div>
+          </div>
+
+          <div class="note">
+            <b>Controller output shape:</b> one object per approved request:
+            <pre><code>{
+  title: "Employee Name",
+  start: "YYYY-MM-DD",
+  end:   "YYYY-MM-DD", // end-exclusive
+  backgroundColor: "#hex",
+  borderColor: "#hex",
+  allDay: true
+}</code></pre>
+          </div>
+        </div>
+      </section>
+
+      <section id="view">
+        <div class="card">
+          <h2>4) View line-by-line: turning <code>$calendarEvents</code> into badges</h2>
+          <p>Source: <code>resources/views/hr/dashboard.blade.php</code> (calendar portion)</p>
+
+          <h3>4.1 Calendar mount point</h3>
+          <pre><code>&lt;div id="calendar" class="min-h-[400px] overflow-visible"&gt;&lt;/div&gt;</code></pre>
+          <details open>
+            <summary>Meaning <span class="line">hr/dashboard.blade.php:192</span></summary>
+            <p>
+              This is the element FullCalendar uses as its “root”. If <code>document.getElementById('calendar')</code>
+              returns <code>null</code>, the script logs <code>Calendar element not found</code>.
+            </p>
+          </details>
+
+          <h3>4.2 Custom badge styles</h3>
+          <pre><code>/* Render leaves as compact badges inside each day cell */
+.fc .leave-badges { ... }
+.fc .leave-badge  { ... }</code></pre>
+          <details>
+            <summary>Meaning <span class="line">hr/dashboard.blade.php:199–221</span></summary>
+            <p>
+              These styles control the look of badges you inject into each day cell:
+              stacked pills with a tiny font, ellipsis, and white text.
+            </p>
+          </details>
+
+          <h3>4.3 Getting PHP data into JavaScript</h3>
+          <pre><code>// We render leave badges per-day ourselves (instead of relying on FullCalendar's event rendering).
+var leaveEvents = @json($calendarEvents);</code></pre>
+          <details open>
+            <summary><code>@json($calendarEvents)</code> <span class="line">hr/dashboard.blade.php:232–234</span></summary>
+            <p>
+              Blade runs on the server and outputs HTML/JS. <code>@json()</code> converts the PHP array into a JS array literal.
+              So when the browser runs the page, <code>leaveEvents</code> is already real JS data.
+            </p>
+          </details>
+
+          <h3>4.4 Date helpers</h3>
+          <pre><code>function parseYmd(ymd) { ... }
+function toYmd(date) { ... }</code></pre>
+          <details>
+            <summary><code>parseYmd</code> <span class="line">hr/dashboard.blade.php:235–238</span></summary>
+            <p>
+              Turns <code>"YYYY-MM-DD"</code> into a JS <code>Date</code>. The month is <code>- 1</code> because JS months are 0-based.
+            </p>
+          </details>
+          <details>
+            <summary><code>toYmd</code> <span class="line">hr/dashboard.blade.php:240–245</span></summary>
+            <p>
+              Turns a JS <code>Date</code> back into <code>"YYYY-MM-DD"</code>. Used as keys in <code>leaveByDate</code>.
+            </p>
+          </details>
+
+          <h3>4.5 Expand each event into per-day entries</h3>
+          <pre><code>// Build a map: YYYY-MM-DD -> [{ name, color }, ...]
+var leaveByDate = {};
+(leaveEvents || []).forEach(function(ev) {
+  if (!ev || !ev.start || !ev.end) return;
+  var start = parseYmd(ev.start);
+  var endExclusive = parseYmd(ev.end);
+  var color = ev.backgroundColor || ev.color || '#3b82f6';
+  var name = ev.title || 'Leave';
+
+  for (var d = new Date(start); d < endExclusive; d.setDate(d.getDate() + 1)) {
+    var key = toYmd(d);
+    if (!leaveByDate[key]) leaveByDate[key] = [];
+    leaveByDate[key].push({ name: name, color: color });
+  }
+});</code></pre>
+
+          <details open>
+            <summary>Line-by-line meaning <span class="line">hr/dashboard.blade.php:247–261</span></summary>
+            <ul>
+              <li><code>leaveByDate</code> is a lookup table: <code>date -> array of badges</code>.</li>
+              <li><code>(leaveEvents || [])</code> prevents a crash if <code>leaveEvents</code> is null/undefined.</li>
+              <li><code>if (!ev || !ev.start || !ev.end) return;</code> skips broken objects safely.</li>
+              <li><code>endExclusive</code> is exclusive because the controller added one day.</li>
+              <li><code>for (d = start; d &lt; endExclusive; d++)</code> iterates through each covered day.</li>
+              <li><code>leaveByDate[key].push(...)</code> allows multiple leaves on the same date.</li>
+            </ul>
+            <div class="note">
+              <span class="warn">Why end is exclusive:</span> it avoids off-by-one. The loop uses <code>d &lt; endExclusive</code>,
+              so sending end = (real end date + 1) includes the last day properly.
+            </div>
+          </details>
+
+          <h3>4.6 Rendering badges into day cells (DOM injection)</h3>
+          <pre><code>function renderLeaveBadges() {
+  calendarEl.querySelectorAll('.leave-badges').forEach(function(node) { node.remove(); });
+  var dayCells = calendarEl.querySelectorAll('.fc-daygrid-day[data-date]');
+  dayCells.forEach(function(cell) {
+    var date = cell.getAttribute('data-date');
+    var items = leaveByDate[date];
+    if (!items || items.length === 0) return;
+
+    var host =
+      cell.querySelector('.fc-daygrid-day-events') ||
+      cell.querySelector('.fc-daygrid-day-frame') ||
+      cell;
+
+    var wrap = document.createElement('div');
+    wrap.className = 'leave-badges';
+
+    items.forEach(function(item) {
+      var badge = document.createElement('div');
+      badge.className = 'leave-badge';
+      badge.style.backgroundColor = item.color;
+      badge.textContent = item.name;
+      wrap.appendChild(badge);
+    });
+
+    host.appendChild(wrap);
+  });
+}</code></pre>
+
+          <details open>
+            <summary>Line-by-line meaning <span class="line">hr/dashboard.blade.php:263–292</span></summary>
+            <ul>
+              <li><b>Clear old badges</b>: FullCalendar reuses DOM when you navigate months; this prevents duplicates.</li>
+              <li><b>Select day cells</b>: <code>.fc-daygrid-day[data-date]</code> targets month grid days.</li>
+              <li><b>Match by date</b>: each cell has <code>data-date="YYYY-MM-DD"</code>, which matches keys in <code>leaveByDate</code>.</li>
+              <li><b>Choose host</b>: tries a few FullCalendar internal containers to place badges in the right spot.</li>
+              <li><b>Create wrapper</b>: <code>&lt;div class="leave-badges"&gt;</code> holds multiple badges.</li>
+              <li><b>Create each badge</b>: sets background color + text and appends to wrapper.</li>
+              <li><b>Append</b>: adds wrapper into the cell so it displays under the date number.</li>
+            </ul>
+          </details>
+
+          <h3>4.7 FullCalendar initialization</h3>
+          <pre><code>var calendar = new FullCalendar.Calendar(calendarEl, {
+  initialView: 'dayGridMonth',
+  headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,listWeek' },
+  events: [],
+  displayEventTime: false,
+  datesSet: function() { setTimeout(renderLeaveBadges, 0); },
+  height: 'auto',
+  dayMaxEvents: true
+});
+calendar.render();
+setTimeout(renderLeaveBadges, 0);</code></pre>
+
+          <details open>
+            <summary>Line-by-line meaning <span class="line">hr/dashboard.blade.php:294–316</span></summary>
+            <ul>
+              <li><code>initialView: 'dayGridMonth'</code>: shows the month grid by default.</li>
+              <li><code>headerToolbar</code>: enables prev/next/today buttons and view switching.</li>
+              <li><code>events: []</code>: you are intentionally NOT using FullCalendar event rendering.</li>
+              <li><code>datesSet</code>: fires after navigation/view changes; you re-inject badges after FullCalendar redraws.</li>
+              <li><code>setTimeout(..., 0)</code>: waits one tick so FullCalendar finishes laying out DOM first.</li>
+              <li><code>calendar.render()</code>: actually draws the calendar into the page.</li>
+              <li>Final <code>setTimeout(renderLeaveBadges, 0)</code>: draws badges for the initial month.</li>
+            </ul>
+          </details>
+        </div>
+      </section>
+
+      <section id="debug">
+        <div class="card">
+          <h2>5) Debug checklist (when calendar is empty/broken)</h2>
+
+          <details open>
+            <summary>Calendar is blank (no grid)</summary>
+            <ul>
+              <li>Check <code>resources/views/components/layout.blade.php</code> includes the FullCalendar CSS + script.</li>
+              <li>Open devtools console: if you see <code>FullCalendar is not loaded</code>, the CDN script didn’t load.</li>
+              <li>Make sure the element exists: <code>&lt;div id="calendar"&gt;</code>.</li>
+            </ul>
+          </details>
+
+          <details>
+            <summary>Calendar grid shows, but no badges</summary>
+            <ul>
+              <li>Verify there are <code>hr_approved</code> requests in the DB (only those are used for events).</li>
+              <li>View page source and search for <code>var leaveEvents</code> — make sure it contains data (not <code>[]</code>).</li>
+              <li>Confirm the date strings are <code>YYYY-MM-DD</code> and the controller adds 1 day to <code>end</code>.</li>
+              <li>In the DOM, check day cells have <code>data-date</code> attributes (month view only).</li>
+            </ul>
+          </details>
+
+          <details>
+            <summary>Badges duplicate when navigating months</summary>
+            <ul>
+              <li>The fix is the first line of <code>renderLeaveBadges()</code> that removes existing <code>.leave-badges</code>.</li>
+              <li>If duplicates happen, that removal probably didn’t run or the selector changed.</li>
+            </ul>
+          </details>
+
+          <div class="note">
+            Tip: in the browser console, you can quickly sanity-check by running:
+            <pre><code>document.querySelectorAll('#calendar .leave-badge').length</code></pre>
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        File created for this repo: <code>docs/hr-calendar-study-guide.html</code>.
+        Open it in your browser to read it nicely.
+      </footer>
+    </div>
+  </body>
+</html>

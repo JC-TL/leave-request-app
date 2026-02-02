@@ -66,12 +66,12 @@ class User extends Authenticatable
 
     public function leaveRequests()
     {
-        return $this->hasMany(Request::class, 'employee_id');
+        return $this->hasMany(LeaveRequest::class, 'employee_id');
     }
 
     public function leaveBalances()
     {
-        return $this->hasMany(Balance::class);
+        return $this->hasMany(LeaveBalance::class);
     }
 
     public function isEmployee()
@@ -100,11 +100,28 @@ class User extends Authenticatable
         if ($year === null) {
             $year = now()->year;
         }
-        
+
         return $this->leaveBalances()
             ->where('leave_type', $leaveType)
             ->where('year', $year)
             ->first();
+    }
+
+    /**
+     * Sum of days from pending or manager-approved requests for a leave type (not yet deducted).
+     * Used to show "available" and validate new submissions.
+     */
+    public function getPendingLeaveDays(string $leaveType, ?int $year = null): int
+    {
+        if ($year === null) {
+            $year = now()->year;
+        }
+
+        return (int) $this->leaveRequests()
+            ->where('leave_type', $leaveType)
+            ->whereIn('status', ['pending', 'dept_manager_approved'])
+            ->whereYear('start_date', $year)
+            ->sum('number_of_days');
     }
 }
 

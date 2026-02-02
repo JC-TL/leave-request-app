@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Balance;
-use App\Models\Request as LeaveRequest;
+
+use App\Models\LeaveRequest;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class EmployeeController extends Controller
 {
@@ -16,18 +17,26 @@ class EmployeeController extends Controller
         // Get current year for filtering balances
         $currentYear = now()->year;
 
-        // Fetch user's leave balances for this year
+        // Fetch user's leave balances for this year with available days (after reserved pending requests)
         $balances = $user->leaveBalances()
             ->where('year', $currentYear)
             ->orderBy('leave_type')
-            ->get();
+            ->get()
+            ->map(function ($balance) use ($user, $currentYear) {
+                $pendingDays = $user->getPendingLeaveDays($balance->leave_type, $currentYear);
+                $balance->available_days = max(0, $balance->getAvailableBalance() - $pendingDays);
+                return $balance;
+            });
 
-        // Get paginated requests, newest first
         $requests = $user->leaveRequests()
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
-        return view('employee.dashboard', compact('balances', 'requests', 'user'));
+        return Inertia::render('Employee/Dashboard', [
+            'balances' => $balances,
+            'requests' => $requests,
+            'user' => $user,
+        ]);
     }
 
     public function storeRequest(Request $request)
@@ -57,17 +66,19 @@ class EmployeeController extends Controller
                 ->withInput();
         }
 
-        // Make sure they have enough days
-        if (!$balance->hasSufficientBalance($numberOfDays)) {
-            $available = $balance->getAvailableBalance();
+        // Available = balance minus used minus days already reserved by pending/manager-approved requests
+        $pendingDays = $user->getPendingLeaveDays($validated['leave_type'], $currentYear);
+        $available = max(0, $balance->getAvailableBalance() - $pendingDays);
+
+        if ($available < $numberOfDays) {
             return back()
                 ->withErrors([
-                    'leave_type' => "Insufficient balance. You only have {$available} days available."
+                    'leave_type' => "Insufficient balance. You have {$available} days available (after pending requests)."
                 ])
                 ->withInput();
         }
 
-        // Create the leave request
+        // Create the leave request (balance is only deducted when HR approves)
         LeaveRequest::create([
             'employee_id' => $user->id,
             'leave_type' => $validated['leave_type'],
@@ -99,6 +110,7 @@ class EmployeeController extends Controller
                 ->withErrors(['error' => 'Only pending requests can be cancelled.']);
         }
 
+        // Balance was never deducted (only deducted when HR approves), so nothing to restore
         $leaveRequest->delete();
 
         return redirect()

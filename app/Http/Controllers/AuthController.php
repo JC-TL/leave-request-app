@@ -5,12 +5,13 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
+use Inertia\Inertia;
 
 class AuthController extends Controller
 {
     public function showLoginForm()
     {
-        return view('welcome');
+        return Inertia::render('Auth/Login');
     }
 
     public function login(Request $request)
@@ -65,7 +66,7 @@ class AuthController extends Controller
 
     public function showContactAdmin()
     {
-        return view('contact-admin');
+        return Inertia::render('Auth/ContactAdmin');
     }
 
     public function submitContact(Request $request)

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laravel Concepts Study Guide - Leave Request App</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h1>📚 Laravel Concepts</h1>
+                <p class="subtitle">Study Guide</p>
+            </div>
+            
+            <!-- Search -->
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="🔍 Search concepts..." class="search-input">
+            </div>
+            
+            <!-- Progress -->
+            <div class="progress-container">
+                <div class="progress-label">
+                    <span>Progress</span>
+                    <span id="progressPercent">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+            
+            <!-- Navigation Menu -->
+            <nav class="nav-menu" id="navMenu">
+                <!-- Will be populated by JavaScript -->
+            </nav>
+            
+            <div class="sidebar-footer">
+                <p>💡 Tip: Click any concept to learn more!</p>
+            </div>
+        </aside>
+        
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Welcome Screen -->
+            <div class="welcome-screen" id="welcomeScreen">
+                <div class="welcome-content">
+                    <h1>Welcome to the Laravel Concepts Study Guide! 🎓</h1>
+                    <p class="lead">Learn Laravel concepts used in the Leave Request App</p>
+                    
+                    <div class="welcome-features">
+                        <div class="feature-card">
+                            <div class="feature-icon">📍</div>
+                            <h3>Code Examples</h3>
+                            <p>See exactly where each concept is used in the project</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">💡</div>
+                            <h3>Beginner Friendly</h3>
+                            <p>Clear explanations that anyone can understand</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">🎯</div>
+                            <h3>Interactive</h3>
+                            <p>Expand sections, search, and track your progress</p>
+                        </div>
+                    </div>
+                    
+                    <div class="quick-start">
+                        <h2>Quick Start</h2>
+                        <p>Select a concept from the sidebar to begin, or use the search bar to find what you're looking for.</p>
+                        <div class="popular-concepts">
+                            <button class="popular-btn" data-concept="routing">🚦 Routing</button>
+                            <button class="popular-btn" data-concept="controllers">🎮 Controllers</button>
+                            <button class="popular-btn" data-concept="eloquent-models">📊 Models</button>
+                            <button class="popular-btn" data-concept="blade-components">🔧 Blade Components</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Concept Content (will be populated by JavaScript) -->
+            <div class="concept-content" id="conceptContent" style="display: none;">
+                <!-- Content will be dynamically generated -->
+            </div>
+        </main>
+    </div>
+    
+    <script src="concepts-data.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leave Request App - Study Guide</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="index.html" class="nav-brand">Leave Request App - Study Guide</a>
+            <ul class="nav-links">
+                <li><a href="index.html" class="active">Overview</a></li>
+                <li><a href="tech-stack.html">Tech Stack</a></li>
+                <li><a href="backend.html">Backend</a></li>
+                <li><a href="frontend.html">Frontend</a></li>
+                <li><a href="database.html">Database</a></li>
+                <li><a href="flows.html">App Flows</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="hero">
+        <h1>Leave Request App</h1>
+        <p>A comprehensive employee leave management system built with Laravel, Inertia.js, and Vue.js</p>
+    </div>
+
+    <div class="container">
+        <!-- Quick Navigation -->
+        <div class="section-nav">
+            <a href="tech-stack.html">Tech Stack</a>
+            <a href="backend.html">Backend (Laravel)</a>
+            <a href="frontend.html">Frontend (Vue + Inertia)</a>
+            <a href="database.html">Database</a>
+            <a href="flows.html">App Flows</a>
+        </div>
+
+        <!-- Overview Card -->
+        <div class="card">
+            <h2>What is this Application?</h2>
+            <p>This is a <strong>Leave Request Management System</strong> that allows:</p>
+            <ul>
+                <li><strong>Employees</strong> to submit and track leave requests</li>
+                <li><strong>Department Managers</strong> to approve/reject their team's requests</li>
+                <li><strong>HR Admins</strong> to give final approval, manage policies, and create employees</li>
+            </ul>
+            
+            <h3>Key Features</h3>
+            <div class="grid grid-3">
+                <div class="tech-card">
+                    <div class="icon">📝</div>
+                    <h3>Leave Requests</h3>
+                    <p>Submit, track, and cancel leave requests with automatic balance management</p>
+                </div>
+                <div class="tech-card">
+                    <div class="icon">✅</div>
+                    <h3>Two-Level Approval</h3>
+                    <p>Manager approval followed by HR approval workflow</p>
+                </div>
+                <div class="tech-card">
+                    <div class="icon">📊</div>
+                    <h3>Balance Tracking</h3>
+                    <p>Real-time leave balance tracking with policy-based entitlements</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Architecture Overview -->
+        <div class="card">
+            <h2>Application Architecture</h2>
+            <p>This app uses a <strong>monolithic architecture</strong> with a modern frontend approach:</p>
+            
+            <div class="flow">
+                <div class="flow-box">Browser</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">Vue.js (Frontend)</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">Inertia.js (Bridge)</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">Laravel (Backend)</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">MySQL (Database)</div>
+            </div>
+
+            <div class="callout callout-info">
+                <strong>Key Insight:</strong> Unlike traditional SPAs that use REST APIs, this app uses <strong>Inertia.js</strong> to connect Vue.js directly to Laravel controllers. No separate API needed!
+            </div>
+        </div>
+
+        <!-- Tech Stack Summary -->
+        <div class="card">
+            <h2>Technology Stack Summary</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Layer</th>
+                        <th>Technology</th>
+                        <th>Purpose</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Backend Framework</td>
+                        <td><span class="badge badge-danger">Laravel 11</span></td>
+                        <td>PHP framework for routing, controllers, models, authentication</td>
+                    </tr>
+                    <tr>
+                        <td>Frontend Framework</td>
+                        <td><span class="badge badge-success">Vue.js 3</span></td>
+                        <td>Reactive UI components with Composition API</td>
+                    </tr>
+                    <tr>
+                        <td>Frontend-Backend Bridge</td>
+                        <td><span class="badge badge-primary">Inertia.js</span></td>
+                        <td>Connects Vue components to Laravel controllers without API</td>
+                    </tr>
+                    <tr>
+                        <td>Starter Kit</td>
+                        <td><span class="badge badge-warning">Laravel Breeze</span></td>
+                        <td>Provides auth scaffolding, components, and Tailwind setup</td>
+                    </tr>
+                    <tr>
+                        <td>CSS Framework</td>
+                        <td><span class="badge badge-primary">Tailwind CSS</span></td>
+                        <td>Utility-first CSS for styling</td>
+                    </tr>
+                    <tr>
+                        <td>Build Tool</td>
+                        <td><span class="badge badge-success">Vite</span></td>
+                        <td>Fast frontend build tool and dev server</td>
+                    </tr>
+                    <tr>
+                        <td>Database</td>
+                        <td><span class="badge badge-primary">MySQL</span></td>
+                        <td>Relational database for storing data</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Project Structure -->
+        <div class="card">
+            <h2>Project Structure</h2>
+            <p>Here are the most important folders and files:</p>
+            
+            <div class="file-tree">
+<span class="folder">leave-request-app/</span>
+├── <span class="folder">app/</span>
+│   ├── <span class="folder">Http/Controllers/</span>     <span class="comment"># Laravel controllers (backend logic)</span>
+│   │   ├── <span class="file">AuthController.php</span>
+│   │   ├── <span class="file">EmployeeController.php</span>
+│   │   ├── <span class="file">ManagerController.php</span>
+│   │   └── <span class="file">HRController.php</span>
+│   ├── <span class="folder">Models/</span>               <span class="comment"># Eloquent models (database tables)</span>
+│   │   ├── <span class="file">User.php</span>
+│   │   ├── <span class="file">LeaveRequest.php</span>
+│   │   ├── <span class="file">LeaveBalance.php</span>
+│   │   └── <span class="file">Policy.php</span>
+│   └── <span class="folder">Http/Middleware/</span>      <span class="comment"># Request middleware</span>
+│       └── <span class="file">HandleInertiaRequests.php</span>
+├── <span class="folder">resources/js/</span>            <span class="comment"># Vue.js frontend</span>
+│   ├── <span class="file">app.js</span>                <span class="comment"># Vue app entry point</span>
+│   ├── <span class="folder">Components/</span>           <span class="comment"># Reusable Vue components</span>
+│   ├── <span class="folder">Layouts/</span>              <span class="comment"># Page layouts</span>
+│   │   ├── <span class="file">AuthenticatedLayout.vue</span>
+│   │   └── <span class="file">GuestLayout.vue</span>
+│   └── <span class="folder">Pages/</span>                <span class="comment"># Page components (matched to routes)</span>
+│       ├── <span class="folder">Auth/</span>
+│       ├── <span class="folder">Employee/</span>
+│       ├── <span class="folder">Manager/</span>
+│       └── <span class="folder">HR/</span>
+├── <span class="folder">routes/</span>                   <span class="comment"># Laravel routes</span>
+│   ├── <span class="file">web.php</span>               <span class="comment"># Main routes</span>
+│   ├── <span class="file">employee.php</span>
+│   ├── <span class="file">manager.php</span>
+│   └── <span class="file">hr.php</span>
+├── <span class="folder">database/</span>
+│   ├── <span class="folder">migrations/</span>           <span class="comment"># Database schema definitions</span>
+│   └── <span class="folder">seeders/</span>              <span class="comment"># Test data seeders</span>
+└── <span class="folder">resources/views/</span>
+    └── <span class="file">app.blade.php</span>         <span class="comment"># Root HTML template for Inertia</span>
+            </div>
+        </div>
+
+        <!-- User Roles -->
+        <div class="card">
+            <h2>User Roles & Permissions</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Role</th>
+                        <th>Dashboard Route</th>
+                        <th>Capabilities</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="badge badge-primary">Employee</span></td>
+                        <td><code class="inline-code">/employee/dashboard</code></td>
+                        <td>View balances, submit leave requests, cancel pending requests</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-warning">Dept Manager</span></td>
+                        <td><code class="inline-code">/manager/dashboard</code></td>
+                        <td>Approve/reject team requests, view team balances</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-success">HR Admin</span></td>
+                        <td><code class="inline-code">/hr/dashboard</code></td>
+                        <td>Final approval, manage policies, create employees, view calendar</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Request Status Flow -->
+        <div class="card">
+            <h2>Leave Request Status Flow</h2>
+            <div class="flow">
+                <div class="flow-box" style="background: var(--warning);">Pending</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box" style="background: #3b82f6;">Manager Approved</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box" style="background: var(--success);">HR Approved</div>
+            </div>
+            
+            <p style="text-align: center; color: var(--text-light); margin-top: 1rem;">
+                <em>At any stage, the request can be rejected, which changes status to "Rejected"</em>
+            </p>
+
+            <div class="callout callout-success">
+                <strong>Important:</strong> Leave balance is only deducted from the <code class="inline-code">used</code> column when HR approves. Before that, pending requests just "reserve" days without actual deduction.
+            </div>
+        </div>
+
+        <!-- Next Steps -->
+        <div class="card">
+            <h2>Continue Learning</h2>
+            <p>Click the links below to dive deeper into each aspect of the application:</p>
+            <div class="grid grid-2">
+                <a href="tech-stack.html" class="tech-card" style="text-decoration: none;">
+                    <div class="icon">🛠️</div>
+                    <h3>Tech Stack Deep Dive</h3>
+                    <p>Learn about Laravel, Vue.js, Inertia.js, and how they work together</p>
+                </a>
+                <a href="backend.html" class="tech-card" style="text-decoration: none;">
+                    <div class="icon">⚙️</div>
+                    <h3>Backend (Laravel)</h3>
+                    <p>Controllers, Models, Routes, Middleware explained with code</p>
+                </a>
+                <a href="frontend.html" class="tech-card" style="text-decoration: none;">
+                    <div class="icon">🎨</div>
+                    <h3>Frontend (Vue + Inertia)</h3>
+                    <p>Components, Layouts, Forms, and reactive data handling</p>
+                </a>
+                <a href="database.html" class="tech-card" style="text-decoration: none;">
+                    <div class="icon">🗄️</div>
+                    <h3>Database Design</h3>
+                    <p>Tables, relationships, migrations, and seeders</p>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>Leave Request App - Presentation Study Guide</p>
+    </footer>
+</body>
+</html>

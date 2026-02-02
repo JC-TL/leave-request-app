@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backend (Laravel) - Study Guide</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="index.html" class="nav-brand">Leave Request App - Study Guide</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Overview</a></li>
+                <li><a href="tech-stack.html">Tech Stack</a></li>
+                <li><a href="backend.html" class="active">Backend</a></li>
+                <li><a href="frontend.html">Frontend</a></li>
+                <li><a href="database.html">Database</a></li>
+                <li><a href="flows.html">App Flows</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1 style="margin-bottom: 2rem;">Backend - Laravel Deep Dive</h1>
+
+        <!-- Routes -->
+        <div class="card">
+            <h2>1. Routes - Mapping URLs to Controllers</h2>
+            <p>Routes define which controller method handles each URL. Located in <code class="inline-code">routes/</code> folder.</p>
+
+            <h3>Route Structure</h3>
+<pre>
+<span class="comment">// routes/web.php - Main routes file</span>
+
+<span class="comment">// Guest routes (not logged in)</span>
+Route::<span class="function">middleware</span>(<span class="string">'guest'</span>)-><span class="function">group</span>(<span class="keyword">function</span> () {
+    <span class="comment">// GET request to "/" calls AuthController's showLoginForm method</span>
+    Route::<span class="function">get</span>(<span class="string">'/'</span>, [AuthController::<span class="keyword">class</span>, <span class="string">'showLoginForm'</span>])-><span class="function">name</span>(<span class="string">'login'</span>);
+    
+    <span class="comment">// POST request to "/login" for form submission</span>
+    Route::<span class="function">post</span>(<span class="string">'/login'</span>, [AuthController::<span class="keyword">class</span>, <span class="string">'login'</span>])-><span class="function">name</span>(<span class="string">'login.store'</span>);
+});
+
+<span class="comment">// Authenticated routes (must be logged in)</span>
+Route::<span class="function">middleware</span>(<span class="string">'auth'</span>)-><span class="function">group</span>(<span class="keyword">function</span> () {
+    Route::<span class="function">post</span>(<span class="string">'/logout'</span>, [AuthController::<span class="keyword">class</span>, <span class="string">'logout'</span>])-><span class="function">name</span>(<span class="string">'logout'</span>);
+});
+
+<span class="comment">// Include role-specific route files</span>
+<span class="keyword">require</span> __DIR__.<span class="string">'/employee.php'</span>;
+<span class="keyword">require</span> __DIR__.<span class="string">'/manager.php'</span>;
+<span class="keyword">require</span> __DIR__.<span class="string">'/hr.php'</span>;
+</pre>
+
+            <h3>Role-Specific Routes</h3>
+<pre>
+<span class="comment">// routes/employee.php</span>
+Route::<span class="function">middleware</span>([<span class="string">'auth'</span>, <span class="string">'role:employee'</span>])-><span class="function">group</span>(<span class="keyword">function</span> () {
+    <span class="comment">// Dashboard page</span>
+    Route::<span class="function">get</span>(<span class="string">'/employee/dashboard'</span>, [EmployeeController::<span class="keyword">class</span>, <span class="string">'dashboard'</span>])
+        -><span class="function">name</span>(<span class="string">'employee.dashboard'</span>);
+    
+    <span class="comment">// Submit leave request (POST = create new data)</span>
+    Route::<span class="function">post</span>(<span class="string">'/employee/request'</span>, [EmployeeController::<span class="keyword">class</span>, <span class="string">'storeRequest'</span>])
+        -><span class="function">name</span>(<span class="string">'employee.store-request'</span>);
+    
+    <span class="comment">// Cancel request (PATCH = update existing data)</span>
+    Route::<span class="function">patch</span>(<span class="string">'/request/{id}/cancel'</span>, [EmployeeController::<span class="keyword">class</span>, <span class="string">'cancelRequest'</span>])
+        -><span class="function">name</span>(<span class="string">'request.cancel'</span>);
+});
+</pre>
+
+            <h3>HTTP Methods Explained</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Method</th>
+                        <th>Purpose</th>
+                        <th>Example</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="badge badge-success">GET</span></td>
+                        <td>Retrieve/display data</td>
+                        <td>View dashboard, view request details</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-primary">POST</span></td>
+                        <td>Create new data</td>
+                        <td>Submit new leave request, login</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-warning">PATCH</span></td>
+                        <td>Update existing data</td>
+                        <td>Approve request, update policy</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-danger">DELETE</span></td>
+                        <td>Remove data</td>
+                        <td>Delete a request</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Controllers -->
+        <div class="card">
+            <h2>2. Controllers - Business Logic</h2>
+            <p>Controllers handle HTTP requests and contain the application's business logic.</p>
+
+            <h3>Controller Anatomy</h3>
+<pre>
+<span class="keyword">&lt;?php</span>
+
+<span class="keyword">namespace</span> App\Http\Controllers;
+
+<span class="keyword">use</span> App\Models\LeaveRequest;
+<span class="keyword">use</span> Illuminate\Http\Request;
+<span class="keyword">use</span> Illuminate\Support\Facades\Auth;
+<span class="keyword">use</span> Inertia\Inertia;
+
+<span class="keyword">class</span> <span class="function">EmployeeController</span> <span class="keyword">extends</span> Controller
+{
+    <span class="comment">/**
+     * Display the employee dashboard
+     */</span>
+    <span class="keyword">public function</span> <span class="function">dashboard</span>()
+    {
+        <span class="comment">// 1. Get the authenticated user</span>
+        <span class="variable">$user</span> = Auth::<span class="function">user</span>();
+        
+        <span class="comment">// 2. Fetch data from database</span>
+        <span class="variable">$balances</span> = <span class="variable">$user</span>-><span class="function">leaveBalances</span>()
+            -><span class="function">where</span>(<span class="string">'year'</span>, now()-><span class="variable">year</span>)
+            -><span class="function">get</span>();
+        
+        <span class="variable">$requests</span> = <span class="variable">$user</span>-><span class="function">leaveRequests</span>()
+            -><span class="function">orderBy</span>(<span class="string">'created_at'</span>, <span class="string">'desc'</span>)
+            -><span class="function">paginate</span>(10);
+        
+        <span class="comment">// 3. Return Inertia response with data</span>
+        <span class="keyword">return</span> Inertia::<span class="function">render</span>(<span class="string">'Employee/Dashboard'</span>, [
+            <span class="string">'balances'</span> => <span class="variable">$balances</span>,
+            <span class="string">'requests'</span> => <span class="variable">$requests</span>,
+            <span class="string">'user'</span> => <span class="variable">$user</span>,
+        ]);
+    }
+}
+</pre>
+
+            <h3>Form Handling with Validation</h3>
+<pre>
+<span class="keyword">public function</span> <span class="function">storeRequest</span>(Request <span class="variable">$request</span>)
+{
+    <span class="comment">// 1. Validate incoming data (returns errors if invalid)</span>
+    <span class="variable">$validated</span> = <span class="variable">$request</span>-><span class="function">validate</span>([
+        <span class="string">'leave_type'</span> => <span class="string">'required|string'</span>,
+        <span class="string">'start_date'</span> => <span class="string">'required|date|after_or_equal:today'</span>,
+        <span class="string">'end_date'</span>   => <span class="string">'required|date|after_or_equal:start_date'</span>,
+        <span class="string">'reason'</span>     => <span class="string">'required|string|max:1000'</span>,
+    ]);
+    
+    <span class="comment">// 2. Business logic (check balance, calculate days, etc.)</span>
+    <span class="variable">$user</span> = Auth::<span class="function">user</span>();
+    <span class="variable">$numberOfDays</span> = <span class="variable">$this</span>-><span class="function">calculateWorkingDays</span>(...);
+    
+    <span class="comment">// 3. Create the record in database</span>
+    LeaveRequest::<span class="function">create</span>([
+        <span class="string">'employee_id'</span> => <span class="variable">$user</span>-><span class="variable">id</span>,
+        <span class="string">'leave_type'</span>  => <span class="variable">$validated</span>[<span class="string">'leave_type'</span>],
+        <span class="string">'start_date'</span>  => <span class="variable">$validated</span>[<span class="string">'start_date'</span>],
+        <span class="string">'end_date'</span>    => <span class="variable">$validated</span>[<span class="string">'end_date'</span>],
+        <span class="string">'reason'</span>      => <span class="variable">$validated</span>[<span class="string">'reason'</span>],
+        <span class="string">'number_of_days'</span> => <span class="variable">$numberOfDays</span>,
+        <span class="string">'status'</span>      => <span class="string">'pending'</span>,
+    ]);
+    
+    <span class="comment">// 4. Redirect with success message</span>
+    <span class="keyword">return</span> <span class="function">redirect</span>()
+        -><span class="function">route</span>(<span class="string">'employee.dashboard'</span>)
+        -><span class="function">with</span>(<span class="string">'success'</span>, <span class="string">'Leave request submitted successfully.'</span>);
+}
+</pre>
+
+            <h3>Our Controllers</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Controller</th>
+                        <th>Purpose</th>
+                        <th>Key Methods</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code class="inline-code">AuthController</code></td>
+                        <td>Login, logout, contact admin</td>
+                        <td>showLoginForm, login, logout</td>
+                    </tr>
+                    <tr>
+                        <td><code class="inline-code">EmployeeController</code></td>
+                        <td>Employee dashboard & requests</td>
+                        <td>dashboard, storeRequest, cancelRequest</td>
+                    </tr>
+                    <tr>
+                        <td><code class="inline-code">ManagerController</code></td>
+                        <td>Manager approval workflow</td>
+                        <td>dashboard, showRequest, approveRequest, rejectRequest</td>
+                    </tr>
+                    <tr>
+                        <td><code class="inline-code">HRController</code></td>
+                        <td>HR dashboard, policies, employees</td>
+                        <td>dashboard, approveRequest, policies, storeEmployee</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Models -->
+        <div class="card">
+            <h2>3. Models - Database Representation</h2>
+            <p>Models represent database tables and define relationships between them.</p>
+
+            <h3>Model Structure</h3>
+<pre>
+<span class="keyword">&lt;?php</span>
+
+<span class="keyword">namespace</span> App\Models;
+
+<span class="keyword">use</span> Illuminate\Database\Eloquent\Model;
+
+<span class="keyword">class</span> <span class="function">LeaveBalance</span> <span class="keyword">extends</span> Model
+{
+    <span class="comment">// Which columns can be mass-assigned</span>
+    <span class="keyword">protected</span> <span class="variable">$fillable</span> = [
+        <span class="string">'user_id'</span>,
+        <span class="string">'leave_type'</span>,
+        <span class="string">'balance'</span>,
+        <span class="string">'used'</span>,
+        <span class="string">'year'</span>
+    ];
+
+    <span class="comment">// Type casting for attributes</span>
+    <span class="keyword">protected function</span> <span class="function">casts</span>(): <span class="keyword">array</span>
+    {
+        <span class="keyword">return</span> [
+            <span class="string">'balance'</span> => <span class="string">'integer'</span>,
+            <span class="string">'used'</span>    => <span class="string">'integer'</span>,
+        ];
+    }
+
+    <span class="comment">// Relationship: A balance belongs to a user</span>
+    <span class="keyword">public function</span> <span class="function">user</span>()
+    {
+        <span class="keyword">return</span> <span class="variable">$this</span>-><span class="function">belongsTo</span>(User::<span class="keyword">class</span>);
+    }
+
+    <span class="comment">// Custom method to calculate available days</span>
+    <span class="keyword">public function</span> <span class="function">getAvailableBalance</span>(): <span class="keyword">int</span>
+    {
+        <span class="keyword">return</span> <span class="function">max</span>(0, <span class="variable">$this</span>-><span class="variable">balance</span> - <span class="variable">$this</span>-><span class="variable">used</span>);
+    }
+
+    <span class="comment">// Custom method to deduct days</span>
+    <span class="keyword">public function</span> <span class="function">deductDays</span>(<span class="variable">$days</span>)
+    {
+        <span class="variable">$this</span>-><span class="variable">used</span> += <span class="variable">$days</span>;
+        <span class="keyword">return</span> <span class="variable">$this</span>-><span class="function">save</span>();
+    }
+}
+</pre>
+
+            <h3>Relationships Explained</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Relationship</th>
+                        <th>Method</th>
+                        <th>Example</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>belongsTo</strong></td>
+                        <td>This model has a foreign key to another</td>
+                        <td>LeaveRequest belongsTo User (employee_id)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>hasMany</strong></td>
+                        <td>This model is referenced by many others</td>
+                        <td>User hasMany LeaveRequests</td>
+                    </tr>
+                    <tr>
+                        <td><strong>hasOne</strong></td>
+                        <td>This model has one related record</td>
+                        <td>Department hasOne Manager</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Using Relationships</h3>
+<pre>
+<span class="comment">// Get user's leave requests</span>
+<span class="variable">$user</span>-><span class="function">leaveRequests</span>();  <span class="comment">// Returns all requests</span>
+
+<span class="comment">// Get request's employee</span>
+<span class="variable">$request</span>-><span class="function">employee</span>;  <span class="comment">// Returns the User model</span>
+
+<span class="comment">// Eager loading (prevents N+1 queries)</span>
+<span class="variable">$requests</span> = LeaveRequest::<span class="function">with</span>(<span class="string">'employee'</span>)-><span class="function">get</span>();
+</pre>
+        </div>
+
+        <!-- Middleware -->
+        <div class="card">
+            <h2>4. Middleware - Request Filtering</h2>
+            <p>Middleware filters HTTP requests before they reach controllers.</p>
+
+            <h3>Common Middleware</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Middleware</th>
+                        <th>Purpose</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code class="inline-code">auth</code></td>
+                        <td>Ensures user is logged in</td>
+                    </tr>
+                    <tr>
+                        <td><code class="inline-code">guest</code></td>
+                        <td>Ensures user is NOT logged in</td>
+                    </tr>
+                    <tr>
+                        <td><code class="inline-code">role:employee</code></td>
+                        <td>Custom: Ensures user has the employee role</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>HandleInertiaRequests Middleware</h3>
+<pre>
+<span class="comment">// app/Http/Middleware/HandleInertiaRequests.php</span>
+<span class="comment">// Shares data with ALL Inertia pages</span>
+
+<span class="keyword">public function</span> <span class="function">share</span>(Request <span class="variable">$request</span>): <span class="keyword">array</span>
+{
+    <span class="keyword">return</span> [
+        ...parent::<span class="function">share</span>(<span class="variable">$request</span>),
+        
+        <span class="comment">// Auth user available on every page as $page.props.auth.user</span>
+        <span class="string">'auth'</span> => [
+            <span class="string">'user'</span> => <span class="variable">$request</span>-><span class="function">user</span>(),
+        ],
+        
+        <span class="comment">// Flash messages available as $page.props.flash</span>
+        <span class="string">'flash'</span> => [
+            <span class="string">'success'</span> => <span class="keyword">fn</span> () => <span class="variable">$request</span>-><span class="function">session</span>()-><span class="function">get</span>(<span class="string">'success'</span>),
+            <span class="string">'error'</span>   => <span class="keyword">fn</span> () => <span class="variable">$request</span>-><span class="function">session</span>()-><span class="function">get</span>(<span class="string">'error'</span>),
+        ],
+    ];
+}
+</pre>
+        </div>
+
+        <!-- Validation -->
+        <div class="card">
+            <h2>5. Validation Rules</h2>
+            <p>Laravel validates incoming data and returns errors automatically.</p>
+
+            <h3>Common Validation Rules</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Rule</th>
+                        <th>Purpose</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><code class="inline-code">required</code></td><td>Field must be present and not empty</td></tr>
+                    <tr><td><code class="inline-code">string</code></td><td>Must be a string</td></tr>
+                    <tr><td><code class="inline-code">integer</code></td><td>Must be an integer</td></tr>
+                    <tr><td><code class="inline-code">email</code></td><td>Must be valid email format</td></tr>
+                    <tr><td><code class="inline-code">date</code></td><td>Must be a valid date</td></tr>
+                    <tr><td><code class="inline-code">after_or_equal:today</code></td><td>Date must be today or later</td></tr>
+                    <tr><td><code class="inline-code">min:8</code></td><td>Minimum 8 characters</td></tr>
+                    <tr><td><code class="inline-code">max:255</code></td><td>Maximum 255 characters</td></tr>
+                    <tr><td><code class="inline-code">unique:users,email</code></td><td>Email must not exist in users table</td></tr>
+                    <tr><td><code class="inline-code">exists:departments,id</code></td><td>ID must exist in departments table</td></tr>
+                    <tr><td><code class="inline-code">confirmed</code></td><td>Must have matching _confirmation field</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Navigation -->
+        <div class="card">
+            <h2>Continue Learning</h2>
+            <div class="grid grid-2">
+                <a href="frontend.html" class="tech-card" style="text-decoration: none;">
+                    <div class="icon">🎨</div>
+                    <h3>Frontend (Vue)</h3>
+                    <p>Components, Layouts, Forms</p>
+                </a>
+                <a href="database.html" class="tech-card" style="text-decoration: none;">
+                    <div class="icon">🗄️</div>
+                    <h3>Database</h3>
+                    <p>Tables, Migrations, Seeders</p>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>Leave Request App - Presentation Study Guide</p>
+    </footer>
+</body>
+</html>

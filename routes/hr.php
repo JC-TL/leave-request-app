@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HRController;
 
-// HR Admin routes
+
 Route::middleware(['auth', 'role:hr_admin'])->group(function () {
     Route::get('/hr/dashboard', [HRController::class, 'dashboard'])->name('hr.dashboard');
     Route::get('/hr/request/{id}', [HRController::class, 'showRequest'])->name('hr.show-request');

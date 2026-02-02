@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tech Stack - Study Guide</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="index.html" class="nav-brand">Leave Request App - Study Guide</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Overview</a></li>
+                <li><a href="tech-stack.html" class="active">Tech Stack</a></li>
+                <li><a href="backend.html">Backend</a></li>
+                <li><a href="frontend.html">Frontend</a></li>
+                <li><a href="database.html">Database</a></li>
+                <li><a href="flows.html">App Flows</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1 style="margin-bottom: 2rem;">Technology Stack Deep Dive</h1>
+
+        <!-- Laravel -->
+        <div class="card">
+            <h2>Laravel 11 (Backend Framework)</h2>
+            <p>Laravel is a PHP framework that provides the backend structure for our application.</p>
+            
+            <h3>What Laravel Provides</h3>
+            <ul>
+                <li><strong>Routing:</strong> Maps URLs to controller methods</li>
+                <li><strong>Controllers:</strong> Handle HTTP requests and return responses</li>
+                <li><strong>Eloquent ORM:</strong> Object-Relational Mapping for database operations</li>
+                <li><strong>Migrations:</strong> Version control for database schema</li>
+                <li><strong>Authentication:</strong> Built-in user authentication system</li>
+                <li><strong>Middleware:</strong> Filter HTTP requests (e.g., auth checks)</li>
+            </ul>
+
+            <h3>Example: A Simple Route</h3>
+<pre>
+<span class="comment">// routes/web.php</span>
+<span class="keyword">use</span> App\Http\Controllers\EmployeeController;
+
+<span class="comment">// When user visits /employee/dashboard, call the dashboard method</span>
+Route::<span class="function">get</span>(<span class="string">'/employee/dashboard'</span>, [EmployeeController::<span class="keyword">class</span>, <span class="string">'dashboard'</span>])
+    -><span class="function">name</span>(<span class="string">'employee.dashboard'</span>);
+</pre>
+
+            <h3>Example: A Controller Method</h3>
+<pre>
+<span class="comment">// app/Http/Controllers/EmployeeController.php</span>
+<span class="keyword">public function</span> <span class="function">dashboard</span>()
+{
+    <span class="variable">$user</span> = Auth::<span class="function">user</span>();  <span class="comment">// Get logged-in user</span>
+    
+    <span class="variable">$balances</span> = <span class="variable">$user</span>-><span class="function">leaveBalances</span>()  <span class="comment">// Get related balances</span>
+        -><span class="function">where</span>(<span class="string">'year'</span>, now()-><span class="variable">year</span>)
+        -><span class="function">get</span>();
+
+    <span class="comment">// Return Inertia response (sends data to Vue component)</span>
+    <span class="keyword">return</span> Inertia::<span class="function">render</span>(<span class="string">'Employee/Dashboard'</span>, [
+        <span class="string">'balances'</span> => <span class="variable">$balances</span>,
+    ]);
+}
+</pre>
+        </div>
+
+        <!-- Vue.js -->
+        <div class="card">
+            <h2>Vue.js 3 (Frontend Framework)</h2>
+            <p>Vue.js is a JavaScript framework for building reactive user interfaces.</p>
+
+            <h3>Key Concepts</h3>
+            <ul>
+                <li><strong>Components:</strong> Reusable UI building blocks (files ending in <code class="inline-code">.vue</code>)</li>
+                <li><strong>Reactivity:</strong> UI automatically updates when data changes</li>
+                <li><strong>Composition API:</strong> Modern way to organize component logic using <code class="inline-code">script setup</code></li>
+                <li><strong>Props:</strong> Data passed from parent to child components</li>
+                <li><strong>Computed:</strong> Derived values that auto-update</li>
+            </ul>
+
+            <h3>Vue Component Structure</h3>
+<pre>
+<span class="tag">&lt;script setup&gt;</span>
+<span class="comment">// JavaScript logic goes here</span>
+<span class="keyword">import</span> { ref, computed } <span class="keyword">from</span> <span class="string">'vue'</span>;
+
+<span class="comment">// Define props (data from parent/server)</span>
+<span class="keyword">const</span> props = <span class="function">defineProps</span>({
+    balances: Array,
+});
+
+<span class="comment">// Reactive variable</span>
+<span class="keyword">const</span> showModal = <span class="function">ref</span>(<span class="keyword">false</span>);
+
+<span class="comment">// Computed property (auto-updates when balances change)</span>
+<span class="keyword">const</span> totalDays = <span class="function">computed</span>(() => {
+    <span class="keyword">return</span> props.balances.<span class="function">reduce</span>((sum, b) => sum + b.balance, 0);
+});
+<span class="tag">&lt;/script&gt;</span>
+
+<span class="tag">&lt;template&gt;</span>
+    <span class="comment">&lt;!-- HTML template goes here --&gt;</span>
+    <span class="tag">&lt;div&gt;</span>
+        <span class="tag">&lt;h1&gt;</span>Total Leave Days: {{ totalDays }}<span class="tag">&lt;/h1&gt;</span>
+        
+        <span class="comment">&lt;!-- Loop through balances --&gt;</span>
+        <span class="tag">&lt;div</span> <span class="attr">v-for</span>=<span class="string">"balance in balances"</span> <span class="attr">:key</span>=<span class="string">"balance.id"</span><span class="tag">&gt;</span>
+            {{ balance.leave_type }}: {{ balance.balance }} days
+        <span class="tag">&lt;/div&gt;</span>
+    <span class="tag">&lt;/div&gt;</span>
+<span class="tag">&lt;/template&gt;</span>
+</pre>
+
+            <h3>Vue Directives Cheat Sheet</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Directive</th>
+                        <th>Purpose</th>
+                        <th>Example</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code class="inline-code">v-if</code></td>
+                        <td>Conditionally render element</td>
+                        <td><code class="inline-code">&lt;div v-if="isLoggedIn"&gt;</code></td>
+                    </tr>
+                    <tr>
+                        <td><code class="inline-code">v-for</code></td>
+                        <td>Loop through array</td>
+                        <td><code class="inline-code">&lt;li v-for="item in items"&gt;</code></td>
+                    </tr>
+                    <tr>
+                        <td><code class="inline-code">v-model</code></td>
+                        <td>Two-way data binding</td>
+                        <td><code class="inline-code">&lt;input v-model="email"&gt;</code></td>
+                    </tr>
+                    <tr>
+                        <td><code class="inline-code">@click</code></td>
+                        <td>Handle click events</td>
+                        <td><code class="inline-code">&lt;button @click="submit"&gt;</code></td>
+                    </tr>
+                    <tr>
+                        <td><code class="inline-code">:class</code></td>
+                        <td>Dynamic CSS classes</td>
+                        <td><code class="inline-code">&lt;div :class="{ active: isActive }"&gt;</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Inertia.js -->
+        <div class="card">
+            <h2>Inertia.js (The Bridge)</h2>
+            <p>Inertia.js connects Laravel and Vue.js <strong>without needing a separate API</strong>.</p>
+
+            <div class="callout callout-info">
+                <strong>Think of Inertia as:</strong> A way to build SPAs (Single Page Apps) while keeping the simplicity of traditional server-side routing.
+            </div>
+
+            <h3>How It Works</h3>
+            <div class="flow">
+                <div class="flow-box">User clicks link</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">Inertia intercepts</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">AJAX request to Laravel</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">Laravel returns JSON</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">Vue updates page</div>
+            </div>
+
+            <h3>Backend: Returning an Inertia Response</h3>
+<pre>
+<span class="comment">// Instead of returning a Blade view:</span>
+<span class="keyword">return</span> <span class="function">view</span>(<span class="string">'employee.dashboard'</span>, [<span class="string">'data'</span> => <span class="variable">$data</span>]);
+
+<span class="comment">// We return an Inertia response (renders Vue component):</span>
+<span class="keyword">return</span> Inertia::<span class="function">render</span>(<span class="string">'Employee/Dashboard'</span>, [
+    <span class="string">'balances'</span> => <span class="variable">$balances</span>,  <span class="comment">// This becomes props in Vue</span>
+    <span class="string">'requests'</span> => <span class="variable">$requests</span>,
+]);
+</pre>
+
+            <h3>Frontend: Receiving Props</h3>
+<pre>
+<span class="comment">// In resources/js/Pages/Employee/Dashboard.vue</span>
+<span class="tag">&lt;script setup&gt;</span>
+<span class="comment">// Props come from Laravel controller's Inertia::render()</span>
+<span class="keyword">const</span> props = <span class="function">defineProps</span>({
+    balances: Array,   <span class="comment">// Automatically passed from backend</span>
+    requests: Object,
+});
+<span class="tag">&lt;/script&gt;</span>
+</pre>
+
+            <h3>Frontend: Submitting Forms</h3>
+<pre>
+<span class="keyword">import</span> { useForm } <span class="keyword">from</span> <span class="string">'@inertiajs/vue3'</span>;
+
+<span class="comment">// Create a form object</span>
+<span class="keyword">const</span> form = <span class="function">useForm</span>({
+    leave_type: <span class="string">''</span>,
+    start_date: <span class="string">''</span>,
+    end_date: <span class="string">''</span>,
+    reason: <span class="string">''</span>,
+});
+
+<span class="comment">// Submit the form</span>
+<span class="keyword">function</span> <span class="function">submit</span>() {
+    form.<span class="function">post</span>(<span class="function">route</span>(<span class="string">'employee.store-request'</span>), {
+        onSuccess: () => form.<span class="function">reset</span>(),
+    });
+}
+</pre>
+
+            <h3>Key Inertia Features</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>What It Does</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code class="inline-code">Inertia::render()</code></td>
+                        <td>Returns a Vue component with props from Laravel</td>
+                    </tr>
+                    <tr>
+                        <td><code class="inline-code">useForm()</code></td>
+                        <td>Manages form state, validation errors, and submission</td>
+                    </tr>
+                    <tr>
+                        <td><code class="inline-code">usePage()</code></td>
+                        <td>Access shared data (like auth user, flash messages)</td>
+                    </tr>
+                    <tr>
+                        <td><code class="inline-code">&lt;Link&gt;</code></td>
+                        <td>SPA-style navigation without full page reload</td>
+                    </tr>
+                    <tr>
+                        <td><code class="inline-code">router.visit()</code></td>
+                        <td>Programmatic navigation</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Laravel Breeze -->
+        <div class="card">
+            <h2>Laravel Breeze (Starter Kit)</h2>
+            <p>Laravel Breeze is an official starter kit that provides:</p>
+
+            <ul>
+                <li><strong>Authentication scaffolding</strong> (login, logout, registration)</li>
+                <li><strong>Pre-built Vue components</strong> (buttons, inputs, modals, dropdowns)</li>
+                <li><strong>Tailwind CSS</strong> configuration</li>
+                <li><strong>Inertia.js</strong> setup</li>
+                <li><strong>Layout components</strong> (AuthenticatedLayout, GuestLayout)</li>
+            </ul>
+
+            <h3>Breeze Components We Use</h3>
+            <div class="file-tree">
+<span class="folder">resources/js/Components/</span>     <span class="comment"># From Laravel Breeze</span>
+├── <span class="file">PrimaryButton.vue</span>        <span class="comment"># Styled primary button</span>
+├── <span class="file">SecondaryButton.vue</span>      <span class="comment"># Styled secondary button</span>
+├── <span class="file">DangerButton.vue</span>         <span class="comment"># Red danger button</span>
+├── <span class="file">TextInput.vue</span>            <span class="comment"># Styled text input</span>
+├── <span class="file">InputLabel.vue</span>           <span class="comment"># Form label</span>
+├── <span class="file">InputError.vue</span>           <span class="comment"># Validation error message</span>
+├── <span class="file">Modal.vue</span>                <span class="comment"># Modal dialog</span>
+├── <span class="file">Dropdown.vue</span>             <span class="comment"># Dropdown menu</span>
+├── <span class="file">NavLink.vue</span>              <span class="comment"># Navigation link</span>
+└── <span class="file">ResponsiveNavLink.vue</span>   <span class="comment"># Mobile navigation link</span>
+            </div>
+
+            <h3>Using Breeze Components</h3>
+<pre>
+<span class="tag">&lt;script setup&gt;</span>
+<span class="keyword">import</span> PrimaryButton <span class="keyword">from</span> <span class="string">'@/Components/PrimaryButton.vue'</span>;
+<span class="keyword">import</span> TextInput <span class="keyword">from</span> <span class="string">'@/Components/TextInput.vue'</span>;
+<span class="keyword">import</span> InputLabel <span class="keyword">from</span> <span class="string">'@/Components/InputLabel.vue'</span>;
+<span class="keyword">import</span> InputError <span class="keyword">from</span> <span class="string">'@/Components/InputError.vue'</span>;
+<span class="tag">&lt;/script&gt;</span>
+
+<span class="tag">&lt;template&gt;</span>
+    <span class="tag">&lt;div&gt;</span>
+        <span class="tag">&lt;InputLabel</span> <span class="attr">for</span>=<span class="string">"email"</span> <span class="attr">value</span>=<span class="string">"Email"</span> <span class="tag">/&gt;</span>
+        <span class="tag">&lt;TextInput</span> <span class="attr">id</span>=<span class="string">"email"</span> <span class="attr">v-model</span>=<span class="string">"form.email"</span> <span class="tag">/&gt;</span>
+        <span class="tag">&lt;InputError</span> <span class="attr">:message</span>=<span class="string">"form.errors.email"</span> <span class="tag">/&gt;</span>
+        <span class="tag">&lt;PrimaryButton&gt;</span>Submit<span class="tag">&lt;/PrimaryButton&gt;</span>
+    <span class="tag">&lt;/div&gt;</span>
+<span class="tag">&lt;/template&gt;</span>
+</pre>
+        </div>
+
+        <!-- Tailwind CSS -->
+        <div class="card">
+            <h2>Tailwind CSS</h2>
+            <p>Tailwind is a utility-first CSS framework. Instead of writing CSS, you apply utility classes directly in HTML.</p>
+
+            <h3>Traditional CSS vs Tailwind</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Traditional CSS</th>
+                        <th>Tailwind CSS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+<pre style="margin: 0; background: transparent; padding: 0.5rem;">
+.button {
+    padding: 0.5rem 1rem;
+    background: blue;
+    color: white;
+    border-radius: 0.25rem;
+}
+</pre>
+                        </td>
+                        <td>
+<pre style="margin: 0; background: transparent; padding: 0.5rem;">
+&lt;button class="px-4 py-2 
+    bg-blue-500 text-white 
+    rounded"&gt;
+    Click Me
+&lt;/button&gt;
+</pre>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Common Tailwind Classes</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Class</th>
+                        <th>CSS Equivalent</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><code class="inline-code">p-4</code></td><td>padding: 1rem</td></tr>
+                    <tr><td><code class="inline-code">px-4</code></td><td>padding-left: 1rem; padding-right: 1rem</td></tr>
+                    <tr><td><code class="inline-code">mt-2</code></td><td>margin-top: 0.5rem</td></tr>
+                    <tr><td><code class="inline-code">text-gray-500</code></td><td>color: #6b7280</td></tr>
+                    <tr><td><code class="inline-code">bg-white</code></td><td>background-color: white</td></tr>
+                    <tr><td><code class="inline-code">rounded-lg</code></td><td>border-radius: 0.5rem</td></tr>
+                    <tr><td><code class="inline-code">flex</code></td><td>display: flex</td></tr>
+                    <tr><td><code class="inline-code">grid grid-cols-2</code></td><td>display: grid; grid-template-columns: repeat(2, 1fr)</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Navigation -->
+        <div class="card">
+            <h2>Continue Learning</h2>
+            <div class="grid grid-2">
+                <a href="backend.html" class="tech-card" style="text-decoration: none;">
+                    <div class="icon">⚙️</div>
+                    <h3>Backend (Laravel)</h3>
+                    <p>Controllers, Models, Routes, Middleware</p>
+                </a>
+                <a href="frontend.html" class="tech-card" style="text-decoration: none;">
+                    <div class="icon">🎨</div>
+                    <h3>Frontend (Vue)</h3>
+                    <p>Components, Layouts, Forms</p>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>Leave Request App - Presentation Study Guide</p>
+    </footer>
+</body>
+</html>
