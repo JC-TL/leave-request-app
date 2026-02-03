@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inertia.js - Vue.js Study Guide</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="index.html" class="nav-brand">Vue.js Study Guide</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Introduction</a></li>
+                <li><a href="components.html">Components</a></li>
+                <li><a href="reactivity.html">Reactivity</a></li>
+                <li><a href="templates.html">Templates</a></li>
+                <li><a href="forms.html">Forms</a></li>
+                <li><a href="inertia.html" class="active">Inertia.js</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1 style="margin-bottom: 2rem;">Inertia.js - The Bridge</h1>
+
+        <!-- What is Inertia -->
+        <div class="card">
+            <h2>What is Inertia.js?</h2>
+            <p>Inertia.js connects Laravel and Vue <strong>without needing a REST API</strong>.</p>
+
+            <h3>Traditional SPA vs Inertia</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Traditional SPA</th>
+                        <th>With Inertia</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Frontend makes API requests</td>
+                        <td>Frontend talks directly to Laravel controllers</td>
+                    </tr>
+                    <tr>
+                        <td>Need to build REST API endpoints</td>
+                        <td>Use normal Laravel routes</td>
+                    </tr>
+                    <tr>
+                        <td>Manage authentication tokens</td>
+                        <td>Use Laravel's session auth</td>
+                    </tr>
+                    <tr>
+                        <td>Two separate applications</td>
+                        <td>One monolithic application</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>How It Works</h3>
+            <div class="flow">
+                <div class="flow-box">User clicks link</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">Inertia intercepts</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">XHR to Laravel</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">Laravel returns JSON</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">Vue updates page</div>
+            </div>
+        </div>
+
+        <!-- Rendering Pages -->
+        <div class="card">
+            <h2>1. Rendering Pages from Laravel</h2>
+            <p>Instead of returning Blade views, Laravel returns Inertia responses:</p>
+
+<pre>
+<span class="comment">// Traditional Laravel (Blade)</span>
+<span class="keyword">return</span> <span class="function">view</span>(<span class="string">'employee.dashboard'</span>, [
+    <span class="string">'balances'</span> => <span class="variable">$balances</span>,
+]);
+
+<span class="comment">// With Inertia (Vue)</span>
+<span class="keyword">return</span> Inertia::<span class="function">render</span>(<span class="string">'Employee/Dashboard'</span>, [
+    <span class="string">'balances'</span> => <span class="variable">$balances</span>,  <span class="comment">// Becomes Vue props</span>
+    <span class="string">'requests'</span> => <span class="variable">$requests</span>,
+    <span class="string">'user'</span> => <span class="variable">$user</span>,
+]);
+</pre>
+
+            <h3>The Mapping</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Inertia::render()</th>
+                        <th>Vue File</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code class="inline-code">'Employee/Dashboard'</code></td>
+                        <td><code class="inline-code">resources/js/Pages/Employee/Dashboard.vue</code></td>
+                    </tr>
+                    <tr>
+                        <td><code class="inline-code">'Auth/Login'</code></td>
+                        <td><code class="inline-code">resources/js/Pages/Auth/Login.vue</code></td>
+                    </tr>
+                    <tr>
+                        <td><code class="inline-code">'HR/Policies'</code></td>
+                        <td><code class="inline-code">resources/js/Pages/HR/Policies.vue</code></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Receiving Props in Vue</h3>
+<pre>
+<span class="comment">// Employee/Dashboard.vue</span>
+<span class="tag">&lt;script setup&gt;</span>
+<span class="comment">// These props come from Laravel's Inertia::render()</span>
+<span class="keyword">const</span> props = <span class="function">defineProps</span>({
+    balances: Array,   <span class="comment">// From $balances</span>
+    requests: Object,  <span class="comment">// From $requests</span>
+    user: Object,      <span class="comment">// From $user</span>
+});
+
+<span class="comment">// Now use them in the template:</span>
+<span class="comment">// {{ balances }}, {{ user.name }}, etc.</span>
+<span class="tag">&lt;/script&gt;</span>
+</pre>
+        </div>
+
+        <!-- Link Component -->
+        <div class="card">
+            <h2>2. Navigation with &lt;Link&gt;</h2>
+            <p>Use Inertia's <code class="inline-code">&lt;Link&gt;</code> component for SPA navigation:</p>
+
+<pre>
+<span class="keyword">import</span> { Link } <span class="keyword">from</span> <span class="string">'@inertiajs/vue3'</span>;
+
+<span class="comment">&lt;!-- Basic link --&gt;</span>
+<span class="tag">&lt;Link</span> <span class="attr">:href</span>=<span class="string">"route('employee.dashboard')"</span><span class="tag">&gt;</span>
+    Dashboard
+<span class="tag">&lt;/Link&gt;</span>
+
+<span class="comment">&lt;!-- Link with parameter --&gt;</span>
+<span class="tag">&lt;Link</span> <span class="attr">:href</span>=<span class="string">"route('manager.show-request', request.id)"</span><span class="tag">&gt;</span>
+    View Details
+<span class="tag">&lt;/Link&gt;</span>
+</pre>
+
+            <h3>Why &lt;Link&gt; instead of &lt;a&gt;?</h3>
+            <ul>
+                <li><strong>&lt;a&gt;</strong> - Full page reload (leaves Vue app)</li>
+                <li><strong>&lt;Link&gt;</strong> - AJAX request, Vue updates (stays in app)</li>
+            </ul>
+
+            <h3>POST/PATCH/DELETE Links</h3>
+<pre>
+<span class="comment">&lt;!-- Logout is a POST request --&gt;</span>
+<span class="tag">&lt;Link</span> 
+    <span class="attr">:href</span>=<span class="string">"route('logout')"</span> 
+    <span class="attr">method</span>=<span class="string">"post"</span> 
+    <span class="attr">as</span>=<span class="string">"button"</span>
+<span class="tag">&gt;</span>
+    Log Out
+<span class="tag">&lt;/Link&gt;</span>
+</pre>
+        </div>
+
+        <!-- route() Helper -->
+        <div class="card">
+            <h2>3. The route() Helper</h2>
+            <p>Generate URLs using Laravel route names (provided by Ziggy):</p>
+
+<pre>
+<span class="comment">// Instead of hardcoding URLs:</span>
+<span class="attr">href</span>=<span class="string">"/employee/dashboard"</span>  <span class="comment">// Bad - breaks if routes change</span>
+
+<span class="comment">// Use route names:</span>
+<span class="attr">:href</span>=<span class="string">"route('employee.dashboard')"</span>  <span class="comment">// Good!</span>
+
+<span class="comment">// With parameters:</span>
+<span class="attr">:href</span>=<span class="string">"route('manager.show-request', request.id)"</span>
+<span class="attr">:href</span>=<span class="string">"route('hr.update-policy', { id: policy.id })"</span>
+
+<span class="comment">// Check current route:</span>
+route().<span class="function">current</span>(<span class="string">'employee.dashboard'</span>)  <span class="comment">// Returns true/false</span>
+</pre>
+
+            <h3>Real Example: Active Link Styling</h3>
+<pre>
+<span class="tag">&lt;NavLink</span> 
+    <span class="attr">:href</span>=<span class="string">"route('employee.dashboard')"</span>
+    <span class="attr">:active</span>=<span class="string">"route().current('employee.dashboard')"</span>
+<span class="tag">&gt;</span>
+    Dashboard
+<span class="tag">&lt;/NavLink&gt;</span>
+</pre>
+        </div>
+
+        <!-- usePage() -->
+        <div class="card">
+            <h2>4. usePage() - Shared Data</h2>
+            <p>Access data that's shared across all pages:</p>
+
+<pre>
+<span class="keyword">import</span> { usePage } <span class="keyword">from</span> <span class="string">'@inertiajs/vue3'</span>;
+
+<span class="keyword">const</span> page = <span class="function">usePage</span>();
+
+<span class="comment">// Access the authenticated user</span>
+<span class="keyword">const</span> user = <span class="function">computed</span>(() => page.props.auth.user);
+
+<span class="comment">// Access flash messages</span>
+<span class="keyword">const</span> flash = <span class="function">computed</span>(() => page.props.flash);
+</pre>
+
+            <h3>What's in page.props?</h3>
+            <p>This is defined in Laravel's <code class="inline-code">HandleInertiaRequests</code> middleware:</p>
+
+<pre>
+<span class="comment">// app/Http/Middleware/HandleInertiaRequests.php</span>
+<span class="keyword">public function</span> <span class="function">share</span>(Request <span class="variable">$request</span>): <span class="keyword">array</span>
+{
+    <span class="keyword">return</span> [
+        <span class="comment">// Always available as page.props.auth.user</span>
+        <span class="string">'auth'</span> => [
+            <span class="string">'user'</span> => <span class="variable">$request</span>-><span class="function">user</span>(),
+        ],
+        
+        <span class="comment">// Always available as page.props.flash</span>
+        <span class="string">'flash'</span> => [
+            <span class="string">'success'</span> => <span class="keyword">fn</span> () => <span class="variable">$request</span>-><span class="function">session</span>()-><span class="function">get</span>(<span class="string">'success'</span>),
+            <span class="string">'error'</span> => <span class="keyword">fn</span> () => <span class="variable">$request</span>-><span class="function">session</span>()-><span class="function">get</span>(<span class="string">'error'</span>),
+        ],
+    ];
+}
+</pre>
+
+            <h3>Real Example: Display Flash Messages</h3>
+<pre>
+<span class="comment">// AuthenticatedLayout.vue</span>
+<span class="keyword">const</span> page = <span class="function">usePage</span>();
+<span class="keyword">const</span> flash = <span class="function">computed</span>(() => page.props.flash);
+
+<span class="comment">// In template</span>
+<span class="tag">&lt;div</span> <span class="attr">v-if</span>=<span class="string">"flash?.success"</span> <span class="attr">class</span>=<span class="string">"bg-green-50 p-4"</span><span class="tag">&gt;</span>
+    {{ flash.success }}
+<span class="tag">&lt;/div&gt;</span>
+</pre>
+        </div>
+
+        <!-- router -->
+        <div class="card">
+            <h2>5. router - Programmatic Navigation</h2>
+            <p>Navigate or make requests from JavaScript code:</p>
+
+<pre>
+<span class="keyword">import</span> { router } <span class="keyword">from</span> <span class="string">'@inertiajs/vue3'</span>;
+
+<span class="comment">// Navigate to a page</span>
+router.<span class="function">visit</span>(<span class="function">route</span>(<span class="string">'employee.dashboard'</span>));
+
+<span class="comment">// GET request with query params</span>
+router.<span class="function">get</span>(<span class="function">route</span>(<span class="string">'manager.dashboard'</span>), {
+    leave_type: <span class="string">'Vacation Leave'</span>
+});
+
+<span class="comment">// PATCH request (like canceling a request)</span>
+router.<span class="function">patch</span>(<span class="function">route</span>(<span class="string">'request.cancel'</span>, id));
+
+<span class="comment">// POST request</span>
+router.<span class="function">post</span>(<span class="function">route</span>(<span class="string">'employee.store-request'</span>), formData);
+</pre>
+
+            <h3>Real Example: Cancel Request</h3>
+<pre>
+<span class="comment">// Employee/Dashboard.vue</span>
+<span class="keyword">function</span> <span class="function">cancelRequest</span>(id) {
+    <span class="keyword">if</span> (<span class="function">confirm</span>(<span class="string">'Are you sure you want to cancel this request?'</span>)) {
+        router.<span class="function">patch</span>(<span class="function">route</span>(<span class="string">'request.cancel'</span>, id));
+    }
+}
+</pre>
+
+            <h3>Real Example: Filter with Preserved State</h3>
+<pre>
+<span class="comment">// Manager/Dashboard.vue - When leave type dropdown changes</span>
+<span class="function">watch</span>(selectedType, (newValue) => {
+    router.<span class="function">get</span>(
+        <span class="function">route</span>(<span class="string">'manager.dashboard'</span>), 
+        { leave_type: newValue },
+        { preserveState: <span class="keyword">true</span> }  <span class="comment">// Keep component state</span>
+    );
+});
+</pre>
+        </div>
+
+        <!-- Head Component -->
+        <div class="card">
+            <h2>6. &lt;Head&gt; - Page Titles</h2>
+            <p>Set the page title (what shows in browser tab):</p>
+
+<pre>
+<span class="keyword">import</span> { Head } <span class="keyword">from</span> <span class="string">'@inertiajs/vue3'</span>;
+
+<span class="comment">&lt;!-- In your template --&gt;</span>
+<span class="tag">&lt;Head</span> <span class="attr">title</span>=<span class="string">"Employee Dashboard"</span> <span class="tag">/&gt;</span>
+<span class="tag">&lt;Head</span> <span class="attr">title</span>=<span class="string">"Sign In"</span> <span class="tag">/&gt;</span>
+<span class="tag">&lt;Head</span> <span class="attr">title</span>=<span class="string">"Leave Policies"</span> <span class="tag">/&gt;</span>
+</pre>
+        </div>
+
+        <!-- Complete Data Flow -->
+        <div class="card">
+            <h2>7. Complete Data Flow</h2>
+            <p>Here's how data flows in your app:</p>
+
+            <div style="overflow-x: auto;">
+                <pre style="text-align: left; display: inline-block; background: #f8fafc; padding: 1.5rem; border-radius: 8px; font-size: 0.85rem;">
+┌──────────────────────────────────────────────────────────────────┐
+│                      INITIAL PAGE LOAD                           │
+└──────────────────────────────────────────────────────────────────┘
+
+User visits /employee/dashboard
+         │
+         ▼
+┌─────────────────────────────────┐
+│  Laravel Route                  │
+│  routes/employee.php            │
+│  Route::get('/employee/dashboard', │
+│    [EmployeeController, 'dashboard'])  │
+└─────────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────┐
+│  Controller                     │
+│  EmployeeController@dashboard   │
+│  - Gets user's balances         │
+│  - Gets user's requests         │
+│  - Returns Inertia::render()    │
+└─────────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────┐
+│  Inertia Response               │
+│  {                              │
+│    component: 'Employee/Dashboard', │
+│    props: { balances, requests }    │
+│  }                              │
+└─────────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────┐
+│  Vue Component                  │
+│  Pages/Employee/Dashboard.vue   │
+│  - Receives props               │
+│  - Renders HTML                 │
+└─────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────┐
+│                      FORM SUBMISSION                             │
+└──────────────────────────────────────────────────────────────────┘
+
+User fills form, clicks submit
+         │
+         ▼
+┌─────────────────────────────────┐
+│  useForm().post()               │
+│  form.post(route('employee.    │
+│    store-request'))             │
+└─────────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────┐
+│  Laravel Controller             │
+│  EmployeeController@storeRequest│
+│  - Validates input              │
+│  - Creates LeaveRequest         │
+│  - Returns redirect with flash  │
+└─────────────────────────────────┘
+         │
+         ├── Success? ──▶ Redirect to dashboard with success message
+         │
+         └── Error? ──▶ Return validation errors to form.errors
+                </pre>
+            </div>
+        </div>
+
+        <!-- Summary -->
+        <div class="card">
+            <h2>Inertia Quick Reference</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Import</th>
+                        <th>Purpose</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code class="inline-code">{ Link }</code></td>
+                        <td>SPA-style navigation links</td>
+                    </tr>
+                    <tr>
+                        <td><code class="inline-code">{ Head }</code></td>
+                        <td>Set page title</td>
+                    </tr>
+                    <tr>
+                        <td><code class="inline-code">{ useForm }</code></td>
+                        <td>Form handling with validation</td>
+                    </tr>
+                    <tr>
+                        <td><code class="inline-code">{ usePage }</code></td>
+                        <td>Access shared props (auth, flash)</td>
+                    </tr>
+                    <tr>
+                        <td><code class="inline-code">{ router }</code></td>
+                        <td>Programmatic navigation/requests</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Navigation -->
+        <div class="card">
+            <h2>You've Completed the Guide!</h2>
+            <p>Review any section:</p>
+            
+            <div class="grid grid-3">
+                <a href="index.html" class="tech-card" style="text-decoration: none;">
+                    <div class="icon">🏠</div>
+                    <h3>Introduction</h3>
+                </a>
+                <a href="components.html" class="tech-card" style="text-decoration: none;">
+                    <div class="icon">🧩</div>
+                    <h3>Components</h3>
+                </a>
+                <a href="reactivity.html" class="tech-card" style="text-decoration: none;">
+                    <div class="icon">⚡</div>
+                    <h3>Reactivity</h3>
+                </a>
+                <a href="templates.html" class="tech-card" style="text-decoration: none;">
+                    <div class="icon">🏷️</div>
+                    <h3>Templates</h3>
+                </a>
+                <a href="forms.html" class="tech-card" style="text-decoration: none;">
+                    <div class="icon">📋</div>
+                    <h3>Forms</h3>
+                </a>
+                <a href="../presentation-guide/index.html" class="tech-card" style="text-decoration: none;">
+                    <div class="icon">📚</div>
+                    <h3>Full App Guide</h3>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>Vue.js Study Guide - Leave Request App</p>
+    </footer>
+</body>
+</html>

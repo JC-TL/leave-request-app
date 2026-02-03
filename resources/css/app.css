@@ -4,7 +4,7 @@
 
 /* App background image */
 body.app-background {
-    background-image: url('/images/bg.jpg');
+    background-image: url('/images/bg.png');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;

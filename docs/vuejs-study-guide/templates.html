@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Templates & Directives - Vue.js Study Guide</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="index.html" class="nav-brand">Vue.js Study Guide</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Introduction</a></li>
+                <li><a href="components.html">Components</a></li>
+                <li><a href="reactivity.html">Reactivity</a></li>
+                <li><a href="templates.html" class="active">Templates</a></li>
+                <li><a href="forms.html">Forms</a></li>
+                <li><a href="inertia.html">Inertia.js</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1 style="margin-bottom: 2rem;">Templates & Directives</h1>
+
+        <!-- Template Basics -->
+        <div class="card">
+            <h2>Template Basics</h2>
+            <p>Templates are the HTML part of Vue components. They use special syntax to make HTML dynamic.</p>
+
+            <h3>Text Interpolation: {{ }}</h3>
+<pre>
+<span class="comment">&lt;!-- Double curly braces output JavaScript values --&gt;</span>
+<span class="tag">&lt;p&gt;</span>Hello, {{ user.name }}<span class="tag">&lt;/p&gt;</span>
+<span class="tag">&lt;p&gt;</span>You have {{ balance.balance - balance.used }} days left<span class="tag">&lt;/p&gt;</span>
+<span class="tag">&lt;p&gt;</span>Today is {{ new Date().toLocaleDateString() }}<span class="tag">&lt;/p&gt;</span>
+</pre>
+
+            <div class="callout callout-info">
+                <strong>JavaScript Expressions:</strong> You can put any JavaScript expression inside {{ }}, but not statements like if/for.
+            </div>
+        </div>
+
+        <!-- v-if -->
+        <div class="card">
+            <h2>1. v-if / v-else - Conditional Rendering</h2>
+            <p>Show or hide elements based on conditions.</p>
+
+<pre>
+<span class="comment">&lt;!-- Simple condition --&gt;</span>
+<span class="tag">&lt;div</span> <span class="attr">v-if</span>=<span class="string">"hasBalance"</span><span class="tag">&gt;</span>
+    Show the leave request form
+<span class="tag">&lt;/div&gt;</span>
+<span class="tag">&lt;div</span> <span class="attr">v-else</span><span class="tag">&gt;</span>
+    <span class="tag">&lt;p&gt;</span>You have no leave balance.<span class="tag">&lt;/p&gt;</span>
+<span class="tag">&lt;/div&gt;</span>
+</pre>
+
+            <h3>Real Example: Employee Dashboard</h3>
+<pre>
+<span class="comment">&lt;!-- Show form only if user has balance --&gt;</span>
+<span class="tag">&lt;div</span> <span class="attr">v-if</span>=<span class="string">"hasBalance"</span> <span class="attr">class</span>=<span class="string">"bg-white p-6 shadow"</span><span class="tag">&gt;</span>
+    <span class="tag">&lt;form&gt;</span>...leave request form...<span class="tag">&lt;/form&gt;</span>
+<span class="tag">&lt;/div&gt;</span>
+
+<span class="tag">&lt;div</span> <span class="attr">v-else</span> <span class="attr">class</span>=<span class="string">"bg-yellow-50 p-4"</span><span class="tag">&gt;</span>
+    <span class="tag">&lt;p&gt;</span>You do not have any available leave balance.<span class="tag">&lt;/p&gt;</span>
+<span class="tag">&lt;/div&gt;</span>
+</pre>
+
+            <h3>v-else-if for Multiple Conditions</h3>
+<pre>
+<span class="comment">&lt;!-- Status badge with different colors --&gt;</span>
+<span class="tag">&lt;span</span> <span class="attr">v-if</span>=<span class="string">"status === 'pending'"</span> <span class="attr">class</span>=<span class="string">"bg-yellow-100"</span><span class="tag">&gt;</span>
+    Pending
+<span class="tag">&lt;/span&gt;</span>
+<span class="tag">&lt;span</span> <span class="attr">v-else-if</span>=<span class="string">"status === 'hr_approved'"</span> <span class="attr">class</span>=<span class="string">"bg-green-100"</span><span class="tag">&gt;</span>
+    Approved
+<span class="tag">&lt;/span&gt;</span>
+<span class="tag">&lt;span</span> <span class="attr">v-else</span> <span class="attr">class</span>=<span class="string">"bg-red-100"</span><span class="tag">&gt;</span>
+    Rejected
+<span class="tag">&lt;/span&gt;</span>
+</pre>
+
+            <h3>Real Example: AuthenticatedLayout</h3>
+<pre>
+<span class="comment">&lt;!-- Only show HR links if user is HR admin --&gt;</span>
+<span class="tag">&lt;template</span> <span class="attr">v-if</span>=<span class="string">"isHR"</span><span class="tag">&gt;</span>
+    <span class="tag">&lt;NavLink</span> <span class="attr">:href</span>=<span class="string">"route('hr.policies')"</span><span class="tag">&gt;</span>Policies<span class="tag">&lt;/NavLink&gt;</span>
+    <span class="tag">&lt;NavLink</span> <span class="attr">:href</span>=<span class="string">"route('hr.employees')"</span><span class="tag">&gt;</span>Employees<span class="tag">&lt;/NavLink&gt;</span>
+<span class="tag">&lt;/template&gt;</span>
+</pre>
+        </div>
+
+        <!-- v-for -->
+        <div class="card">
+            <h2>2. v-for - Looping</h2>
+            <p>Render a list of items by looping through an array.</p>
+
+<pre>
+<span class="comment">&lt;!-- Basic loop --&gt;</span>
+<span class="tag">&lt;div</span> <span class="attr">v-for</span>=<span class="string">"item in items"</span> <span class="attr">:key</span>=<span class="string">"item.id"</span><span class="tag">&gt;</span>
+    {{ item.name }}
+<span class="tag">&lt;/div&gt;</span>
+</pre>
+
+            <div class="callout callout-warning">
+                <strong>Always use :key</strong> - Vue needs a unique identifier to track each item efficiently. Usually use the item's <code class="inline-code">id</code>.
+            </div>
+
+            <h3>Real Example: Leave Balances</h3>
+<pre>
+<span class="comment">&lt;!-- Loop through balance cards --&gt;</span>
+<span class="tag">&lt;div</span> <span class="attr">class</span>=<span class="string">"grid grid-cols-4"</span><span class="tag">&gt;</span>
+    <span class="tag">&lt;div</span>
+        <span class="attr">v-for</span>=<span class="string">"balance in balances"</span>
+        <span class="attr">:key</span>=<span class="string">"balance.id"</span>
+        <span class="attr">:class</span>=<span class="string">"['rounded-lg border p-4', getBalanceColor(balance)]"</span>
+    <span class="tag">&gt;</span>
+        <span class="tag">&lt;h4&gt;</span>{{ balance.leave_type }}<span class="tag">&lt;/h4&gt;</span>
+        <span class="tag">&lt;p&gt;</span>{{ getAvailableBalance(balance) }} / {{ balance.balance }}<span class="tag">&lt;/p&gt;</span>
+    <span class="tag">&lt;/div&gt;</span>
+<span class="tag">&lt;/div&gt;</span>
+</pre>
+
+            <h3>Real Example: Requests Table</h3>
+<pre>
+<span class="tag">&lt;tbody&gt;</span>
+    <span class="comment">&lt;!-- Loop through paginated requests --&gt;</span>
+    <span class="tag">&lt;tr</span> <span class="attr">v-for</span>=<span class="string">"request in requests.data"</span> <span class="attr">:key</span>=<span class="string">"request.id"</span><span class="tag">&gt;</span>
+        <span class="tag">&lt;td&gt;</span>{{ request.leave_type }}<span class="tag">&lt;/td&gt;</span>
+        <span class="tag">&lt;td&gt;</span>{{ formatDate(request.start_date) }}<span class="tag">&lt;/td&gt;</span>
+        <span class="tag">&lt;td&gt;</span>{{ request.number_of_days }}<span class="tag">&lt;/td&gt;</span>
+    <span class="tag">&lt;/tr&gt;</span>
+    
+    <span class="comment">&lt;!-- Show message if no requests --&gt;</span>
+    <span class="tag">&lt;tr</span> <span class="attr">v-if</span>=<span class="string">"requests.data.length === 0"</span><span class="tag">&gt;</span>
+        <span class="tag">&lt;td</span> <span class="attr">colspan</span>=<span class="string">"6"</span><span class="tag">&gt;</span>No leave requests found.<span class="tag">&lt;/td&gt;</span>
+    <span class="tag">&lt;/tr&gt;</span>
+<span class="tag">&lt;/tbody&gt;</span>
+</pre>
+
+            <h3>Loop with Index</h3>
+<pre>
+<span class="tag">&lt;li</span> <span class="attr">v-for</span>=<span class="string">"(item, index) in items"</span> <span class="attr">:key</span>=<span class="string">"item.id"</span><span class="tag">&gt;</span>
+    {{ index + 1 }}. {{ item.name }}
+<span class="tag">&lt;/li&gt;</span>
+</pre>
+        </div>
+
+        <!-- v-model -->
+        <div class="card">
+            <h2>3. v-model - Two-Way Binding</h2>
+            <p><code class="inline-code">v-model</code> syncs form inputs with JavaScript variables.</p>
+
+<pre>
+<span class="comment">&lt;!-- Input changes → variable updates → input shows new value --&gt;</span>
+<span class="tag">&lt;input</span> <span class="attr">v-model</span>=<span class="string">"form.email"</span> <span class="attr">type</span>=<span class="string">"email"</span> <span class="tag">/&gt;</span>
+
+<span class="comment">&lt;!-- This is equivalent to: --&gt;</span>
+<span class="tag">&lt;input</span> 
+    <span class="attr">:value</span>=<span class="string">"form.email"</span>
+    <span class="attr">@input</span>=<span class="string">"form.email = $event.target.value"</span>
+<span class="tag">/&gt;</span>
+</pre>
+
+            <h3>Real Example: Login Form</h3>
+<pre>
+<span class="comment">&lt;!-- Login.vue --&gt;</span>
+<span class="keyword">const</span> form = <span class="function">useForm</span>({
+    email: <span class="string">''</span>,
+    password: <span class="string">''</span>,
+    remember: <span class="keyword">false</span>,
+});
+
+<span class="comment">&lt;!-- Template --&gt;</span>
+<span class="tag">&lt;input</span> <span class="attr">type</span>=<span class="string">"email"</span> <span class="attr">v-model</span>=<span class="string">"form.email"</span> <span class="tag">/&gt;</span>
+<span class="tag">&lt;input</span> <span class="attr">type</span>=<span class="string">"password"</span> <span class="attr">v-model</span>=<span class="string">"form.password"</span> <span class="tag">/&gt;</span>
+<span class="tag">&lt;input</span> <span class="attr">type</span>=<span class="string">"checkbox"</span> <span class="attr">v-model</span>=<span class="string">"form.remember"</span> <span class="tag">/&gt;</span>
+</pre>
+
+            <h3>v-model with Different Inputs</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Input Type</th>
+                        <th>v-model Binds To</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>text, email, password</td><td>String value</td></tr>
+                    <tr><td>checkbox</td><td>Boolean (single) or Array (multiple)</td></tr>
+                    <tr><td>radio</td><td>Selected option value</td></tr>
+                    <tr><td>select</td><td>Selected option value</td></tr>
+                    <tr><td>textarea</td><td>String value</td></tr>
+                </tbody>
+            </table>
+
+            <h3>Real Example: Select Dropdown</h3>
+<pre>
+<span class="tag">&lt;select</span> <span class="attr">v-model</span>=<span class="string">"form.leave_type"</span><span class="tag">&gt;</span>
+    <span class="tag">&lt;option</span> <span class="attr">value</span>=<span class="string">""</span><span class="tag">&gt;</span>Select Leave Type<span class="tag">&lt;/option&gt;</span>
+    <span class="tag">&lt;option</span> 
+        <span class="attr">v-for</span>=<span class="string">"balance in availableBalances"</span> 
+        <span class="attr">:key</span>=<span class="string">"balance.id"</span> 
+        <span class="attr">:value</span>=<span class="string">"balance.leave_type"</span>
+    <span class="tag">&gt;</span>
+        {{ balance.leave_type }} ({{ getAvailableBalance(balance) }} days)
+    <span class="tag">&lt;/option&gt;</span>
+<span class="tag">&lt;/select&gt;</span>
+</pre>
+        </div>
+
+        <!-- Event Handling -->
+        <div class="card">
+            <h2>4. @event - Event Handling</h2>
+            <p>Use <code class="inline-code">@</code> to listen to DOM events.</p>
+
+<pre>
+<span class="comment">&lt;!-- @click = v-on:click --&gt;</span>
+<span class="tag">&lt;button</span> <span class="attr">@click</span>=<span class="string">"doSomething"</span><span class="tag">&gt;</span>Click Me<span class="tag">&lt;/button&gt;</span>
+
+<span class="comment">&lt;!-- Call function with argument --&gt;</span>
+<span class="tag">&lt;button</span> <span class="attr">@click</span>=<span class="string">"cancelRequest(request.id)"</span><span class="tag">&gt;</span>Cancel<span class="tag">&lt;/button&gt;</span>
+
+<span class="comment">&lt;!-- Inline expression --&gt;</span>
+<span class="tag">&lt;button</span> <span class="attr">@click</span>=<span class="string">"count++"</span><span class="tag">&gt;</span>Add<span class="tag">&lt;/button&gt;</span>
+<span class="tag">&lt;button</span> <span class="attr">@click</span>=<span class="string">"showModal = true"</span><span class="tag">&gt;</span>Open<span class="tag">&lt;/button&gt;</span>
+</pre>
+
+            <h3>Common Events</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Event</th>
+                        <th>Triggered When</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><code class="inline-code">@click</code></td><td>Element is clicked</td></tr>
+                    <tr><td><code class="inline-code">@submit</code></td><td>Form is submitted</td></tr>
+                    <tr><td><code class="inline-code">@input</code></td><td>Input value changes</td></tr>
+                    <tr><td><code class="inline-code">@change</code></td><td>Input loses focus after change</td></tr>
+                    <tr><td><code class="inline-code">@keyup</code></td><td>Key is released</td></tr>
+                </tbody>
+            </table>
+
+            <h3>Event Modifiers</h3>
+<pre>
+<span class="comment">&lt;!-- .prevent = e.preventDefault() --&gt;</span>
+<span class="tag">&lt;form</span> <span class="attr">@submit.prevent</span>=<span class="string">"submit"</span><span class="tag">&gt;</span>
+    <span class="comment">&lt;!-- Form won't reload the page --&gt;</span>
+<span class="tag">&lt;/form&gt;</span>
+
+<span class="comment">&lt;!-- .stop = e.stopPropagation() --&gt;</span>
+<span class="tag">&lt;button</span> <span class="attr">@click.stop</span>=<span class="string">"doThis"</span><span class="tag">&gt;</span>Click<span class="tag">&lt;/button&gt;</span>
+</pre>
+        </div>
+
+        <!-- Dynamic Attributes -->
+        <div class="card">
+            <h2>5. :attr - Dynamic Attributes</h2>
+            <p>Use <code class="inline-code">:</code> to bind JavaScript values to HTML attributes.</p>
+
+<pre>
+<span class="comment">&lt;!-- :href = v-bind:href --&gt;</span>
+<span class="tag">&lt;a</span> <span class="attr">:href</span>=<span class="string">"url"</span><span class="tag">&gt;</span>Link<span class="tag">&lt;/a&gt;</span>
+
+<span class="comment">&lt;!-- Dynamic src --&gt;</span>
+<span class="tag">&lt;img</span> <span class="attr">:src</span>=<span class="string">"user.avatar"</span> <span class="tag">/&gt;</span>
+
+<span class="comment">&lt;!-- Dynamic disabled --&gt;</span>
+<span class="tag">&lt;button</span> <span class="attr">:disabled</span>=<span class="string">"form.processing"</span><span class="tag">&gt;</span>Submit<span class="tag">&lt;/button&gt;</span>
+
+<span class="comment">&lt;!-- Dynamic min date --&gt;</span>
+<span class="tag">&lt;input</span> <span class="attr">type</span>=<span class="string">"date"</span> <span class="attr">:min</span>=<span class="string">"today"</span> <span class="tag">/&gt;</span>
+</pre>
+
+            <h3>Dynamic Classes</h3>
+<pre>
+<span class="comment">&lt;!-- Object syntax: class applies if value is truthy --&gt;</span>
+<span class="tag">&lt;div</span> <span class="attr">:class</span>=<span class="string">"{ 'bg-green-50': isActive, 'bg-red-50': isError }"</span><span class="tag">&gt;</span>
+
+<span class="comment">&lt;!-- Array syntax: combine static and dynamic --&gt;</span>
+<span class="tag">&lt;div</span> <span class="attr">:class</span>=<span class="string">"['rounded-lg p-4', getBalanceColor(balance)]"</span><span class="tag">&gt;</span>
+
+<span class="comment">&lt;!-- Ternary expression --&gt;</span>
+<span class="tag">&lt;div</span> <span class="attr">:class</span>=<span class="string">"isActive ? 'text-green-500' : 'text-gray-500'"</span><span class="tag">&gt;</span>
+</pre>
+
+            <h3>Real Example: Mobile Menu Toggle</h3>
+<pre>
+<span class="comment">&lt;!-- AuthenticatedLayout.vue --&gt;</span>
+<span class="tag">&lt;div</span> <span class="attr">:class</span>=<span class="string">"{ 
+    block: showingNavigationDropdown, 
+    hidden: !showingNavigationDropdown 
+}"</span><span class="tag">&gt;</span>
+    ...mobile menu content...
+<span class="tag">&lt;/div&gt;</span>
+</pre>
+
+            <h3>Real Example: Low Balance Warning</h3>
+<pre>
+<span class="comment">&lt;!-- Manager/Dashboard.vue --&gt;</span>
+<span class="tag">&lt;tr</span>
+    <span class="attr">v-for</span>=<span class="string">"member in teamMembers"</span>
+    <span class="attr">:key</span>=<span class="string">"member.id"</span>
+    <span class="attr">:class</span>=<span class="string">"{ 'bg-yellow-50': isLowBalance(member) }"</span>
+<span class="tag">&gt;</span>
+    <span class="comment">&lt;!-- Row gets yellow background if balance is low --&gt;</span>
+<span class="tag">&lt;/tr&gt;</span>
+</pre>
+        </div>
+
+        <!-- Cheat Sheet -->
+        <div class="card">
+            <h2>Quick Reference Cheat Sheet</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Syntax</th>
+                        <th>Full Form</th>
+                        <th>Purpose</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><code class="inline-code">{{ x }}</code></td><td>-</td><td>Output text</td></tr>
+                    <tr><td><code class="inline-code">v-if</code></td><td>-</td><td>Conditional rendering</td></tr>
+                    <tr><td><code class="inline-code">v-for</code></td><td>-</td><td>Loop through array</td></tr>
+                    <tr><td><code class="inline-code">v-model</code></td><td>-</td><td>Two-way form binding</td></tr>
+                    <tr><td><code class="inline-code">:attr</code></td><td><code class="inline-code">v-bind:attr</code></td><td>Dynamic attribute</td></tr>
+                    <tr><td><code class="inline-code">@event</code></td><td><code class="inline-code">v-on:event</code></td><td>Event listener</td></tr>
+                    <tr><td><code class="inline-code">#name</code></td><td><code class="inline-code">v-slot:name</code></td><td>Named slot</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Navigation -->
+        <div class="card">
+            <h2>Continue Learning</h2>
+            <div class="grid grid-2">
+                <a href="forms.html" class="tech-card" style="text-decoration: none;">
+                    <div class="icon">📋</div>
+                    <h3>Forms</h3>
+                    <p>useForm(), validation, submission</p>
+                </a>
+                <a href="inertia.html" class="tech-card" style="text-decoration: none;">
+                    <div class="icon">🔗</div>
+                    <h3>Inertia.js</h3>
+                    <p>Laravel + Vue integration</p>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>Vue.js Study Guide - Leave Request App</p>
+    </footer>
+</body>
+</html>

@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Department;
 use App\Models\LeaveBalance;
+use App\Models\Policy;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
@@ -11,47 +12,16 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        $leaveCredits = [
-            'employee' => [
-                'Vacation Leave' => 15,
-                'Sick Leave' => 10,
-                'Emergency Leave' => 3,
-                'Maternity Leave' => 0,
-                'Paternity Leave' => 0,
-                'Bereavement Leave' => 5,
-                'Special Leave' => 3,
-                'Unpaid Leave' => 0,
-            ],
-            'dept_manager' => [
-                'Vacation Leave' => 18,
-                'Sick Leave' => 10,
-                'Emergency Leave' => 3,
-                'Maternity Leave' => 0,
-                'Paternity Leave' => 0,
-                'Bereavement Leave' => 5,
-                'Special Leave' => 3,
-                'Unpaid Leave' => 0,
-            ],
-            'hr_admin' => [
-                'Vacation Leave' => 20,
-                'Sick Leave' => 10,
-                'Emergency Leave' => 3,
-                'Maternity Leave' => 0,
-                'Paternity Leave' => 0,
-                'Bereavement Leave' => 5,
-                'Special Leave' => 3,
-                'Unpaid Leave' => 0,
-            ],
-            'ceo' => [
-                'Vacation Leave' => 25,
-                'Sick Leave' => 15,
-                'Emergency Leave' => 5,
-                'Maternity Leave' => 0,
-                'Paternity Leave' => 0,
-                'Bereavement Leave' => 5,
-                'Special Leave' => 5,
-                'Unpaid Leave' => 0,
-            ],
+        // Get all policies from the database (source of truth)
+        $policies = Policy::all()->keyBy('leave_type');
+        
+        // Define role-based multipliers/overrides for leave credits
+        // Base is from policies table, but some roles get more
+        $roleMultipliers = [
+            'employee' => 1.0,      // Uses base policy amounts
+            'dept_manager' => 1.2,  // 20% more vacation than base
+            'hr_admin' => 1.33,     // 33% more vacation than base
+            'ceo' => 1.67,          // 67% more vacation and sick leave
         ];
 
         $hrDept = Department::where('name', 'HR')->first();
@@ -151,9 +121,17 @@ class UserSeeder extends Seeder
         $currentYear = now()->year;
 
         foreach ($allUsers as $user) {
-            $credits = $leaveCredits[$user->role] ?? $leaveCredits['employee'];
+            $multiplier = $roleMultipliers[$user->role] ?? 1.0;
 
-            foreach ($credits as $leaveType => $balance) {
+            foreach ($policies as $leaveType => $policy) {
+                // Calculate balance based on policy and role multiplier
+                // Only apply multiplier to vacation and sick leave for senior roles
+                $balance = $policy->annual_entitlement;
+                
+                if (in_array($leaveType, ['Vacation Leave', 'Sick Leave']) && $multiplier > 1.0) {
+                    $balance = (int) ceil($policy->annual_entitlement * $multiplier);
+                }
+
                 LeaveBalance::create([
                     'user_id' => $user->id,
                     'leave_type' => $leaveType,
@@ -164,19 +142,23 @@ class UserSeeder extends Seeder
             }
         }
 
-        $this->command->info('Created users with leave credits.');
+        // Display summary with actual calculated values
+        $baseVacation = $policies['Vacation Leave']->annual_entitlement ?? 15;
+        $baseSick = $policies['Sick Leave']->annual_entitlement ?? 10;
+        
+        $this->command->info('Created users with leave credits (based on policies table).');
         $this->command->table(
             ['Name', 'Email', 'Role', 'Vacation Leave', 'Sick Leave'],
             [
-                ['David Williams', 'david@vglobal.com', 'ceo', '25 days', '15 days'],
-                ['Sarah Johnson', 'sarah@vglobal.com', 'hr_admin', '20 days', '10 days'],
-                ['Lisa Brown', 'lisa@vglobal.com', 'hr_admin', '20 days', '10 days'],
-                ['John Smith', 'john@vglobal.com', 'dept_manager', '18 days', '10 days'],
-                ['Mary Johnson', 'mary@vglobal.com', 'dept_manager', '18 days', '10 days'],
-                ['Alice Brown', 'alice@vglobal.com', 'employee', '15 days', '10 days'],
-                ['Bob Wilson', 'bob@vglobal.com', 'employee', '15 days', '10 days'],
-                ['Carol Davis', 'carol@vglobal.com', 'employee', '15 days', '10 days'],
-                ['Brad Smith', 'brad@vglobal.com', 'employee', '15 days', '10 days'],
+                ['David Williams', 'david@vglobal.com', 'ceo', ceil($baseVacation * 1.67) . ' days', ceil($baseSick * 1.67) . ' days'],
+                ['Sarah Johnson', 'sarah@vglobal.com', 'hr_admin', ceil($baseVacation * 1.33) . ' days', ceil($baseSick * 1.33) . ' days'],
+                ['Lisa Brown', 'lisa@vglobal.com', 'hr_admin', ceil($baseVacation * 1.33) . ' days', ceil($baseSick * 1.33) . ' days'],
+                ['John Smith', 'john@vglobal.com', 'dept_manager', ceil($baseVacation * 1.2) . ' days', ceil($baseSick * 1.2) . ' days'],
+                ['Mary Johnson', 'mary@vglobal.com', 'dept_manager', ceil($baseVacation * 1.2) . ' days', ceil($baseSick * 1.2) . ' days'],
+                ['Alice Brown', 'alice@vglobal.com', 'employee', $baseVacation . ' days', $baseSick . ' days'],
+                ['Bob Wilson', 'bob@vglobal.com', 'employee', $baseVacation . ' days', $baseSick . ' days'],
+                ['Carol Davis', 'carol@vglobal.com', 'employee', $baseVacation . ' days', $baseSick . ' days'],
+                ['Brad Smith', 'brad@vglobal.com', 'employee', $baseVacation . ' days', $baseSick . ' days'],
             ]
         );
     }

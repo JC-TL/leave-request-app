@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\LeaveRequest;
+use App\Models\LeaveRequestLog;
 use App\Models\Policy;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -146,12 +147,25 @@ class ManagerController extends Controller
             'reason' => 'required|string|max:500',
         ]);
 
+        // Get old status before update
+        $oldStatus = $leaveRequest->status;
+
         // Balance is only deducted when HR approves, so nothing to restore
         $leaveRequest->update([
             'status' => 'dept_manager_rejected',
             'dept_manager_comment' => $validated['reason'],
             'rejected_at' => now(),
         ]);
+
+        // Log the rejection
+        LeaveRequestLog::createLog(
+            $leaveRequest->id,
+            $user->id,
+            'manager_rejected',
+            $oldStatus,
+            'dept_manager_rejected',
+            $validated['reason']
+        );
 
         return redirect()
             ->route('manager.dashboard')

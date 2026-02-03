@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Department;
 use App\Models\LeaveBalance;
 use App\Models\LeaveRequest;
+use App\Models\LeaveRequestLog;
 use App\Models\Policy;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -101,6 +102,9 @@ class HRController extends Controller
                 ->withErrors(['error' => 'This request cannot be approved yet. It is still pending manager approval.']);
         }
 
+        // Get old status before update
+        $oldStatus = $leaveRequest->status;
+
         // Deduct balance only when HR approves (after manager approval)
         $currentYear = now()->year;
         $balance = $leaveRequest->employee->getLeaveBalance($leaveRequest->leave_type, $currentYear);
@@ -114,6 +118,16 @@ class HRController extends Controller
             'hr_comment' => $request->input('comment'),
             'approved_by_hr_at' => now(),
         ]);
+
+        // Log the approval
+        LeaveRequestLog::createLog(
+            $leaveRequest->id,
+            $user->id,
+            'hr_approved',
+            $oldStatus,
+            'hr_approved',
+            $request->input('comment')
+        );
 
         return redirect()
             ->route('hr.dashboard')
@@ -134,12 +148,25 @@ class HRController extends Controller
             'reason' => 'required|string|max:500',
         ]);
 
+        // Get old status before update
+        $oldStatus = $leaveRequest->status;
+
         // Balance was never deducted (only deducted when HR approves), so nothing to restore
         $leaveRequest->update([
             'status' => 'hr_rejected',
             'hr_comment' => $validated['reason'],
             'rejected_at' => now(),
         ]);
+
+        // Log the rejection
+        LeaveRequestLog::createLog(
+            $leaveRequest->id,
+            $user->id,
+            'hr_rejected',
+            $oldStatus,
+            'hr_rejected',
+            $validated['reason']
+        );
 
         return redirect()
             ->route('hr.dashboard')

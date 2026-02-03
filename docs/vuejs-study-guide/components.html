@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Components - Vue.js Study Guide</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="index.html" class="nav-brand">Vue.js Study Guide</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Introduction</a></li>
+                <li><a href="components.html" class="active">Components</a></li>
+                <li><a href="reactivity.html">Reactivity</a></li>
+                <li><a href="templates.html">Templates</a></li>
+                <li><a href="forms.html">Forms</a></li>
+                <li><a href="inertia.html">Inertia.js</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1 style="margin-bottom: 2rem;">Vue Components</h1>
+
+        <!-- What are Components -->
+        <div class="card">
+            <h2>What are Components?</h2>
+            <p>Components are <strong>reusable pieces of UI</strong>. Think of them as custom HTML elements.</p>
+
+            <div class="flow">
+                <div class="flow-box">TextInput.vue</div>
+                <div class="flow-arrow">+</div>
+                <div class="flow-box">InputLabel.vue</div>
+                <div class="flow-arrow">+</div>
+                <div class="flow-box">PrimaryButton.vue</div>
+                <div class="flow-arrow">=</div>
+                <div class="flow-box" style="background: var(--success);">Login Form</div>
+            </div>
+
+            <p style="text-align: center; margin-top: 1rem; color: var(--text-light);">
+                Small components combine to make bigger features
+            </p>
+        </div>
+
+        <!-- Importing Components -->
+        <div class="card">
+            <h2>1. Importing Components</h2>
+            <p>Before using a component, you must import it:</p>
+
+<pre>
+<span class="tag">&lt;script setup&gt;</span>
+<span class="comment">// Import from Components folder</span>
+<span class="keyword">import</span> PrimaryButton <span class="keyword">from</span> <span class="string">'@/Components/PrimaryButton.vue'</span>;
+<span class="keyword">import</span> TextInput <span class="keyword">from</span> <span class="string">'@/Components/TextInput.vue'</span>;
+<span class="keyword">import</span> InputLabel <span class="keyword">from</span> <span class="string">'@/Components/InputLabel.vue'</span>;
+
+<span class="comment">// Import from Layouts folder</span>
+<span class="keyword">import</span> AuthenticatedLayout <span class="keyword">from</span> <span class="string">'@/Layouts/AuthenticatedLayout.vue'</span>;
+
+<span class="comment">// Import from Inertia</span>
+<span class="keyword">import</span> { Head, Link } <span class="keyword">from</span> <span class="string">'@inertiajs/vue3'</span>;
+<span class="tag">&lt;/script&gt;</span>
+</pre>
+
+            <div class="callout callout-info">
+                <strong>@ symbol:</strong> The <code class="inline-code">@</code> is an alias for <code class="inline-code">resources/js/</code>. So <code class="inline-code">@/Components/</code> means <code class="inline-code">resources/js/Components/</code>.
+            </div>
+        </div>
+
+        <!-- Props -->
+        <div class="card">
+            <h2>2. Props - Passing Data to Components</h2>
+            <p>Props are data passed from a <strong>parent</strong> component to a <strong>child</strong> component.</p>
+
+            <h3>Defining Props (in the child)</h3>
+<pre>
+<span class="comment">// NavLink.vue - receives href and active props</span>
+<span class="tag">&lt;script setup&gt;</span>
+<span class="keyword">const</span> props = <span class="function">defineProps</span>({
+    href: {
+        type: String,       <span class="comment">// Expected data type</span>
+        required: <span class="keyword">true</span>,     <span class="comment">// Must be provided</span>
+    },
+    active: {
+        type: Boolean,      <span class="comment">// true or false</span>
+        <span class="comment">// Not required - optional prop</span>
+    },
+});
+
+<span class="comment">// Access props with: props.href, props.active</span>
+<span class="tag">&lt;/script&gt;</span>
+</pre>
+
+            <h3>Passing Props (from the parent)</h3>
+<pre>
+<span class="comment">&lt;!-- In AuthenticatedLayout.vue --&gt;</span>
+<span class="tag">&lt;NavLink</span> 
+    <span class="attr">:href</span>=<span class="string">"route('employee.dashboard')"</span>  <span class="comment">&lt;!-- Dynamic value --&gt;</span>
+    <span class="attr">:active</span>=<span class="string">"route().current('employee.dashboard')"</span>
+<span class="tag">&gt;</span>
+    Dashboard
+<span class="tag">&lt;/NavLink&gt;</span>
+</pre>
+
+            <h3>Static vs Dynamic Props</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Syntax</th>
+                        <th>Type</th>
+                        <th>Example</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code class="inline-code">prop="value"</code></td>
+                        <td>Static string</td>
+                        <td><code class="inline-code">type="text"</code></td>
+                    </tr>
+                    <tr>
+                        <td><code class="inline-code">:prop="value"</code></td>
+                        <td>Dynamic JavaScript</td>
+                        <td><code class="inline-code">:min="today"</code></td>
+                    </tr>
+                    <tr>
+                        <td><code class="inline-code">:prop="true"</code></td>
+                        <td>Boolean true</td>
+                        <td><code class="inline-code">:active="true"</code></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Real Example: Employee Dashboard</h3>
+<pre>
+<span class="comment">// Employee Dashboard receives these props from Laravel</span>
+<span class="keyword">const</span> props = <span class="function">defineProps</span>({
+    balances: Array,    <span class="comment">// Array of leave balance objects</span>
+    requests: Object,   <span class="comment">// Paginated leave requests</span>
+    user: Object,       <span class="comment">// Current user data</span>
+});
+
+<span class="comment">// Use them in the template:</span>
+<span class="tag">&lt;div</span> <span class="attr">v-for</span>=<span class="string">"balance in balances"</span><span class="tag">&gt;</span>
+    {{ balance.leave_type }}
+<span class="tag">&lt;/div&gt;</span>
+</pre>
+        </div>
+
+        <!-- Slots -->
+        <div class="card">
+            <h2>3. Slots - Passing Content to Components</h2>
+            <p>Slots let you pass <strong>HTML content</strong> into a component.</p>
+
+            <h3>Default Slot</h3>
+<pre>
+<span class="comment">&lt;!-- PrimaryButton.vue --&gt;</span>
+<span class="tag">&lt;template&gt;</span>
+    <span class="tag">&lt;button</span> <span class="attr">class</span>=<span class="string">"..."</span><span class="tag">&gt;</span>
+        <span class="tag">&lt;slot /&gt;</span>  <span class="comment">&lt;!-- Content goes here --&gt;</span>
+    <span class="tag">&lt;/button&gt;</span>
+<span class="tag">&lt;/template&gt;</span>
+
+<span class="comment">&lt;!-- Usage --&gt;</span>
+<span class="tag">&lt;PrimaryButton&gt;</span>Submit Request<span class="tag">&lt;/PrimaryButton&gt;</span>
+<span class="comment">&lt;!-- "Submit Request" replaces &lt;slot /&gt; --&gt;</span>
+</pre>
+
+            <h3>Named Slots</h3>
+            <p>Use named slots when a component has multiple insertion points:</p>
+
+<pre>
+<span class="comment">&lt;!-- AuthenticatedLayout.vue has named slots --&gt;</span>
+<span class="tag">&lt;template&gt;</span>
+    <span class="comment">&lt;!-- Named slot for header --&gt;</span>
+    <span class="tag">&lt;header</span> <span class="attr">v-if</span>=<span class="string">"$slots.header"</span><span class="tag">&gt;</span>
+        <span class="tag">&lt;slot</span> <span class="attr">name</span>=<span class="string">"header"</span> <span class="tag">/&gt;</span>
+    <span class="tag">&lt;/header&gt;</span>
+
+    <span class="comment">&lt;!-- Default slot for main content --&gt;</span>
+    <span class="tag">&lt;main&gt;</span>
+        <span class="tag">&lt;slot /&gt;</span>
+    <span class="tag">&lt;/main&gt;</span>
+<span class="tag">&lt;/template&gt;</span>
+</pre>
+
+            <h3>Using Named Slots</h3>
+<pre>
+<span class="comment">&lt;!-- Employee/Dashboard.vue --&gt;</span>
+<span class="tag">&lt;AuthenticatedLayout&gt;</span>
+    <span class="comment">&lt;!-- Fill the "header" slot --&gt;</span>
+    <span class="tag">&lt;template</span> <span class="attr">#header</span><span class="tag">&gt;</span>
+        <span class="tag">&lt;h2&gt;</span>Employee Dashboard<span class="tag">&lt;/h2&gt;</span>
+    <span class="tag">&lt;/template&gt;</span>
+
+    <span class="comment">&lt;!-- This goes in the default slot --&gt;</span>
+    <span class="tag">&lt;div</span> <span class="attr">class</span>=<span class="string">"py-12"</span><span class="tag">&gt;</span>
+        ...main content...
+    <span class="tag">&lt;/div&gt;</span>
+<span class="tag">&lt;/AuthenticatedLayout&gt;</span>
+</pre>
+
+            <div class="callout callout-success">
+                <strong>Shorthand:</strong> <code class="inline-code">#header</code> is the same as <code class="inline-code">v-slot:header</code>
+            </div>
+        </div>
+
+        <!-- Component Hierarchy -->
+        <div class="card">
+            <h2>4. Component Hierarchy</h2>
+            <p>Your app has a clear component structure:</p>
+
+            <div style="text-align: center; margin: 2rem 0;">
+                <pre style="display: inline-block; text-align: left; background: #f8fafc; padding: 1.5rem; border-radius: 8px;">
+┌─────────────────────────────────────────────────────┐
+│  <strong>app.blade.php</strong> (Laravel root template)            │
+│  └── <strong>App.vue</strong> (Inertia creates this)                │
+│      └── <strong>AuthenticatedLayout.vue</strong> (or GuestLayout) │
+│          ├── NavLink, Dropdown, etc.               │
+│          └── <strong>Page Component</strong> (e.g., Dashboard.vue) │
+│              ├── PrimaryButton                     │
+│              ├── TextInput                         │
+│              └── InputLabel                        │
+└─────────────────────────────────────────────────────┘
+                </pre>
+            </div>
+        </div>
+
+        <!-- Real Component Analysis -->
+        <div class="card">
+            <h2>5. Real Component: NavLink.vue</h2>
+            <p>Let's analyze an actual component from your app line by line:</p>
+
+<pre>
+<span class="comment">// resources/js/Components/NavLink.vue</span>
+
+<span class="tag">&lt;script setup&gt;</span>
+<span class="comment">// 1. Import Vue's computed function</span>
+<span class="keyword">import</span> { computed } <span class="keyword">from</span> <span class="string">'vue'</span>;
+
+<span class="comment">// 2. Import Inertia's Link component</span>
+<span class="keyword">import</span> { Link } <span class="keyword">from</span> <span class="string">'@inertiajs/vue3'</span>;
+
+<span class="comment">// 3. Define what props this component accepts</span>
+<span class="keyword">const</span> props = <span class="function">defineProps</span>({
+    href: {
+        type: String,
+        required: <span class="keyword">true</span>,
+    },
+    active: {
+        type: Boolean,
+    },
+});
+
+<span class="comment">// 4. Computed property: CSS classes based on active state</span>
+<span class="keyword">const</span> classes = <span class="function">computed</span>(() =>
+    props.active
+        ? <span class="string">'border-b-2 border-indigo-400 text-gray-900 ...'</span>  <span class="comment">// Active styles</span>
+        : <span class="string">'border-transparent text-gray-500 hover:text-gray-700 ...'</span>  <span class="comment">// Inactive</span>
+);
+<span class="tag">&lt;/script&gt;</span>
+
+<span class="tag">&lt;template&gt;</span>
+    <span class="comment">&lt;!-- Use Inertia's Link with dynamic href and classes --&gt;</span>
+    <span class="tag">&lt;Link</span> <span class="attr">:href</span>=<span class="string">"href"</span> <span class="attr">:class</span>=<span class="string">"classes"</span><span class="tag">&gt;</span>
+        <span class="tag">&lt;slot /&gt;</span>  <span class="comment">&lt;!-- Link text goes here --&gt;</span>
+    <span class="tag">&lt;/Link&gt;</span>
+<span class="tag">&lt;/template&gt;</span>
+</pre>
+
+            <h3>What This Component Does</h3>
+            <ol>
+                <li>Receives <code class="inline-code">href</code> (URL) and <code class="inline-code">active</code> (boolean) as props</li>
+                <li>Computes CSS classes based on whether link is active</li>
+                <li>Renders an Inertia Link with those classes</li>
+                <li>The link text comes through the slot</li>
+            </ol>
+        </div>
+
+        <!-- Layouts -->
+        <div class="card">
+            <h2>6. Layouts</h2>
+            <p>Layouts are special components that wrap entire pages.</p>
+
+            <h3>Your Two Layouts</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Layout</th>
+                        <th>Used For</th>
+                        <th>Contains</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code class="inline-code">GuestLayout</code></td>
+                        <td>Login page, Contact Admin</td>
+                        <td>Logo, centered card</td>
+                    </tr>
+                    <tr>
+                        <td><code class="inline-code">AuthenticatedLayout</code></td>
+                        <td>All dashboard pages</td>
+                        <td>Navbar, user dropdown, flash messages</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>How Layouts Work</h3>
+<pre>
+<span class="comment">&lt;!-- Login.vue uses GuestLayout --&gt;</span>
+<span class="tag">&lt;GuestLayout&gt;</span>
+    <span class="tag">&lt;Head</span> <span class="attr">title</span>=<span class="string">"Sign In"</span> <span class="tag">/&gt;</span>
+    <span class="tag">&lt;form&gt;</span>...login form...<span class="tag">&lt;/form&gt;</span>
+<span class="tag">&lt;/GuestLayout&gt;</span>
+
+<span class="comment">&lt;!-- Dashboard.vue uses AuthenticatedLayout --&gt;</span>
+<span class="tag">&lt;AuthenticatedLayout&gt;</span>
+    <span class="tag">&lt;template</span> <span class="attr">#header</span><span class="tag">&gt;</span>
+        <span class="tag">&lt;h2&gt;</span>Employee Dashboard<span class="tag">&lt;/h2&gt;</span>
+    <span class="tag">&lt;/template&gt;</span>
+    
+    <span class="tag">&lt;div&gt;</span>...dashboard content...<span class="tag">&lt;/div&gt;</span>
+<span class="tag">&lt;/AuthenticatedLayout&gt;</span>
+</pre>
+        </div>
+
+        <!-- Navigation -->
+        <div class="card">
+            <h2>Continue Learning</h2>
+            <div class="grid grid-2">
+                <a href="reactivity.html" class="tech-card" style="text-decoration: none;">
+                    <div class="icon">⚡</div>
+                    <h3>Reactivity</h3>
+                    <p>ref(), computed(), watch()</p>
+                </a>
+                <a href="templates.html" class="tech-card" style="text-decoration: none;">
+                    <div class="icon">🏷️</div>
+                    <h3>Templates</h3>
+                    <p>v-if, v-for, v-model</p>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>Vue.js Study Guide - Leave Request App</p>
+    </footer>
+</body>
+</html>

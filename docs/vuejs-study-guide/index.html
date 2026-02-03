@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vue.js Study Guide - Leave Request App</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="index.html" class="nav-brand">Vue.js Study Guide</a>
+            <ul class="nav-links">
+                <li><a href="index.html" class="active">Introduction</a></li>
+                <li><a href="components.html">Components</a></li>
+                <li><a href="reactivity.html">Reactivity</a></li>
+                <li><a href="templates.html">Templates</a></li>
+                <li><a href="forms.html">Forms</a></li>
+                <li><a href="inertia.html">Inertia.js</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="hero">
+        <h1>Vue.js in Your Leave Request App</h1>
+        <p>Learn Vue.js 3 using real examples from your codebase</p>
+    </div>
+
+    <div class="container">
+        <!-- Navigation -->
+        <div class="section-nav">
+            <a href="components.html">Components</a>
+            <a href="reactivity.html">Reactivity</a>
+            <a href="templates.html">Templates</a>
+            <a href="forms.html">Forms</a>
+            <a href="inertia.html">Inertia.js</a>
+        </div>
+
+        <!-- What is Vue.js -->
+        <div class="card">
+            <h2>What is Vue.js?</h2>
+            <p>Vue.js is a <strong>JavaScript framework</strong> for building user interfaces. It makes your HTML dynamic and reactive.</p>
+
+            <h3>Traditional HTML vs Vue.js</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Traditional HTML</th>
+                        <th>Vue.js</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Static content</td>
+                        <td>Dynamic, reactive content</td>
+                    </tr>
+                    <tr>
+                        <td>Requires JavaScript for interactivity</td>
+                        <td>Built-in reactivity system</td>
+                    </tr>
+                    <tr>
+                        <td>Manual DOM updates</td>
+                        <td>Automatic DOM updates</td>
+                    </tr>
+                    <tr>
+                        <td>No component reuse</td>
+                        <td>Reusable components</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Vue 3 & Composition API -->
+        <div class="card">
+            <h2>Vue 3 Composition API</h2>
+            <p>Your app uses <strong>Vue 3</strong> with the <strong>Composition API</strong>, which is the modern way to write Vue components.</p>
+
+            <h3>The &lt;script setup&gt; Syntax</h3>
+            <p>All your components use <code class="inline-code">&lt;script setup&gt;</code>, which is a cleaner way to write component logic:</p>
+
+<pre>
+<span class="comment">&lt;!-- This is the modern Vue 3 way --&gt;</span>
+<span class="tag">&lt;script setup&gt;</span>
+<span class="keyword">import</span> { ref, computed } <span class="keyword">from</span> <span class="string">'vue'</span>;
+
+<span class="comment">// Your code goes here - it's cleaner!</span>
+<span class="keyword">const</span> count = <span class="function">ref</span>(0);
+<span class="tag">&lt;/script&gt;</span>
+
+<span class="comment">&lt;!-- vs the older Options API way --&gt;</span>
+<span class="tag">&lt;script&gt;</span>
+<span class="keyword">export default</span> {
+    data() {
+        <span class="keyword">return</span> { count: 0 };
+    }
+}
+<span class="tag">&lt;/script&gt;</span>
+</pre>
+
+            <div class="callout callout-info">
+                <strong>Why script setup?</strong> It's more concise, has better TypeScript support, and everything you define is automatically available in the template.
+            </div>
+        </div>
+
+        <!-- Component Structure -->
+        <div class="card">
+            <h2>Vue Component Structure</h2>
+            <p>Every Vue component has up to 3 sections:</p>
+
+            <div class="grid grid-3">
+                <div class="tech-card">
+                    <div class="icon">📝</div>
+                    <h3>&lt;script setup&gt;</h3>
+                    <p>JavaScript logic: imports, variables, functions</p>
+                </div>
+                <div class="tech-card">
+                    <div class="icon">🎨</div>
+                    <h3>&lt;template&gt;</h3>
+                    <p>HTML structure with Vue directives</p>
+                </div>
+                <div class="tech-card">
+                    <div class="icon">💅</div>
+                    <h3>&lt;style&gt;</h3>
+                    <p>CSS styling (optional)</p>
+                </div>
+            </div>
+
+            <h3>Real Example: PrimaryButton.vue</h3>
+            <p>This is one of the simplest components in your app:</p>
+
+<pre>
+<span class="comment">&lt;!-- resources/js/Components/PrimaryButton.vue --&gt;</span>
+
+<span class="comment">&lt;!-- No script needed - this is a "dumb" component --&gt;</span>
+
+<span class="tag">&lt;template&gt;</span>
+    <span class="tag">&lt;button</span>
+        <span class="attr">class</span>=<span class="string">"inline-flex items-center rounded-md border 
+               border-transparent bg-gray-800 px-4 py-2 
+               text-xs font-semibold uppercase tracking-widest 
+               text-white transition duration-150 ease-in-out 
+               hover:bg-gray-700 focus:bg-gray-700"</span>
+    <span class="tag">&gt;</span>
+        <span class="comment">&lt;!-- slot = where child content goes --&gt;</span>
+        <span class="tag">&lt;slot /&gt;</span>
+    <span class="tag">&lt;/button&gt;</span>
+<span class="tag">&lt;/template&gt;</span>
+</pre>
+
+            <h3>Using the Component</h3>
+<pre>
+<span class="comment">&lt;!-- In another component --&gt;</span>
+<span class="keyword">import</span> PrimaryButton <span class="keyword">from</span> <span class="string">'@/Components/PrimaryButton.vue'</span>;
+
+<span class="comment">&lt;!-- In the template --&gt;</span>
+<span class="tag">&lt;PrimaryButton&gt;</span>Click Me<span class="tag">&lt;/PrimaryButton&gt;</span>
+<span class="comment">&lt;!-- "Click Me" goes into the &lt;slot /&gt; --&gt;</span>
+</pre>
+        </div>
+
+        <!-- Your File Structure -->
+        <div class="card">
+            <h2>Your Vue Files</h2>
+            
+            <div class="file-tree">
+<span class="folder">resources/js/</span>
+├── <span class="file">app.js</span>              <span class="comment"># Vue initialization</span>
+├── <span class="file">bootstrap.js</span>        <span class="comment"># Axios setup</span>
+├── <span class="folder">Components/</span>          <span class="comment"># Reusable UI pieces</span>
+│   ├── <span class="file">PrimaryButton.vue</span>
+│   ├── <span class="file">TextInput.vue</span>
+│   ├── <span class="file">InputLabel.vue</span>
+│   ├── <span class="file">InputError.vue</span>
+│   ├── <span class="file">Modal.vue</span>
+│   ├── <span class="file">Dropdown.vue</span>
+│   └── <span class="file">NavLink.vue</span>
+├── <span class="folder">Layouts/</span>             <span class="comment"># Page wrappers</span>
+│   ├── <span class="file">AuthenticatedLayout.vue</span>  <span class="comment"># For logged-in users</span>
+│   └── <span class="file">GuestLayout.vue</span>         <span class="comment"># For login page</span>
+└── <span class="folder">Pages/</span>               <span class="comment"># Full pages</span>
+    ├── <span class="folder">Auth/</span>
+    │   └── <span class="file">Login.vue</span>
+    ├── <span class="folder">Employee/</span>
+    │   └── <span class="file">Dashboard.vue</span>
+    ├── <span class="folder">Manager/</span>
+    │   ├── <span class="file">Dashboard.vue</span>
+    │   └── <span class="file">ShowRequest.vue</span>
+    └── <span class="folder">HR/</span>
+        ├── <span class="file">Dashboard.vue</span>
+        ├── <span class="file">Policies.vue</span>
+        └── <span class="file">Employees.vue</span>
+            </div>
+        </div>
+
+        <!-- Key Concepts -->
+        <div class="card">
+            <h2>Key Concepts You'll Learn</h2>
+            
+            <div class="grid grid-2">
+                <a href="components.html" class="tech-card" style="text-decoration: none;">
+                    <div class="icon">🧩</div>
+                    <h3>Components</h3>
+                    <p>Props, slots, imports, and reusable pieces</p>
+                </a>
+                <a href="reactivity.html" class="tech-card" style="text-decoration: none;">
+                    <div class="icon">⚡</div>
+                    <h3>Reactivity</h3>
+                    <p>ref(), computed(), watch() - making data reactive</p>
+                </a>
+                <a href="templates.html" class="tech-card" style="text-decoration: none;">
+                    <div class="icon">🏷️</div>
+                    <h3>Templates</h3>
+                    <p>v-if, v-for, v-model, :class, @click</p>
+                </a>
+                <a href="forms.html" class="tech-card" style="text-decoration: none;">
+                    <div class="icon">📋</div>
+                    <h3>Forms</h3>
+                    <p>useForm(), validation, and submission</p>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>Vue.js Study Guide - Leave Request App</p>
+    </footer>
+</body>
+</html>

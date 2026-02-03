@@ -4,12 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Builder;
 use Carbon\Carbon;
 
 class LeaveRequest extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'employee_id',
@@ -52,6 +53,11 @@ class LeaveRequest extends Model
     public function hrApprover()
     {
         return $this->belongsTo(User::class, 'approved_by_hr_id');
+    }
+
+    public function logs()
+    {
+        return $this->hasMany(LeaveRequestLog::class);
     }
 
     public function isPending()

@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forms - Vue.js Study Guide</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="index.html" class="nav-brand">Vue.js Study Guide</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Introduction</a></li>
+                <li><a href="components.html">Components</a></li>
+                <li><a href="reactivity.html">Reactivity</a></li>
+                <li><a href="templates.html">Templates</a></li>
+                <li><a href="forms.html" class="active">Forms</a></li>
+                <li><a href="inertia.html">Inertia.js</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1 style="margin-bottom: 2rem;">Form Handling with Inertia</h1>
+
+        <!-- useForm Overview -->
+        <div class="card">
+            <h2>useForm() - The Form Helper</h2>
+            <p>Inertia's <code class="inline-code">useForm()</code> is a powerful helper that handles:</p>
+            
+            <div class="grid grid-3">
+                <div class="tech-card">
+                    <div class="icon">📝</div>
+                    <h3>Form State</h3>
+                    <p>All your field values in one object</p>
+                </div>
+                <div class="tech-card">
+                    <div class="icon">⚠️</div>
+                    <h3>Validation Errors</h3>
+                    <p>Automatic error handling from Laravel</p>
+                </div>
+                <div class="tech-card">
+                    <div class="icon">⏳</div>
+                    <h3>Loading State</h3>
+                    <p>Know when form is submitting</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Creating a Form -->
+        <div class="card">
+            <h2>1. Creating a Form</h2>
+
+<pre>
+<span class="keyword">import</span> { useForm } <span class="keyword">from</span> <span class="string">'@inertiajs/vue3'</span>;
+
+<span class="comment">// Create form with initial values</span>
+<span class="keyword">const</span> form = <span class="function">useForm</span>({
+    email: <span class="string">''</span>,
+    password: <span class="string">''</span>,
+    remember: <span class="keyword">false</span>,
+});
+</pre>
+
+            <h3>Real Example: Login Form</h3>
+<pre>
+<span class="comment">// Login.vue</span>
+<span class="keyword">const</span> form = <span class="function">useForm</span>({
+    email: <span class="string">''</span>,        <span class="comment">// Empty string for text inputs</span>
+    password: <span class="string">''</span>,     <span class="comment">// Empty string for password</span>
+    remember: <span class="keyword">false</span>,  <span class="comment">// Boolean for checkbox</span>
+});
+</pre>
+
+            <h3>Real Example: Leave Request Form</h3>
+<pre>
+<span class="comment">// Employee/Dashboard.vue</span>
+<span class="keyword">const</span> form = <span class="function">useForm</span>({
+    leave_type: <span class="string">''</span>,   <span class="comment">// Will hold selected leave type</span>
+    start_date: <span class="string">''</span>,   <span class="comment">// Date string: "2026-02-01"</span>
+    end_date: <span class="string">''</span>,     <span class="comment">// Date string: "2026-02-05"</span>
+    reason: <span class="string">''</span>,       <span class="comment">// Text for textarea</span>
+});
+</pre>
+        </div>
+
+        <!-- Binding to Inputs -->
+        <div class="card">
+            <h2>2. Binding Form to Inputs</h2>
+            <p>Use <code class="inline-code">v-model</code> to connect inputs to form fields:</p>
+
+<pre>
+<span class="tag">&lt;form</span> <span class="attr">@submit.prevent</span>=<span class="string">"submit"</span><span class="tag">&gt;</span>
+    <span class="comment">&lt;!-- Text Input --&gt;</span>
+    <span class="tag">&lt;input</span> 
+        <span class="attr">type</span>=<span class="string">"email"</span> 
+        <span class="attr">v-model</span>=<span class="string">"form.email"</span>  <span class="comment">&lt;!-- Binds to form.email --&gt;</span>
+    <span class="tag">/&gt;</span>
+
+    <span class="comment">&lt;!-- Password Input --&gt;</span>
+    <span class="tag">&lt;input</span> 
+        <span class="attr">type</span>=<span class="string">"password"</span> 
+        <span class="attr">v-model</span>=<span class="string">"form.password"</span>
+    <span class="tag">/&gt;</span>
+
+    <span class="comment">&lt;!-- Checkbox --&gt;</span>
+    <span class="tag">&lt;input</span> 
+        <span class="attr">type</span>=<span class="string">"checkbox"</span> 
+        <span class="attr">v-model</span>=<span class="string">"form.remember"</span>
+    <span class="tag">/&gt;</span>
+
+    <span class="comment">&lt;!-- Select Dropdown --&gt;</span>
+    <span class="tag">&lt;select</span> <span class="attr">v-model</span>=<span class="string">"form.leave_type"</span><span class="tag">&gt;</span>
+        <span class="tag">&lt;option</span> <span class="attr">value</span>=<span class="string">""</span><span class="tag">&gt;</span>Select...<span class="tag">&lt;/option&gt;</span>
+        <span class="tag">&lt;option</span> <span class="attr">value</span>=<span class="string">"Vacation Leave"</span><span class="tag">&gt;</span>Vacation<span class="tag">&lt;/option&gt;</span>
+    <span class="tag">&lt;/select&gt;</span>
+
+    <span class="comment">&lt;!-- Textarea --&gt;</span>
+    <span class="tag">&lt;textarea</span> <span class="attr">v-model</span>=<span class="string">"form.reason"</span><span class="tag">&gt;&lt;/textarea&gt;</span>
+
+    <span class="comment">&lt;!-- Submit Button --&gt;</span>
+    <span class="tag">&lt;button</span> <span class="attr">type</span>=<span class="string">"submit"</span><span class="tag">&gt;</span>Submit<span class="tag">&lt;/button&gt;</span>
+<span class="tag">&lt;/form&gt;</span>
+</pre>
+        </div>
+
+        <!-- Submitting -->
+        <div class="card">
+            <h2>3. Submitting the Form</h2>
+            <p>Use form methods to send data to Laravel:</p>
+
+<pre>
+<span class="comment">// POST request (create new data)</span>
+form.<span class="function">post</span>(<span class="function">route</span>(<span class="string">'login.store'</span>));
+
+<span class="comment">// PATCH request (update existing data)</span>
+form.<span class="function">patch</span>(<span class="function">route</span>(<span class="string">'hr.update-policy'</span>, policy.id));
+
+<span class="comment">// DELETE request</span>
+form.<span class="function">delete</span>(<span class="function">route</span>(<span class="string">'hr.delete-employee'</span>, id));
+</pre>
+
+            <h3>With Callbacks</h3>
+<pre>
+<span class="keyword">function</span> <span class="function">submit</span>() {
+    form.<span class="function">post</span>(<span class="function">route</span>(<span class="string">'employee.store-request'</span>), {
+        <span class="comment">// Called when request succeeds</span>
+        onSuccess: () => {
+            form.<span class="function">reset</span>();  <span class="comment">// Clear all fields</span>
+        },
+        
+        <span class="comment">// Called when request finishes (success or error)</span>
+        onFinish: () => {
+            form.<span class="function">reset</span>(<span class="string">'password'</span>);  <span class="comment">// Clear just password</span>
+        },
+        
+        <span class="comment">// Called on error</span>
+        onError: (errors) => {
+            console.<span class="function">log</span>(errors);
+        },
+    });
+}
+</pre>
+
+            <h3>Real Example: Login Submit</h3>
+<pre>
+<span class="comment">// Login.vue</span>
+<span class="keyword">const</span> <span class="function">submit</span> = () => {
+    form.<span class="function">post</span>(<span class="function">route</span>(<span class="string">'login.store'</span>), {
+        <span class="comment">// Always clear password after attempt</span>
+        onFinish: () => form.<span class="function">reset</span>(<span class="string">'password'</span>),
+    });
+};
+</pre>
+
+            <h3>Real Example: Leave Request Submit</h3>
+<pre>
+<span class="comment">// Employee/Dashboard.vue</span>
+<span class="keyword">function</span> <span class="function">submit</span>() {
+    form.<span class="function">post</span>(<span class="function">route</span>(<span class="string">'employee.store-request'</span>), {
+        <span class="comment">// Clear form on success</span>
+        onSuccess: () => form.<span class="function">reset</span>(),
+    });
+}
+</pre>
+        </div>
+
+        <!-- Validation Errors -->
+        <div class="card">
+            <h2>4. Displaying Validation Errors</h2>
+            <p>Laravel validation errors are automatically available in <code class="inline-code">form.errors</code>.</p>
+
+<pre>
+<span class="comment">&lt;!-- Check if field has error --&gt;</span>
+<span class="tag">&lt;input</span> <span class="attr">v-model</span>=<span class="string">"form.email"</span> <span class="tag">/&gt;</span>
+
+<span class="comment">&lt;!-- Show error message --&gt;</span>
+<span class="tag">&lt;p</span> <span class="attr">v-if</span>=<span class="string">"form.errors.email"</span> <span class="attr">class</span>=<span class="string">"text-red-500"</span><span class="tag">&gt;</span>
+    {{ form.errors.email }}
+<span class="tag">&lt;/p&gt;</span>
+</pre>
+
+            <h3>Using InputError Component</h3>
+            <p>Your app has a reusable component for this:</p>
+
+<pre>
+<span class="comment">&lt;!-- Import the component --&gt;</span>
+<span class="keyword">import</span> InputError <span class="keyword">from</span> <span class="string">'@/Components/InputError.vue'</span>;
+
+<span class="comment">&lt;!-- Use it after each input --&gt;</span>
+<span class="tag">&lt;div&gt;</span>
+    <span class="tag">&lt;InputLabel</span> <span class="attr">for</span>=<span class="string">"email"</span> <span class="attr">value</span>=<span class="string">"Email"</span> <span class="tag">/&gt;</span>
+    <span class="tag">&lt;TextInput</span>
+        <span class="attr">id</span>=<span class="string">"email"</span>
+        <span class="attr">type</span>=<span class="string">"email"</span>
+        <span class="attr">v-model</span>=<span class="string">"form.email"</span>
+    <span class="tag">/&gt;</span>
+    <span class="tag">&lt;InputError</span> <span class="attr">:message</span>=<span class="string">"form.errors.email"</span> <span class="attr">class</span>=<span class="string">"mt-2"</span> <span class="tag">/&gt;</span>
+<span class="tag">&lt;/div&gt;</span>
+</pre>
+
+            <h3>How Errors Flow</h3>
+            <div class="flow">
+                <div class="flow-box">Form submits</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">Laravel validates</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">Errors returned</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">form.errors updated</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">UI shows errors</div>
+            </div>
+        </div>
+
+        <!-- Processing State -->
+        <div class="card">
+            <h2>5. Loading / Processing State</h2>
+            <p><code class="inline-code">form.processing</code> is true while the form is submitting.</p>
+
+<pre>
+<span class="comment">&lt;!-- Disable button while submitting --&gt;</span>
+<span class="tag">&lt;button</span> <span class="attr">:disabled</span>=<span class="string">"form.processing"</span><span class="tag">&gt;</span>
+    Submit
+<span class="tag">&lt;/button&gt;</span>
+
+<span class="comment">&lt;!-- Show different text --&gt;</span>
+<span class="tag">&lt;button</span> <span class="attr">:disabled</span>=<span class="string">"form.processing"</span><span class="tag">&gt;</span>
+    <span class="tag">&lt;span</span> <span class="attr">v-if</span>=<span class="string">"form.processing"</span><span class="tag">&gt;</span>Submitting...<span class="tag">&lt;/span&gt;</span>
+    <span class="tag">&lt;span</span> <span class="attr">v-else</span><span class="tag">&gt;</span>Submit Request<span class="tag">&lt;/span&gt;</span>
+<span class="tag">&lt;/button&gt;</span>
+
+<span class="comment">&lt;!-- Add visual feedback --&gt;</span>
+<span class="tag">&lt;button</span> 
+    <span class="attr">:disabled</span>=<span class="string">"form.processing"</span>
+    <span class="attr">:class</span>=<span class="string">"{ 'opacity-25': form.processing }"</span>
+<span class="tag">&gt;</span>
+    Submit
+<span class="tag">&lt;/button&gt;</span>
+</pre>
+        </div>
+
+        <!-- Form Reset -->
+        <div class="card">
+            <h2>6. Resetting the Form</h2>
+
+<pre>
+<span class="comment">// Reset all fields to initial values</span>
+form.<span class="function">reset</span>();
+
+<span class="comment">// Reset specific field(s)</span>
+form.<span class="function">reset</span>(<span class="string">'password'</span>);
+form.<span class="function">reset</span>(<span class="string">'password'</span>, <span class="string">'password_confirmation'</span>);
+
+<span class="comment">// Clear all errors</span>
+form.<span class="function">clearErrors</span>();
+
+<span class="comment">// Clear specific error</span>
+form.<span class="function">clearErrors</span>(<span class="string">'email'</span>);
+</pre>
+        </div>
+
+        <!-- Complete Example -->
+        <div class="card">
+            <h2>7. Complete Form Example</h2>
+            <p>Here's the full leave request form from your app:</p>
+
+<pre>
+<span class="tag">&lt;script setup&gt;</span>
+<span class="keyword">import</span> { useForm } <span class="keyword">from</span> <span class="string">'@inertiajs/vue3'</span>;
+<span class="keyword">import</span> { computed } <span class="keyword">from</span> <span class="string">'vue'</span>;
+<span class="keyword">import</span> PrimaryButton <span class="keyword">from</span> <span class="string">'@/Components/PrimaryButton.vue'</span>;
+<span class="keyword">import</span> InputLabel <span class="keyword">from</span> <span class="string">'@/Components/InputLabel.vue'</span>;
+<span class="keyword">import</span> TextInput <span class="keyword">from</span> <span class="string">'@/Components/TextInput.vue'</span>;
+<span class="keyword">import</span> InputError <span class="keyword">from</span> <span class="string">'@/Components/InputError.vue'</span>;
+
+<span class="comment">// Props from Laravel</span>
+<span class="keyword">const</span> props = <span class="function">defineProps</span>({
+    balances: Array,
+});
+
+<span class="comment">// Create form</span>
+<span class="keyword">const</span> form = <span class="function">useForm</span>({
+    leave_type: <span class="string">''</span>,
+    start_date: <span class="string">''</span>,
+    end_date: <span class="string">''</span>,
+    reason: <span class="string">''</span>,
+});
+
+<span class="comment">// Today's date for min validation</span>
+<span class="keyword">const</span> today = <span class="function">computed</span>(() => 
+    <span class="keyword">new</span> <span class="function">Date</span>().<span class="function">toISOString</span>().<span class="function">split</span>(<span class="string">'T'</span>)[0]
+);
+
+<span class="comment">// Submit handler</span>
+<span class="keyword">function</span> <span class="function">submit</span>() {
+    form.<span class="function">post</span>(<span class="function">route</span>(<span class="string">'employee.store-request'</span>), {
+        onSuccess: () => form.<span class="function">reset</span>(),
+    });
+}
+<span class="tag">&lt;/script&gt;</span>
+
+<span class="tag">&lt;template&gt;</span>
+    <span class="tag">&lt;form</span> <span class="attr">@submit.prevent</span>=<span class="string">"submit"</span><span class="tag">&gt;</span>
+        <span class="comment">&lt;!-- Leave Type --&gt;</span>
+        <span class="tag">&lt;div&gt;</span>
+            <span class="tag">&lt;InputLabel</span> <span class="attr">for</span>=<span class="string">"leave_type"</span> <span class="attr">value</span>=<span class="string">"Leave Type"</span> <span class="tag">/&gt;</span>
+            <span class="tag">&lt;select</span> <span class="attr">v-model</span>=<span class="string">"form.leave_type"</span> <span class="attr">required</span><span class="tag">&gt;</span>
+                <span class="tag">&lt;option</span> <span class="attr">value</span>=<span class="string">""</span><span class="tag">&gt;</span>Select...<span class="tag">&lt;/option&gt;</span>
+                <span class="tag">&lt;option</span> <span class="attr">v-for</span>=<span class="string">"b in balances"</span> <span class="attr">:value</span>=<span class="string">"b.leave_type"</span><span class="tag">&gt;</span>
+                    {{ b.leave_type }}
+                <span class="tag">&lt;/option&gt;</span>
+            <span class="tag">&lt;/select&gt;</span>
+            <span class="tag">&lt;InputError</span> <span class="attr">:message</span>=<span class="string">"form.errors.leave_type"</span> <span class="tag">/&gt;</span>
+        <span class="tag">&lt;/div&gt;</span>
+
+        <span class="comment">&lt;!-- Dates --&gt;</span>
+        <span class="tag">&lt;div&gt;</span>
+            <span class="tag">&lt;InputLabel</span> <span class="attr">value</span>=<span class="string">"Start Date"</span> <span class="tag">/&gt;</span>
+            <span class="tag">&lt;TextInput</span>
+                <span class="attr">type</span>=<span class="string">"date"</span>
+                <span class="attr">v-model</span>=<span class="string">"form.start_date"</span>
+                <span class="attr">:min</span>=<span class="string">"today"</span>
+                <span class="attr">required</span>
+            <span class="tag">/&gt;</span>
+            <span class="tag">&lt;InputError</span> <span class="attr">:message</span>=<span class="string">"form.errors.start_date"</span> <span class="tag">/&gt;</span>
+        <span class="tag">&lt;/div&gt;</span>
+
+        <span class="comment">&lt;!-- Reason --&gt;</span>
+        <span class="tag">&lt;div&gt;</span>
+            <span class="tag">&lt;InputLabel</span> <span class="attr">value</span>=<span class="string">"Reason"</span> <span class="tag">/&gt;</span>
+            <span class="tag">&lt;textarea</span> <span class="attr">v-model</span>=<span class="string">"form.reason"</span> <span class="attr">required</span><span class="tag">&gt;&lt;/textarea&gt;</span>
+            <span class="tag">&lt;InputError</span> <span class="attr">:message</span>=<span class="string">"form.errors.reason"</span> <span class="tag">/&gt;</span>
+        <span class="tag">&lt;/div&gt;</span>
+
+        <span class="comment">&lt;!-- Submit --&gt;</span>
+        <span class="tag">&lt;PrimaryButton</span> <span class="attr">:disabled</span>=<span class="string">"form.processing"</span><span class="tag">&gt;</span>
+            <span class="tag">&lt;span</span> <span class="attr">v-if</span>=<span class="string">"form.processing"</span><span class="tag">&gt;</span>Submitting...<span class="tag">&lt;/span&gt;</span>
+            <span class="tag">&lt;span</span> <span class="attr">v-else</span><span class="tag">&gt;</span>Submit Request<span class="tag">&lt;/span&gt;</span>
+        <span class="tag">&lt;/PrimaryButton&gt;</span>
+    <span class="tag">&lt;/form&gt;</span>
+<span class="tag">&lt;/template&gt;</span>
+</pre>
+        </div>
+
+        <!-- useForm API -->
+        <div class="card">
+            <h2>useForm() Quick Reference</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Property/Method</th>
+                        <th>Type</th>
+                        <th>Purpose</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><code class="inline-code">form.fieldName</code></td><td>any</td><td>Access/set field value</td></tr>
+                    <tr><td><code class="inline-code">form.errors.fieldName</code></td><td>string</td><td>Validation error message</td></tr>
+                    <tr><td><code class="inline-code">form.processing</code></td><td>boolean</td><td>True while submitting</td></tr>
+                    <tr><td><code class="inline-code">form.post(url)</code></td><td>function</td><td>Submit as POST</td></tr>
+                    <tr><td><code class="inline-code">form.patch(url)</code></td><td>function</td><td>Submit as PATCH</td></tr>
+                    <tr><td><code class="inline-code">form.delete(url)</code></td><td>function</td><td>Submit as DELETE</td></tr>
+                    <tr><td><code class="inline-code">form.reset()</code></td><td>function</td><td>Reset to initial values</td></tr>
+                    <tr><td><code class="inline-code">form.clearErrors()</code></td><td>function</td><td>Clear validation errors</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Navigation -->
+        <div class="card">
+            <h2>Continue Learning</h2>
+            <div class="grid grid-2">
+                <a href="inertia.html" class="tech-card" style="text-decoration: none;">
+                    <div class="icon">🔗</div>
+                    <h3>Inertia.js</h3>
+                    <p>How Laravel and Vue connect</p>
+                </a>
+                <a href="index.html" class="tech-card" style="text-decoration: none;">
+                    <div class="icon">🏠</div>
+                    <h3>Back to Start</h3>
+                    <p>Review the introduction</p>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>Vue.js Study Guide - Leave Request App</p>
+    </footer>
+</body>
+</html>

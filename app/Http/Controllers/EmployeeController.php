@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 
 use App\Models\LeaveRequest;
+use App\Models\LeaveRequestLog;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -79,7 +80,7 @@ class EmployeeController extends Controller
         }
 
         // Create the leave request (balance is only deducted when HR approves)
-        LeaveRequest::create([
+        $leaveRequest = LeaveRequest::create([
             'employee_id' => $user->id,
             'leave_type' => $validated['leave_type'],
             'start_date' => $validated['start_date'],
@@ -88,6 +89,16 @@ class EmployeeController extends Controller
             'number_of_days' => $numberOfDays,
             'status' => 'pending',
         ]);
+
+        // Log the creation
+        LeaveRequestLog::createLog(
+            $leaveRequest->id,
+            $user->id,
+            'created',
+            null,
+            'pending',
+            $validated['reason']
+        );
 
         return redirect()
             ->route('employee.dashboard')
@@ -109,6 +120,16 @@ class EmployeeController extends Controller
             return back()
                 ->withErrors(['error' => 'Only pending requests can be cancelled.']);
         }
+
+        // Log the cancellation before deleting (soft delete)
+        LeaveRequestLog::createLog(
+            $leaveRequest->id,
+            $user->id,
+            'cancelled',
+            $leaveRequest->status,
+            'cancelled',
+            'Cancelled by employee'
+        );
 
         // Balance was never deducted (only deducted when HR approves), so nothing to restore
         $leaveRequest->delete();
