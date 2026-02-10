@@ -3,10 +3,12 @@
 use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
 
-// Guest routes (login, contact-admin)
+// Guest routes (login, register, contact-admin)
 Route::middleware('guest')->group(function () {
     Route::get('/', [AuthController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.store');
+    Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
+    Route::post('/register', [AuthController::class, 'register'])->name('register.store');
     Route::get('/contact-admin', [AuthController::class, 'showContactAdmin'])->name('contact-admin');
     Route::post('/contact-admin', [AuthController::class, 'submitContact'])->name('contact-admin.store');
 });

@@ -67,25 +67,28 @@ const isHR = computed(() => ['hr_admin', 'ceo'].includes(user.value?.role));
                                 {{ roleLabel }}
                             </span>
                             
-                            <!-- Settings Dropdown -->
+                            <!-- Settings Dropdown (hamburger trigger) -->
                             <div class="relative ms-3">
                                 <Dropdown align="right" width="48">
                                     <template #trigger>
                                         <span class="inline-flex rounded-md">
                                             <button
                                                 type="button"
-                                                class="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-500 transition duration-150 ease-in-out hover:text-gray-700 focus:outline-none"
+                                                class="inline-flex items-center justify-center rounded-md p-2 text-gray-500 transition duration-150 ease-in-out hover:bg-gray-100 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
+                                                aria-label="Open menu"
                                             >
-                                                {{ user.name }}
-                                                <svg class="-me-0.5 ms-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 5.25h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5" />
                                                 </svg>
                                             </button>
                                         </span>
                                     </template>
 
                                     <template #content>
-                                        
+                                        <div class="border-b border-gray-100 px-4 py-3">
+                                            <p class="text-sm font-medium text-gray-800">{{ user.name }}</p>
+                                            <p class="text-xs text-gray-500">{{ roleLabel }}</p>
+                                        </div>
                                         <DropdownLink :href="route('logout')" method="post" as="button">
                                             <span class="flex items-center gap-2">
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5">
@@ -127,6 +130,9 @@ const isHR = computed(() => ['hr_admin', 'ceo'].includes(user.value?.role));
                             </ResponsiveNavLink>
                             <ResponsiveNavLink :href="route('hr.employees')" :active="route().current('hr.employees')">
                                 Employees
+                            </ResponsiveNavLink>
+                            <ResponsiveNavLink :href="route('hr.employees')" :active="route().current('hr.employees')">
+                                Pending
                             </ResponsiveNavLink>
                         </template>
                     </div>

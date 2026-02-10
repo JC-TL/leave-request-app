@@ -1,24 +1,24 @@
 <script setup>
-import GuestLayout from '@/Layouts/GuestLayout.vue';
-import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import TextInput from '@/Components/TextInput.vue';
-import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import GuestLayout from "@/Layouts/GuestLayout.vue";
+import InputError from "@/Components/InputError.vue";
+import InputLabel from "@/Components/InputLabel.vue";
+import PrimaryButton from "@/Components/PrimaryButton.vue";
+import TextInput from "@/Components/TextInput.vue";
+import { Head, Link, useForm, usePage } from "@inertiajs/vue3";
+import { computed } from "vue";
 
 const page = usePage();
 const flash = computed(() => page.props.flash);
 
 const form = useForm({
-    email: '',
-    password: '',
+    email: "",
+    password: "",
     remember: false,
 });
 
 const submit = () => {
-    form.post(route('login.store'), {
-        onFinish: () => form.reset('password'),
+    form.post(route("login.store"), {
+        onFinish: () => form.reset("password"),
     });
 };
 </script>
@@ -27,7 +27,10 @@ const submit = () => {
     <GuestLayout>
         <Head title="Sign In" />
 
-        <div v-if="flash?.success" class="mb-4 rounded-md bg-green-50 p-4 text-sm font-medium text-green-600">
+        <div
+            v-if="flash?.success"
+            class="mb-4 rounded-md bg-green-50 p-4 text-sm font-medium text-green-600"
+        >
             {{ flash.success }}
         </div>
 
@@ -72,15 +75,31 @@ const submit = () => {
             </div>
 
             <div class="mt-4 flex items-center justify-end">
-                <PrimaryButton class="w-full justify-center" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
+                <PrimaryButton
+                    class="w-full justify-center"
+                    :class="{ 'opacity-25': form.processing }"
+                    :disabled="form.processing"
+                >
                     Sign In
                 </PrimaryButton>
+            </div>
+
+            <div class="mt-4">
+                <Link
+                    :href="route('register')"
+                    class="flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-center text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                >
+                    Register
+                </Link>
             </div>
         </form>
 
         <div class="mt-6 text-center">
             <p class="text-sm text-gray-600">Having trouble signing in?</p>
-            <Link :href="route('contact-admin')" class="text-sm text-indigo-600 hover:text-indigo-500">
+            <Link
+                :href="route('contact-admin')"
+                class="text-sm text-indigo-600 hover:text-indigo-500"
+            >
                 Submit a Ticket
             </Link>
         </div>
