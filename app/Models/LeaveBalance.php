@@ -2,61 +2,65 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class LeaveBalance extends Model
 {
     use HasFactory;
 
+    protected $table = 'leave_balance';
+    protected $primaryKey = 'balance_id';
+
     protected $fillable = [
-        'user_id',
-        'leave_type',
-        'balance',
-        'used',
-        'year'
+        'emp_id',
+        'leave_type_id',
+        'year',
+        'allocated_days',
+        'used_days',
     ];
 
     protected function casts(): array
     {
         return [
-            'balance' => 'integer',
-            'used' => 'integer',
+            'allocated_days' => 'integer',
+            'used_days' => 'integer',
             'year' => 'integer',
         ];
     }
 
-    public function user()
+    public function employee()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Employee::class, 'emp_id');
     }
 
-    // Calculate available balance (total - used)
+    public function leaveType()
+    {
+        return $this->belongsTo(LeaveType::class, 'leave_type_id');
+    }
+
     public function getAvailableBalance(): int
     {
-        return max(0, $this->balance - $this->used);
+        return max(0, $this->allocated_days - $this->used_days);
     }
 
-    // Deduct days from balance
-    public function deductDays($days)
+    public function deductDays(int $days): bool
     {
         if (!$this->hasSufficientBalance($days)) {
             return false;
         }
 
-        $this->used += $days;
+        $this->used_days += $days;
         return $this->save();
     }
 
-    // Add days back to balance (for cancellations)
-    public function addDays($days)
+    public function addDays(int $days): bool
     {
-        $this->used = max(0, $this->used - $days);
+        $this->used_days = max(0, $this->used_days - $days);
         return $this->save();
     }
 
-    // Check if user has enough balance
-    public function hasSufficientBalance($days)
+    public function hasSufficientBalance(int $days): bool
     {
         return $this->getAvailableBalance() >= $days;
     }

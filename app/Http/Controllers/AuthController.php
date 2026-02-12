@@ -3,9 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Department;
+use App\Models\Employee;
 use App\Models\LeaveBalance;
-use App\Models\Policy;
-use App\Models\User;
+use App\Models\LeaveType;
+use App\Models\PendingRegistration;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -26,24 +27,21 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
-        // Trim email to handle whitespace
         $credentials = [
             'email' => trim($request->input('email')),
             'password' => $request->input('password'),
         ];
-        
+
         if (!Auth::attempt($credentials, $request->boolean('remember'))) {
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials are incorrect.'],
             ]);
         }
 
-        // Regenerate session for security
         $request->session()->regenerate();
         $user = Auth::user();
 
-        // Redirect based on user role
-        return match($user->role) {
+        return match ($user->role) {
             'employee' => redirect()->route('employee.dashboard'),
             'dept_manager' => redirect()->route('manager.dashboard'),
             'hr_admin', 'ceo' => redirect()->route('hr.dashboard'),
@@ -84,9 +82,6 @@ class AuthController extends Controller
             'urgent' => 'nullable|boolean',
         ]);
 
-        // TODO: Save to database or send email notification
-        // For now just redirect with success message
-
         return redirect()
             ->route('login')
             ->with('success', 'Your ticket has been submitted successfully. Our admin team will contact you soon.');
@@ -106,37 +101,36 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email',
+            'first_name' => 'required|string|max:100',
+            'last_name' => 'required|string|max:100',
+            'gender' => 'nullable|string|max:1',
+            'email' => [
+                'required',
+                'email',
+                'max:255',
+                function ($attr, $value, $fail) {
+                    if (Employee::where('email', $value)->exists() || PendingRegistration::where('email', $value)->exists()) {
+                        $fail('This email is already registered or pending approval.');
+                    }
+                },
+            ],
             'password' => 'required|string|min:8|confirmed',
             'role' => 'required|in:employee,dept_manager',
-            'department_id' => 'required|exists:departments,id',
+            'dept_id' => 'required|exists:departments,dept_id',
         ]);
 
         if ($validated['role'] === 'employee') {
-            $department = Department::find($validated['department_id']);
-            $validated['manager_id'] = $department->dept_manager_id;
+            $department = Department::find($validated['dept_id']);
+            $validated['manager_id'] = $department?->dept_manager_id;
         } else {
             $validated['manager_id'] = null;
         }
 
         $validated['password'] = Hash::make($validated['password']);
-        $user = User::create($validated);
-
-        $currentYear = now()->year;
-        $policies = Policy::all();
-        foreach ($policies as $policy) {
-            LeaveBalance::create([
-                'user_id' => $user->id,
-                'leave_type' => $policy->leave_type,
-                'balance' => $policy->annual_entitlement,
-                'used' => 0,
-                'year' => $currentYear,
-            ]);
-        }
+        PendingRegistration::create($validated);
 
         return redirect()
             ->route('login')
-            ->with('success', 'Account created successfully. You can now sign in.');
+            ->with('success', 'Your registration has been submitted. HR will review and approve your account before you can sign in.');
     }
 }

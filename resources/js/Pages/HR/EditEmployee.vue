@@ -5,34 +5,34 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import InputLabel from '@/Components/InputLabel.vue';
-import TextInput from '@/Components/TextInput.vue';
 import InputError from '@/Components/InputError.vue';
 
 const props = defineProps({
+    employee: Object,
     departments: Array,
     roles: Array,
     employees: Array,
 });
 
 const form = useForm({
-    first_name: '',
-    last_name: '',
-    gender: '',
-    email: '',
-    password: '',
-    password_confirmation: '',
-    role: '',
-    dept_id: '',
-    manager_id: '',
+    role: props.employee.role,
+    dept_id: props.employee.dept_id ?? '',
+    manager_id: props.employee.manager_id ?? '',
 });
+
+form.transform((data) => ({
+    ...data,
+    dept_id: data.dept_id === '' || data.dept_id === null ? null : Number(data.dept_id),
+    manager_id: data.manager_id === '' || data.manager_id === null ? null : Number(data.manager_id),
+}));
 
 const employeesForDepartment = computed(() => {
     if (!form.dept_id) return [];
-    return (props.employees ?? []).filter(emp => emp.dept_id == form.dept_id);
+    return (props.employees ?? []).filter(emp => emp.dept_id == form.dept_id && emp.emp_id !== props.employee.emp_id);
 });
 
 function submit() {
-    form.post(route('hr.store-employee'));
+    form.patch(route('hr.update-employee', props.employee.emp_id));
 }
 
 function formatRole(role) {
@@ -41,7 +41,7 @@ function formatRole(role) {
 </script>
 
 <template>
-    <Head title="Add Employee" />
+    <Head title="Edit Employee" />
 
     <AuthenticatedLayout>
         <template #header>
@@ -51,7 +51,7 @@ function formatRole(role) {
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                     </svg>
                 </Link>
-                <h2 class="text-xl font-semibold leading-tight text-gray-800">Add New Employee</h2>
+                <h2 class="text-xl font-semibold leading-tight text-gray-800">Edit Employee: {{ employee.name }}</h2>
             </div>
         </template>
 
@@ -59,49 +59,11 @@ function formatRole(role) {
             <div class="mx-auto max-w-2xl sm:px-6 lg:px-8">
                 <div class="bg-white p-6 shadow sm:rounded-lg">
                     <form @submit.prevent="submit" class="space-y-6">
+                        <div class="rounded-md bg-gray-50 p-4">
+                            <p class="text-sm text-gray-600">{{ employee.name }} ({{ employee.email }})</p>
+                        </div>
+
                         <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                            <div>
-                                <InputLabel for="first_name" value="First Name" />
-                                <TextInput id="first_name" type="text" v-model="form.first_name" class="mt-1 block w-full" required />
-                                <InputError :message="form.errors.first_name" class="mt-2" />
-                            </div>
-
-                            <div>
-                                <InputLabel for="last_name" value="Last Name" />
-                                <TextInput id="last_name" type="text" v-model="form.last_name" class="mt-1 block w-full" required />
-                                <InputError :message="form.errors.last_name" class="mt-2" />
-                            </div>
-
-                            <div>
-                                <InputLabel for="gender" value="Gender (optional)" />
-                                <select
-                                    id="gender"
-                                    v-model="form.gender"
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                >
-                                    <option value="">Select</option>
-                                    <option value="M">Male</option>
-                                    <option value="F">Female</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <InputLabel for="email" value="Email Address" />
-                                <TextInput id="email" type="email" v-model="form.email" class="mt-1 block w-full" required />
-                                <InputError :message="form.errors.email" class="mt-2" />
-                            </div>
-
-                            <div>
-                                <InputLabel for="password" value="Password" />
-                                <TextInput id="password" type="password" v-model="form.password" class="mt-1 block w-full" required />
-                                <InputError :message="form.errors.password" class="mt-2" />
-                            </div>
-
-                            <div>
-                                <InputLabel for="password_confirmation" value="Confirm Password" />
-                                <TextInput id="password_confirmation" type="password" v-model="form.password_confirmation" class="mt-1 block w-full" required />
-                            </div>
-
                             <div>
                                 <InputLabel for="role" value="Role" />
                                 <select
@@ -122,9 +84,8 @@ function formatRole(role) {
                                     id="dept_id"
                                     v-model="form.dept_id"
                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                    required
                                 >
-                                    <option value="">Select Department</option>
+                                    <option value="">None</option>
                                     <option v-for="dept in departments" :key="dept.dept_id" :value="dept.dept_id">{{ dept.name }}</option>
                                 </select>
                                 <InputError :message="form.errors.dept_id" class="mt-2" />
@@ -144,15 +105,11 @@ function formatRole(role) {
                             </div>
                         </div>
 
-                        <div class="rounded-md bg-blue-50 p-4">
-                            <p class="text-sm text-blue-700">Leave balances will be automatically initialized based on current policies.</p>
-                        </div>
-
                         <div class="flex justify-end gap-3">
                             <Link :href="route('hr.employees')">
                                 <SecondaryButton type="button">Cancel</SecondaryButton>
                             </Link>
-                            <PrimaryButton :disabled="form.processing">Create Employee</PrimaryButton>
+                            <PrimaryButton :disabled="form.processing">Update Employee</PrimaryButton>
                         </div>
                     </form>
                 </div>

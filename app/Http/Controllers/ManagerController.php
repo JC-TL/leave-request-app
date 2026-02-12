@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Employee;
 use App\Models\LeaveRequest;
-use App\Models\LeaveRequestLog;
-use App\Models\Policy;
-use App\Models\User;
+use App\Models\LeaveType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -16,41 +15,37 @@ class ManagerController extends Controller
     {
         $user = Auth::user();
 
-        // Leave type for team balance card (default: Vacation Leave)
-        $leaveTypes = Policy::orderBy('leave_type')->pluck('leave_type');
-        $selectedLeaveType = $request->input('leave_type', 'Vacation Leave');
-        if (!$leaveTypes->contains($selectedLeaveType)) {
-            $selectedLeaveType = $leaveTypes->first() ?? 'Vacation Leave';
+        $leaveTypes = LeaveType::orderBy('leave_type')->pluck('leave_type', 'leave_type_id');
+        $selectedLeaveTypeId = $request->input('leave_type_id', $leaveTypes->keys()->first());
+        if (!$leaveTypes->has($selectedLeaveTypeId)) {
+            $selectedLeaveTypeId = $leaveTypes->keys()->first();
         }
 
         $currentYear = now()->year;
 
-        // get all employees in manager's department with their leave balances
-        $teamMembers = User::where('department_id', $user->department_id)
+        $teamMembers = Employee::where('dept_id', $user->dept_id)
             ->where('role', 'employee')
             ->with(['leaveBalances' => function ($query) use ($currentYear) {
-                $query->where('year', $currentYear);
+                $query->where('year', $currentYear)->with('leaveType');
             }])
             ->get();
 
-        $employeeIds = $teamMembers->pluck('id');
-        
-        // get pending requests from team members (preserve leave_type when paginating)
-        $pendingRequests = LeaveRequest::whereIn('employee_id', $employeeIds)
+        $employeeIds = $teamMembers->pluck('emp_id');
+
+        $pendingRequests = LeaveRequest::whereIn('emp_id', $employeeIds)
             ->pending()
-            ->with('employee')
+            ->with(['employee', 'leaveType'])
             ->orderBy('created_at', 'desc')
             ->paginate(10)
             ->withQueryString();
 
-        $pendingCount = LeaveRequest::whereIn('employee_id', $employeeIds)
+        $pendingCount = LeaveRequest::whereIn('emp_id', $employeeIds)
             ->pending()
             ->count();
-        
-        // Count how many requests manager approved this month
-        $approvedThisMonth = LeaveRequest::whereIn('employee_id', $employeeIds)
+
+        $approvedThisMonth = LeaveRequest::whereIn('emp_id', $employeeIds)
             ->whereNotNull('approved_by_dept_at')
-            ->where('approved_by_dept_manager_id', $user->id)
+            ->where('approved_by_dept_manager_id', $user->emp_id)
             ->whereMonth('approved_by_dept_at', now()->month)
             ->whereYear('approved_by_dept_at', now()->year)
             ->count();
@@ -64,7 +59,7 @@ class ManagerController extends Controller
             'approvedThisMonth' => $approvedThisMonth,
             'teamCount' => $teamCount,
             'leaveTypes' => $leaveTypes,
-            'selectedLeaveType' => $selectedLeaveType,
+            'selectedLeaveTypeId' => $selectedLeaveTypeId,
             'user' => $user,
         ]);
     }
@@ -72,17 +67,16 @@ class ManagerController extends Controller
     public function showRequest($id)
     {
         $user = Auth::user();
-        
-        $leaveRequest = LeaveRequest::with(['employee', 'employee.department'])
+
+        $leaveRequest = LeaveRequest::with(['employee', 'employee.department', 'leaveType'])
             ->findOrFail($id);
 
-        // Security check - only view requests from own department
-        if ($leaveRequest->employee->department_id !== $user->department_id) {
+        if ($leaveRequest->employee->dept_id !== $user->dept_id) {
             abort(403, 'Unauthorized access.');
         }
 
         $currentYear = now()->year;
-        $balance = $leaveRequest->employee->getLeaveBalance($leaveRequest->leave_type, $currentYear);
+        $balance = $leaveRequest->employee->getLeaveBalance($leaveRequest->leave_type_id, $currentYear);
 
         return Inertia::render('Manager/ShowRequest', [
             'leaveRequest' => $leaveRequest,
@@ -93,32 +87,30 @@ class ManagerController extends Controller
     public function approveRequest(Request $request, $id)
     {
         $user = Auth::user();
-        $leaveRequest = LeaveRequest::with('employee')->findOrFail($id);
+        $leaveRequest = LeaveRequest::with(['employee', 'leaveType'])->findOrFail($id);
 
-        // Make sure it's from their department
-        if ($leaveRequest->employee->department_id !== $user->department_id) {
+        if ($leaveRequest->employee->dept_id !== $user->dept_id) {
             abort(403, 'Unauthorized access.');
         }
 
-        // Can only approve pending requests
         if (!$leaveRequest->isPending()) {
             return back()
                 ->withErrors(['error' => 'This request cannot be approved.']);
         }
 
-        // Check that total reserved (pending + manager-approved) does not exceed balance - used
+        $leaveType = $leaveRequest->leaveType;
         $currentYear = now()->year;
-        $balance = $leaveRequest->employee->getLeaveBalance($leaveRequest->leave_type, $currentYear);
-        $pendingDays = $leaveRequest->employee->getPendingLeaveDays($leaveRequest->leave_type, $currentYear);
-        if (!$balance || $balance->getAvailableBalance() < $pendingDays) {
+        $balance = $leaveRequest->employee->getLeaveBalance($leaveRequest->leave_type_id, $currentYear);
+        $pendingDays = $leaveRequest->employee->getPendingLeaveDays($leaveRequest->leave_type_id, $currentYear);
+
+        if (!$leaveType?->isCreditedOnApproval() && (!$balance || $balance->getAvailableBalance() < $pendingDays)) {
             return back()
                 ->withErrors(['error' => 'Employee has insufficient balance for this request.']);
         }
 
-        // Approve the request
         $leaveRequest->update([
             'status' => 'dept_manager_approved',
-            'approved_by_dept_manager_id' => $user->id,
+            'approved_by_dept_manager_id' => $user->emp_id,
             'dept_manager_comment' => $request->input('comment'),
             'approved_by_dept_at' => now(),
         ]);
@@ -133,8 +125,7 @@ class ManagerController extends Controller
         $user = Auth::user();
         $leaveRequest = LeaveRequest::with('employee')->findOrFail($id);
 
-        // Department check
-        if ($leaveRequest->employee->department_id !== $user->department_id) {
+        if ($leaveRequest->employee->dept_id !== $user->dept_id) {
             abort(403, 'Unauthorized access.');
         }
 
@@ -147,25 +138,11 @@ class ManagerController extends Controller
             'reason' => 'required|string|max:500',
         ]);
 
-        // Get old status before update
-        $oldStatus = $leaveRequest->status;
-
-        // Balance is only deducted when HR approves, so nothing to restore
         $leaveRequest->update([
             'status' => 'dept_manager_rejected',
             'dept_manager_comment' => $validated['reason'],
             'rejected_at' => now(),
         ]);
-
-        // Log the rejection
-        LeaveRequestLog::createLog(
-            $leaveRequest->id,
-            $user->id,
-            'manager_rejected',
-            $oldStatus,
-            'dept_manager_rejected',
-            $validated['reason']
-        );
 
         return redirect()
             ->route('manager.dashboard')

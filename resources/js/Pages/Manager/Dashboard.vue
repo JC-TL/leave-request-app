@@ -1,7 +1,8 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link, router } from '@inertiajs/vue3';
-import { ref, watch } from 'vue';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { getLeaveTypeName } from '@/utils/leaveType';
+import { ref, watch, computed } from 'vue';
 
 const props = defineProps({
     pendingRequests: Object,
@@ -9,15 +10,18 @@ const props = defineProps({
     pendingCount: Number,
     approvedThisMonth: Number,
     teamCount: Number,
-    leaveTypes: Array,
-    selectedLeaveType: String,
+    leaveTypes: Object,
+    selectedLeaveTypeId: [Number, String],
     user: Object,
 });
 
-const selectedType = ref(props.selectedLeaveType);
+const page = usePage();
+const departmentColor = computed(() => page.props.auth.departmentColor);
 
-watch(selectedType, (newValue) => {
-    router.get(route('manager.dashboard'), { leave_type: newValue }, { preserveState: true });
+const selectedTypeId = ref(props.selectedLeaveTypeId);
+
+watch(selectedTypeId, (newValue) => {
+    router.get(route('manager.dashboard'), { leave_type_id: newValue }, { preserveState: true });
 });
 
 function formatDate(dateString) {
@@ -29,10 +33,10 @@ function formatDate(dateString) {
 }
 
 function getTeamMemberBalance(member) {
-    const balance = member.leave_balances?.find(b => b.leave_type === selectedType.value);
+    const balance = member.leave_balances?.find(b => b.leave_type_id == selectedTypeId.value);
     return {
-        available: balance ? Math.max(0, balance.balance - balance.used) : 0,
-        total: balance ? balance.balance : 0
+        available: balance ? Math.max(0, balance.allocated_days - balance.used_days) : 0,
+        total: balance ? balance.allocated_days : 0
     };
 }
 
@@ -52,24 +56,24 @@ function isLowBalance(member) {
 
         <div class="py-12">
             <div class="mx-auto max-w-7xl space-y-6 sm:px-6 lg:px-8">
-                <!-- Stats Cards -->
+                <!-- Stats Cards with Department Color Accent -->
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                    <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6">
+                    <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6 border-t-4" :style="{ borderTopColor: departmentColor }">
                         <dt class="truncate text-sm font-medium text-gray-500">Pending Approvals</dt>
                         <dd class="mt-1 text-3xl font-semibold tracking-tight text-yellow-600">{{ pendingCount }}</dd>
                     </div>
-                    <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6">
+                    <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6 border-t-4" :style="{ borderTopColor: departmentColor }">
                         <dt class="truncate text-sm font-medium text-gray-500">Approved This Month</dt>
                         <dd class="mt-1 text-3xl font-semibold tracking-tight text-green-600">{{ approvedThisMonth }}</dd>
                     </div>
-                    <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6">
+                    <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6 border-t-4" :style="{ borderTopColor: departmentColor }">
                         <dt class="truncate text-sm font-medium text-gray-500">Team Members</dt>
-                        <dd class="mt-1 text-3xl font-semibold tracking-tight text-gray-900">{{ teamCount }}</dd>
+                        <dd class="mt-1 text-3xl font-semibold tracking-tight" :style="{ color: departmentColor }">{{ teamCount }}</dd>
                     </div>
                 </div>
 
                 <!-- Pending Requests -->
-                <div class="bg-white p-6 shadow sm:rounded-lg">
+                <div class="bg-white p-6 shadow sm:rounded-lg border-t-4" :style="{ borderTopColor: departmentColor }">
                     <h3 class="mb-4 text-lg font-medium text-gray-900">Pending Requests from My Team</h3>
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200">
@@ -84,9 +88,9 @@ function isLowBalance(member) {
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200 bg-white">
-                                <tr v-for="request in pendingRequests.data" :key="request.id">
-                                    <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">{{ request.employee.name }}</td>
-                                    <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{{ request.leave_type }}</td>
+                                <tr v-for="request in pendingRequests.data" :key="request.leave_request_id">
+                                    <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">{{ request.employee?.name ?? '—' }}</td>
+                                    <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{{ getLeaveTypeName(request) }}</td>
                                     <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
                                         {{ formatDate(request.start_date) }} - {{ formatDate(request.end_date) }}
                                     </td>
@@ -94,7 +98,7 @@ function isLowBalance(member) {
                                     <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{{ formatDate(request.created_at) }}</td>
                                     <td class="whitespace-nowrap px-6 py-4 text-sm">
                                         <Link
-                                            :href="route('manager.show-request', request.id)"
+                                            :href="route('manager.show-request', request.leave_request_id)"
                                             class="text-indigo-600 hover:text-indigo-900"
                                         >
                                             View Details
@@ -110,18 +114,18 @@ function isLowBalance(member) {
                 </div>
 
                 <!-- Team Members -->
-                <div class="bg-white p-6 shadow sm:rounded-lg">
+                <div class="bg-white p-6 shadow sm:rounded-lg border-t-4" :style="{ borderTopColor: departmentColor }">
                     <div class="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                         <h3 class="text-lg font-medium text-gray-900">Team Members</h3>
                         <div class="flex items-center gap-2">
-                            <label for="leave_type" class="text-sm text-gray-700">Leave type:</label>
+                            <label for="leave_type_id" class="text-sm text-gray-700">Leave type:</label>
                             <select
-                                id="leave_type"
-                                v-model="selectedType"
+                                id="leave_type_id"
+                                v-model="selectedTypeId"
                                 class="rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                             >
-                                <option v-for="leaveType in leaveTypes" :key="leaveType" :value="leaveType">
-                                    {{ leaveType }}
+                                <option v-for="(label, id) in leaveTypes" :key="id" :value="id">
+                                    {{ label }}
                                 </option>
                             </select>
                         </div>
@@ -139,7 +143,7 @@ function isLowBalance(member) {
                             <tbody class="divide-y divide-gray-200 bg-white">
                                 <tr
                                     v-for="member in teamMembers"
-                                    :key="member.id"
+                                    :key="member.emp_id"
                                     :class="{ 'bg-yellow-50': isLowBalance(member) }"
                                 >
                                     <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">{{ member.name }}</td>

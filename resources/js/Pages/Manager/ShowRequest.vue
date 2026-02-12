@@ -1,5 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import { getLeaveTypeName } from '@/utils/leaveType';
+import { getRelationName } from '@/utils/relations';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import DangerButton from '@/Components/DangerButton.vue';
@@ -17,10 +19,10 @@ const rejectForm = useForm({ reason: '' });
 
 const availableBalance = computed(() => {
     if (!props.balance) return 0;
-    return Math.max(0, props.balance.balance - props.balance.used);
+    return Math.max(0, props.balance.allocated_days - props.balance.used_days);
 });
 
-const totalBalance = computed(() => props.balance?.balance ?? 0);
+const totalBalance = computed(() => props.balance?.allocated_days ?? 0);
 
 function formatDate(dateString) {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -31,6 +33,7 @@ function formatDate(dateString) {
 }
 
 function formatDateTime(dateString) {
+    if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',
@@ -42,11 +45,11 @@ function formatDateTime(dateString) {
 }
 
 function approve() {
-    approveForm.patch(route('manager.approve-request', props.leaveRequest.id));
+    approveForm.patch(route('manager.approve-request', props.leaveRequest.leave_request_id));
 }
 
 function reject() {
-    rejectForm.patch(route('manager.reject-request', props.leaveRequest.id));
+    rejectForm.patch(route('manager.reject-request', props.leaveRequest.leave_request_id));
 }
 </script>
 
@@ -73,15 +76,15 @@ function reject() {
                     <dl class="grid grid-cols-1 gap-4 sm:grid-cols-3">
                         <div>
                             <dt class="text-sm font-medium text-gray-500">Name</dt>
-                            <dd class="mt-1 text-sm text-gray-900">{{ leaveRequest.employee.name }}</dd>
+                            <dd class="mt-1 text-sm text-gray-900">{{ leaveRequest.employee?.name ?? '—' }}</dd>
                         </div>
                         <div>
                             <dt class="text-sm font-medium text-gray-500">Department</dt>
-                            <dd class="mt-1 text-sm text-gray-900">{{ leaveRequest.employee.department?.name ?? 'N/A' }}</dd>
+                            <dd class="mt-1 text-sm text-gray-900">{{ getRelationName(leaveRequest.employee, 'department') ?? 'N/A' }}</dd>
                         </div>
                         <div>
                             <dt class="text-sm font-medium text-gray-500">Email</dt>
-                            <dd class="mt-1 text-sm text-gray-900">{{ leaveRequest.employee.email }}</dd>
+                            <dd class="mt-1 text-sm text-gray-900">{{ leaveRequest.employee?.email ?? '—' }}</dd>
                         </div>
                     </dl>
                 </div>
@@ -92,7 +95,7 @@ function reject() {
                     <dl class="grid grid-cols-1 gap-4 sm:grid-cols-3">
                         <div>
                             <dt class="text-sm font-medium text-gray-500">Leave Type</dt>
-                            <dd class="mt-1 text-sm text-gray-900">{{ leaveRequest.leave_type }}</dd>
+                            <dd class="mt-1 text-sm text-gray-900">{{ getLeaveTypeName(leaveRequest) }}</dd>
                         </div>
                         <div>
                             <dt class="text-sm font-medium text-gray-500">Dates</dt>

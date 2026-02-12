@@ -29,10 +29,15 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+        
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $user,
+                'departmentColor' => $user && $user->department 
+                    ? $user->department->color 
+                    : '#6366f1', // Default indigo color as fallback
             ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),

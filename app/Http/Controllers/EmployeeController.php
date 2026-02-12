@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-
 use App\Models\LeaveRequest;
-use App\Models\LeaveRequestLog;
+use App\Models\LeaveType;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -15,21 +14,24 @@ class EmployeeController extends Controller
     public function dashboard()
     {
         $user = Auth::user();
-        // Get current year for filtering balances
         $currentYear = now()->year;
 
-        // Fetch user's leave balances for this year with available days (after reserved pending requests)
         $balances = $user->leaveBalances()
+            ->with('leaveType')
             ->where('year', $currentYear)
-            ->orderBy('leave_type')
+            ->orderBy('leave_type_id')
             ->get()
             ->map(function ($balance) use ($user, $currentYear) {
-                $pendingDays = $user->getPendingLeaveDays($balance->leave_type, $currentYear);
+                $pendingDays = $user->getPendingLeaveDays($balance->leave_type_id, $currentYear);
                 $balance->available_days = max(0, $balance->getAvailableBalance() - $pendingDays);
+                $balance->is_credited_on_approval = $balance->leaveType?->isCreditedOnApproval() ?? false;
+                $balance->is_start_date_only = $balance->leaveType?->isStartDateOnly() ?? false;
+                $balance->default_duration_days = $balance->leaveType?->default_duration_days;
                 return $balance;
             });
 
         $requests = $user->leaveRequests()
+            ->with('leaveType')
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
@@ -42,63 +44,70 @@ class EmployeeController extends Controller
 
     public function storeRequest(Request $request)
     {
-        // Validate the incoming request
-        $validated = $request->validate([
-            'leave_type' => 'required|string',
-            'start_date' => 'required|date|after_or_equal:today',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'reason' => 'required|string|max:1000',
-        ]);
-
         $user = Auth::user();
-        $currentYear = now()->year;
-        
-        // Parse dates and calculate working days (excludes weekends)
+        $leaveType = LeaveType::find($request->input('leave_type_id'));
+
+        if (!$leaveType) {
+            return back()->withErrors(['leave_type_id' => 'Invalid leave type.'])->withInput();
+        }
+
+        $rules = [
+            'leave_type_id' => 'required|integer|exists:leave_types,leave_type_id',
+            'start_date' => 'required|date|after_or_equal:today',
+            'reason' => 'required|string|max:1000',
+        ];
+
+        if ($leaveType->isPaternity()) {
+            if ($user->gender !== 'M') {
+                return back()->withErrors(['leave_type_id' => 'Paternity Leave is only available for male employees.'])->withInput();
+            }
+            // Paternity: start date only, end_date calculated from default_duration_days
+        } elseif ($leaveType->isMaternity()) {
+            if ($user->gender !== 'F') {
+                return back()->withErrors(['leave_type_id' => 'Maternity Leave is only available for female employees.'])->withInput();
+            }
+            if (!$leaveType->isStartDateOnly()) {
+                $rules['end_date'] = 'required|date|after_or_equal:start_date';
+            }
+        } else {
+            $rules['end_date'] = 'required|date|after_or_equal:start_date';
+        }
+
+        $validated = $request->validate($rules);
+
         $startDate = Carbon::parse($validated['start_date']);
-        $endDate = Carbon::parse($validated['end_date']);
-        $numberOfDays = $this->calculateWorkingDays($startDate, $endDate);
+        $endDate = null;
+        $numberOfDays = 0;
 
-        // Check if user has balance for this leave type
-        $balance = $user->getLeaveBalance($validated['leave_type'], $currentYear);
-        
-        if (!$balance) {
-            return back()
-                ->withErrors(['leave_type' => 'No leave balance found for this leave type.'])
-                ->withInput();
+        if ($leaveType->isStartDateOnly()) {
+            $endDate = $startDate->copy()->addWeekdays($leaveType->default_duration_days - 1);
+            $numberOfDays = (int) $leaveType->default_duration_days;
+        } else {
+            $endDate = Carbon::parse($validated['end_date']);
+            $numberOfDays = $this->calculateWorkingDays($startDate, $endDate);
         }
 
-        // Available = balance minus used minus days already reserved by pending/manager-approved requests
-        $pendingDays = $user->getPendingLeaveDays($validated['leave_type'], $currentYear);
-        $available = max(0, $balance->getAvailableBalance() - $pendingDays);
-
-        if ($available < $numberOfDays) {
-            return back()
-                ->withErrors([
-                    'leave_type' => "Insufficient balance. You have {$available} days available (after pending requests)."
-                ])
-                ->withInput();
+        if (!$leaveType->isCreditedOnApproval()) {
+            $balance = $user->getLeaveBalance((int) $validated['leave_type_id'], now()->year);
+            if (!$balance) {
+                return back()->withErrors(['leave_type_id' => 'No leave balance found for this leave type.'])->withInput();
+            }
+            $pendingDays = $user->getPendingLeaveDays((int) $validated['leave_type_id'], now()->year);
+            $available = max(0, $balance->getAvailableBalance() - $pendingDays);
+            if ($available < $numberOfDays) {
+                return back()->withErrors(['leave_type_id' => "Insufficient balance. You have {$available} days available."])->withInput();
+            }
         }
 
-        // Create the leave request (balance is only deducted when HR approves)
-        $leaveRequest = LeaveRequest::create([
-            'employee_id' => $user->id,
-            'leave_type' => $validated['leave_type'],
+        LeaveRequest::create([
+            'emp_id' => $user->emp_id,
+            'leave_type_id' => $validated['leave_type_id'],
             'start_date' => $validated['start_date'],
-            'end_date' => $validated['end_date'],
+            'end_date' => $endDate->format('Y-m-d'),
             'reason' => $validated['reason'],
             'number_of_days' => $numberOfDays,
             'status' => 'pending',
         ]);
-
-        // Log the creation
-        LeaveRequestLog::createLog(
-            $leaveRequest->id,
-            $user->id,
-            'created',
-            null,
-            'pending',
-            $validated['reason']
-        );
 
         return redirect()
             ->route('employee.dashboard')
@@ -110,28 +119,15 @@ class EmployeeController extends Controller
         $user = Auth::user();
         $leaveRequest = LeaveRequest::findOrFail($id);
 
-        // Security check - make sure they can only cancel their own requests
-        if ($leaveRequest->employee_id !== $user->id) {
+        if ($leaveRequest->emp_id !== $user->emp_id) {
             abort(403, 'Unauthorized action.');
         }
 
-        // Can only cancel if still pending
         if (!$leaveRequest->isPending()) {
             return back()
                 ->withErrors(['error' => 'Only pending requests can be cancelled.']);
         }
 
-        // Log the cancellation before deleting (soft delete)
-        LeaveRequestLog::createLog(
-            $leaveRequest->id,
-            $user->id,
-            'cancelled',
-            $leaveRequest->status,
-            'cancelled',
-            'Cancelled by employee'
-        );
-
-        // Balance was never deducted (only deducted when HR approves), so nothing to restore
         $leaveRequest->delete();
 
         return redirect()
@@ -139,14 +135,12 @@ class EmployeeController extends Controller
             ->with('success', 'Leave request cancelled successfully.');
     }
 
-    // Calculate working days excluding weekends
-    private function calculateWorkingDays(Carbon $startDate, Carbon $endDate)
+    private function calculateWorkingDays(Carbon $startDate, Carbon $endDate): int
     {
         $days = 0;
         $current = $startDate->copy();
 
         while ($current->lte($endDate)) {
-            // Skip weekends
             if (!in_array($current->dayOfWeek, [Carbon::SATURDAY, Carbon::SUNDAY])) {
                 $days++;
             }

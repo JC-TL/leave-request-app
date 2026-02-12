@@ -10,29 +10,29 @@ import InputError from '@/Components/InputError.vue';
 import { ref } from 'vue';
 
 const props = defineProps({
-    policies: Array,
+    leaveTypes: Array,
 });
 
 const showModal = ref(false);
-const editingPolicy = ref(null);
+const editingLeaveType = ref(null);
 const form = useForm({
     annual_entitlement: 0,
 });
 
-function openEditModal(policy) {
-    editingPolicy.value = policy;
-    form.annual_entitlement = policy.annual_entitlement;
+function openEditModal(leaveType) {
+    editingLeaveType.value = leaveType;
+    form.annual_entitlement = leaveType.annual_entitlement;
     showModal.value = true;
 }
 
 function closeModal() {
     showModal.value = false;
-    editingPolicy.value = null;
+    editingLeaveType.value = null;
     form.reset();
 }
 
 function submitUpdate() {
-    form.patch(route('hr.update-policy', editingPolicy.value.id), {
+    form.patch(route('hr.update-policy', editingLeaveType.value.leave_type_id), {
         onSuccess: () => closeModal(),
     });
 }
@@ -59,17 +59,17 @@ function submitUpdate() {
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200 bg-white">
-                                <tr v-for="policy in policies" :key="policy.id">
-                                    <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">{{ policy.leave_type }}</td>
-                                    <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{{ policy.annual_entitlement }}</td>
+                                <tr v-for="lt in leaveTypes" :key="lt.leave_type_id">
+                                    <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">{{ lt.leave_type }}</td>
+                                    <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{{ lt.annual_entitlement }}</td>
                                     <td class="whitespace-nowrap px-6 py-4 text-right text-sm">
-                                        <button @click="openEditModal(policy)" class="text-indigo-600 hover:text-indigo-900">
+                                        <button @click="openEditModal(lt)" class="text-indigo-600 hover:text-indigo-900">
                                             Edit
                                         </button>
                                     </td>
                                 </tr>
-                                <tr v-if="policies.length === 0">
-                                    <td colspan="3" class="px-6 py-4 text-center text-sm text-gray-500">No policies found.</td>
+                                <tr v-if="leaveTypes.length === 0">
+                                    <td colspan="3" class="px-6 py-4 text-center text-sm text-gray-500">No leave types found.</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -81,7 +81,7 @@ function submitUpdate() {
         <!-- Edit Modal -->
         <Modal :show="showModal" @close="closeModal">
             <div class="p-6">
-                <h2 class="text-lg font-medium text-gray-900">Edit Policy: {{ editingPolicy?.leave_type }}</h2>
+                <h2 class="text-lg font-medium text-gray-900">Edit Policy: {{ editingLeaveType?.leave_type }}</h2>
                 <form @submit.prevent="submitUpdate" class="mt-6">
                     <div>
                         <InputLabel for="annual_entitlement" value="Annual Entitlement (Days)" />

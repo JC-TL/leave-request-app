@@ -1,13 +1,15 @@
 <?php
 
-use App\Models\Department;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-
+    /**
+     * Creates users, sessions, password_reset_tokens.
+     * Note: These are dropped and replaced by restructure migration (employees, etc.)
+     */
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
@@ -18,8 +20,8 @@ return new class extends Migration
             $table->rememberToken();
             $table->string('email')->unique();
             $table->enum('role', ['employee', 'dept_manager', 'hr_admin', 'ceo']);
-            $table->foreignIdFor(Department::class)->nullable();
-            $table->foreignId('manager_id')->nullable()->constrained('users')->onDelete('set null');
+            $table->unsignedBigInteger('department_id')->nullable();
+            $table->unsignedBigInteger('manager_id')->nullable();
             $table->timestamps();
         });
 

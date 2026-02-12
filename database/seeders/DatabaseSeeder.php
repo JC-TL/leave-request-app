@@ -9,9 +9,9 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            PolicySeeder::class,
+            LeaveTypeSeeder::class,
             DepartmentSeeder::class,
-            UserSeeder::class,
+            EmployeeSeeder::class,
         ]);
 
         $this->command->info('');

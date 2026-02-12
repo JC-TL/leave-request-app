@@ -11,6 +11,7 @@ const showingNavigationDropdown = ref(false);
 const page = usePage();
 const user = computed(() => page.props.auth.user);
 const flash = computed(() => page.props.flash);
+const departmentColor = computed(() => page.props.auth.departmentColor);
 
 const dashboardRoute = computed(() => {
     switch (user.value?.role) {
@@ -38,7 +39,7 @@ const isHR = computed(() => ['hr_admin', 'ceo'].includes(user.value?.role));
 <template>
     <div>
         <div class="min-h-screen bg-gray-100/85">
-            <nav class="border-b border-gray-100 bg-white">
+            <nav class="border-b border-gray-100 bg-white" :style="{ borderTopColor: departmentColor, borderTopWidth: '3px' }">
                 <!-- Primary Navigation Menu -->
                 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div class="flex h-16 justify-between">
@@ -57,13 +58,23 @@ const isHR = computed(() => ['hr_admin', 'ceo'].includes(user.value?.role));
                                     <NavLink :href="route('hr.employees')" :active="route().current('hr.employees')">
                                         Employees
                                     </NavLink>
+                                    <NavLink :href="route('hr.departments')" :active="route().current('hr.departments')">
+                                        Departments
+                                    </NavLink>
                                 </template>
                             </div>
                         </div>
 
                         <div class="hidden sm:ms-6 sm:flex sm:items-center">
-                            <!-- Role Badge -->
-                            <span class="mr-4 rounded-full bg-indigo-100 px-3 py-1 text-xs font-medium text-indigo-800">
+                            <!-- Role Badge with Dynamic Department Color -->
+                            <span 
+                                :style="{ 
+                                    backgroundColor: departmentColor + '15',
+                                    color: departmentColor,
+                                    borderColor: departmentColor + '40'
+                                }"
+                                class="mr-4 rounded-full border px-3 py-1 text-xs font-medium"
+                            >
                                 {{ roleLabel }}
                             </span>
                             
@@ -74,7 +85,9 @@ const isHR = computed(() => ['hr_admin', 'ceo'].includes(user.value?.role));
                                         <span class="inline-flex rounded-md">
                                             <button
                                                 type="button"
-                                                class="inline-flex items-center justify-center rounded-md p-2 text-gray-500 transition duration-150 ease-in-out hover:bg-gray-100 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
+                                                :style="{ '--focus-ring-color': departmentColor }"
+                                                class="inline-flex items-center justify-center rounded-md p-2 text-gray-500 transition duration-150 ease-in-out hover:bg-gray-100 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-1"
+                                                style="--tw-ring-color: var(--focus-ring-color)"
                                                 aria-label="Open menu"
                                             >
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
@@ -131,8 +144,8 @@ const isHR = computed(() => ['hr_admin', 'ceo'].includes(user.value?.role));
                             <ResponsiveNavLink :href="route('hr.employees')" :active="route().current('hr.employees')">
                                 Employees
                             </ResponsiveNavLink>
-                            <ResponsiveNavLink :href="route('hr.employees')" :active="route().current('hr.employees')">
-                                Pending
+                            <ResponsiveNavLink :href="route('hr.departments')" :active="route().current('hr.departments')">
+                                Departments
                             </ResponsiveNavLink>
                         </template>
                     </div>
@@ -153,7 +166,14 @@ const isHR = computed(() => ['hr_admin', 'ceo'].includes(user.value?.role));
                 </div>
             </nav>
 
-            <!-- Flash Messages -->
+            <!-- Page Heading -->
+            <header class="bg-white shadow" v-if="$slots.header">
+                <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+                    <slot name="header" />
+                </div>
+            </header>
+
+            <!-- Flash Messages (after header) -->
             <div v-if="flash?.success" class="mx-auto mt-4 max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div class="rounded-md bg-green-50 p-4">
                     <div class="flex">
@@ -168,13 +188,20 @@ const isHR = computed(() => ['hr_admin', 'ceo'].includes(user.value?.role));
                     </div>
                 </div>
             </div>
-
-            <!-- Page Heading -->
-            <header class="bg-white shadow" v-if="$slots.header">
-                <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-                    <slot name="header" />
+            <div v-if="flash?.error" class="mx-auto mt-4 max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div class="rounded-md bg-red-50 p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm font-medium text-red-800">{{ flash.error }}</p>
+                        </div>
+                    </div>
                 </div>
-            </header>
+            </div>
 
             <!-- Page Content -->
             <main>

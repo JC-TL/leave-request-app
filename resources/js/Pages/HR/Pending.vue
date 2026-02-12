@@ -1,6 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
+import { getRelationName } from '@/utils/relations';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 
 const props = defineProps({
@@ -46,7 +47,7 @@ function formatRole(role) {
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200 bg-white">
-                                <tr v-for="employee in employees.data" :key="employee.id">
+                                <tr v-for="employee in employees.data" :key="employee.emp_id">
                                     <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">{{ employee.name }}</td>
                                     <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{{ employee.email }}</td>
                                     <td class="whitespace-nowrap px-6 py-4">
@@ -58,10 +59,10 @@ function formatRole(role) {
                                         </span>
                                     </td>
                                     <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                                        {{ employee.department?.name ?? 'N/A' }}
+                                        {{ getRelationName(employee, 'department') ?? 'N/A' }}
                                     </td>
                                     <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                                        {{ employee.manager?.name ?? 'N/A' }}
+                                        {{ getRelationName(employee, 'manager') ?? 'N/A' }}
                                     </td>
                                 </tr>
                                 <tr v-if="employees.data.length === 0">

@@ -9,6 +9,8 @@ class Department extends Model
 {
     use HasFactory;
 
+    protected $primaryKey = 'dept_id';
+
     protected $fillable = [
         'name',
         'color',
@@ -17,11 +19,11 @@ class Department extends Model
 
     public function manager()
     {
-        return $this->belongsTo(User::class, 'dept_manager_id');
+        return $this->belongsTo(Employee::class, 'dept_manager_id');
     }
 
     public function employees()
     {
-        return $this->hasMany(User::class);
+        return $this->hasMany(Employee::class, 'dept_id');
     }
 }

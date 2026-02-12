@@ -1,6 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, useForm, router } from '@inertiajs/vue3';
+import { Head, useForm, router, usePage } from '@inertiajs/vue3';
+import { getLeaveTypeName } from '@/utils/leaveType';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import DangerButton from '@/Components/DangerButton.vue';
 import InputLabel from '@/Components/InputLabel.vue';
@@ -14,8 +15,11 @@ const props = defineProps({
     user: Object,
 });
 
+const page = usePage();
+const departmentColor = computed(() => page.props.auth.departmentColor);
+
 const form = useForm({
-    leave_type: '',
+    leave_type_id: '',
     start_date: '',
     end_date: '',
     reason: '',
@@ -24,22 +28,51 @@ const form = useForm({
 const today = computed(() => new Date().toISOString().split('T')[0]);
 
 function getAvailableBalance(balance) {
-    // Backend sends available_days (balance - used - pending request days) when not yet deducted until HR approval
-    const available = balance.available_days ?? Math.max(0, balance.balance - balance.used);
+    const available = balance.available_days ?? Math.max(0, balance.allocated_days - balance.used_days);
     return Math.max(0, available);
 }
 
+const isMale = computed(() => props.user?.gender === 'M');
+const isFemale = computed(() => props.user?.gender === 'F');
+
+const paternityBalance = computed(() =>
+    props.balances.find(b => getLeaveTypeName(b) === 'Paternity Leave')
+);
+const maternityBalance = computed(() =>
+    props.balances.find(b => getLeaveTypeName(b) === 'Maternity Leave')
+);
+
 const availableBalances = computed(() => {
-    return props.balances.filter(b => getAvailableBalance(b) > 0);
+    const withBalance = props.balances.filter(b => getAvailableBalance(b) > 0);
+    const paternity = isMale.value && paternityBalance.value;
+    const maternity = isFemale.value && maternityBalance.value;
+    const extras = [];
+    if (paternity && !withBalance.some(b => b.leave_type_id === paternity.leave_type_id)) extras.push(paternity);
+    if (maternity && !withBalance.some(b => b.leave_type_id === maternity.leave_type_id)) extras.push(maternity);
+    return [...withBalance, ...extras];
 });
 
 const hasBalance = computed(() => {
-    return props.balances.some(b => b.balance > 0);
+    return props.balances.some(b => b.allocated_days > 0) ||
+        (isMale.value && paternityBalance.value) ||
+        (isFemale.value && maternityBalance.value);
+});
+
+const isStartDateOnly = computed(() => {
+    const selected = props.balances.find(b => b.leave_type_id == form.leave_type_id);
+    return selected?.is_start_date_only ?? false;
+});
+
+const startDateOnlyLabel = computed(() => {
+    const selected = props.balances.find(b => b.leave_type_id == form.leave_type_id);
+    if (!selected?.is_start_date_only || !selected?.default_duration_days) return '';
+    const typeName = getLeaveTypeName(selected);
+    return `End date is set automatically (${selected.default_duration_days} working days for ${typeName}).`;
 });
 
 function getBalanceColor(balance) {
     const available = getAvailableBalance(balance);
-    const total = balance.balance;
+    const total = balance.allocated_days;
     const percentage = total > 0 ? (available / total) * 100 : 0;
     
     if (available === 0) return 'bg-gray-100 text-gray-400';
@@ -98,16 +131,16 @@ function getStatusBadge(status) {
         <div class="py-12">
             <div class="mx-auto max-w-7xl space-y-6 sm:px-6 lg:px-8">
                 <!-- Leave Balances -->
-                <div class="bg-white p-6 shadow sm:rounded-lg">
+                <div class="bg-white p-6 shadow sm:rounded-lg border-t-4" :style="{ borderTopColor: departmentColor }">
                     <h3 class="mb-4 text-lg font-medium text-gray-900">Leave Balances</h3>
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                         <div
                             v-for="balance in balances"
-                            :key="balance.id"
+                            :key="balance.balance_id"
                             :class="['rounded-lg border p-4', getBalanceColor(balance)]"
                         >
-                            <h4 class="text-sm font-medium">{{ balance.leave_type }}</h4>
-                            <p class="mt-2 text-2xl font-bold">{{ getAvailableBalance(balance) }} / {{ balance.balance }}</p>
+                            <h4 class="text-sm font-medium">{{ getLeaveTypeName(balance) }}</h4>
+                            <p class="mt-2 text-2xl font-bold">{{ getAvailableBalance(balance) }} / {{ balance.allocated_days }}</p>
                             <p class="text-xs opacity-70">Available / Total</p>
                         </div>
                         <p v-if="balances.length === 0" class="col-span-full text-center text-gray-500">
@@ -117,23 +150,23 @@ function getStatusBadge(status) {
                 </div>
 
                 <!-- Submit Leave Request Form -->
-                <div v-if="hasBalance" class="bg-white p-6 shadow sm:rounded-lg">
+                <div v-if="hasBalance" class="bg-white p-6 shadow sm:rounded-lg border-t-4" :style="{ borderTopColor: departmentColor }">
                     <h3 class="mb-4 text-lg font-medium text-gray-900">Submit Leave Request</h3>
                     <form @submit.prevent="submit" class="space-y-4">
                         <div>
-                            <InputLabel for="leave_type" value="Leave Type" />
+                            <InputLabel for="leave_type_id" value="Leave Type" />
                             <select
-                                id="leave_type"
-                                v-model="form.leave_type"
+                                id="leave_type_id"
+                                v-model="form.leave_type_id"
                                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                                 required
                             >
                                 <option value="">Select Leave Type</option>
-                                <option v-for="balance in availableBalances" :key="balance.id" :value="balance.leave_type">
-                                    {{ balance.leave_type }} ({{ getAvailableBalance(balance) }} days available)
+                                <option v-for="balance in availableBalances" :key="balance.balance_id" :value="balance.leave_type_id">
+                                    {{ getLeaveTypeName(balance) }} ({{ balance.is_credited_on_approval ? 'HR will credit on approval' : getAvailableBalance(balance) + ' days available' }})
                                 </option>
                             </select>
-                            <InputError :message="form.errors.leave_type" class="mt-2" />
+                            <InputError :message="form.errors.leave_type_id" class="mt-2" />
                         </div>
 
                         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -149,7 +182,7 @@ function getStatusBadge(status) {
                                 />
                                 <InputError :message="form.errors.start_date" class="mt-2" />
                             </div>
-                            <div>
+                            <div v-if="!isStartDateOnly">
                                 <InputLabel for="end_date" value="End Date" />
                                 <TextInput
                                     id="end_date"
@@ -160,6 +193,9 @@ function getStatusBadge(status) {
                                     required
                                 />
                                 <InputError :message="form.errors.end_date" class="mt-2" />
+                            </div>
+                            <div v-else class="flex items-center text-sm text-gray-500">
+                                <span>{{ startDateOnlyLabel }}</span>
                             </div>
                         </div>
 
@@ -190,7 +226,7 @@ function getStatusBadge(status) {
                 </div>
 
                 <!-- Leave Requests History -->
-                <div class="bg-white p-6 shadow sm:rounded-lg">
+                <div class="bg-white p-6 shadow sm:rounded-lg border-t-4" :style="{ borderTopColor: departmentColor }">
                     <h3 class="mb-4 text-lg font-medium text-gray-900">My Leave Requests</h3>
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200">
@@ -205,8 +241,8 @@ function getStatusBadge(status) {
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200 bg-white">
-                                <tr v-for="request in requests.data" :key="request.id">
-                                    <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">{{ request.leave_type }}</td>
+                                <tr v-for="request in requests.data" :key="request.leave_request_id">
+                                    <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">{{ getLeaveTypeName(request) }}</td>
                                     <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{{ formatDate(request.start_date) }}</td>
                                     <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{{ formatDate(request.end_date) }}</td>
                                     <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{{ request.number_of_days }}</td>
@@ -218,7 +254,7 @@ function getStatusBadge(status) {
                                     <td class="whitespace-nowrap px-6 py-4 text-sm">
                                         <button
                                             v-if="request.status === 'pending'"
-                                            @click="cancelRequest(request.id)"
+                                            @click="cancelRequest(request.leave_request_id)"
                                             class="rounded-md border border-red-300 bg-white px-3 py-1.5 text-xs font-medium text-red-600 shadow-sm transition hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1"
                                         >
                                             Cancel Request

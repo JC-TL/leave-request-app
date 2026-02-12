@@ -1,7 +1,8 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link } from '@inertiajs/vue3';
-import { onMounted, ref } from 'vue';
+import { getLeaveTypeName } from '@/utils/leaveType';
+import { Head, Link, usePage } from '@inertiajs/vue3';
+import { onMounted, ref, computed } from 'vue';
 
 const props = defineProps({
     pendingRequests: Object,
@@ -11,6 +12,9 @@ const props = defineProps({
     totalEmployees: Number,
     calendarEvents: Array,
 });
+
+const page = usePage();
+const departmentColor = computed(() => page.props.auth.departmentColor);
 
 const calendarEl = ref(null);
 
@@ -74,9 +78,9 @@ onMounted(async () => {
                 <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
                     <!-- Left Column -->
                     <div class="space-y-6 lg:col-span-2">
-                        <!-- Stats Cards -->
+                        <!-- Stats Cards with Department Color Accent -->
                         <div class="grid grid-cols-2 gap-4 lg:grid-cols-4 text-center">
-                            <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow">
+                            <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow border-t-4" :style="{ borderTopColor: departmentColor }">
                                 <div class="flex items-center gap-2">
                                     <span class="flex-shrink-0 text-gray-500">
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 "><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
@@ -85,7 +89,7 @@ onMounted(async () => {
                                 </div>
                                 <dd class="mt-1 text-3xl font-semibold text-yellow-600">{{ totalPending }}</dd>
                             </div>
-                            <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow">
+                            <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow border-t-4" :style="{ borderTopColor: departmentColor }">
                                 <div class="flex items-center gap-2">
                                     <span class="flex-shrink-0 text-gray-500">
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6"><path fill-rule="evenodd" d="M19.916 4.626a.75.75 0 0 1 .208 1.04l-9 13.5a.75.75 0 0 1-1.154.114l-6-6a.75.75 0 0 1 1.06-1.06l5.353 5.353 8.493-12.74a.75.75 0 0 1 1.04-.207Z" clip-rule="evenodd" /></svg>
@@ -94,7 +98,7 @@ onMounted(async () => {
                                 </div>
                                 <dd class="mt-1 text-3xl font-semibold text-green-600">{{ totalApprovedThisMonth }}</dd>
                             </div>
-                            <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow">
+                            <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow border-t-4" :style="{ borderTopColor: departmentColor }">
                                 <div class="flex items-center gap-2">
                                     <span class="flex-shrink-0 text-gray-500">
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6"><path fill-rule="evenodd" d="M5.47 5.47a.75.75 0 0 1 1.06 0L12 10.94l5.47-5.47a.75.75 0 1 1 1.06 1.06L13.06 12l5.47 5.47a.75.75 0 1 1-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 0 1-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" /></svg>
@@ -103,19 +107,19 @@ onMounted(async () => {
                                 </div>
                                 <dd class="mt-1 text-3xl font-semibold text-red-600">{{ totalRejectedThisMonth }}</dd>
                             </div>
-                            <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow">
+                            <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow border-t-4" :style="{ borderTopColor: departmentColor }">
                                 <div class="flex items-center gap-2">
                                     <span class="flex-shrink-0 text-gray-500">
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6"><path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" clip-rule="evenodd" /></svg>
                                     </span>
                                     <dt class="truncate text-sm font-medium text-gray-500">Employees</dt>
                                 </div>
-                                <dd class="mt-1 text-3xl font-semibold text-indigo-600">{{ totalEmployees }}</dd>
+                                <dd class="mt-1 text-3xl font-semibold" :style="{ color: departmentColor }">{{ totalEmployees }}</dd>
                             </div>
                         </div>
 
                         <!-- Pending Requests Table -->
-                        <div class="bg-white p-6 shadow sm:rounded-lg">
+                        <div class="bg-white p-6 shadow sm:rounded-lg border-t-4" :style="{ borderTopColor: departmentColor }">
                             
                             <h3 class="mb-4 text-lg font-medium text-gray-900">Pending Requests</h3>
                             <div class="overflow-x-auto">
@@ -131,10 +135,10 @@ onMounted(async () => {
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-gray-200 bg-white">
-                                        <tr v-for="request in pendingRequests.data" :key="request.id">
-                                            <td class="whitespace-nowrap px-4 py-4 text-sm font-medium text-gray-900">{{ request.employee.name }}</td>
-                                            <td class="whitespace-nowrap px-4 py-4 text-sm text-gray-500">{{ request.employee.department?.name ?? 'N/A' }}</td>
-                                            <td class="whitespace-nowrap px-4 py-4 text-sm text-gray-500">{{ request.leave_type }}</td>
+                                        <tr v-for="request in pendingRequests.data" :key="request.leave_request_id">
+                                            <td class="whitespace-nowrap px-4 py-4 text-sm font-medium text-gray-900">{{ request.employee?.name ?? '—' }}</td>
+                                            <td class="whitespace-nowrap px-4 py-4 text-sm text-gray-500">{{ request.employee?.department?.name ?? 'N/A' }}</td>
+                                            <td class="whitespace-nowrap px-4 py-4 text-sm text-gray-500">{{ getLeaveTypeName(request) }}</td>
                                             <td class="whitespace-nowrap px-4 py-4 text-sm text-gray-500">
                                                 {{ formatDate(request.start_date) }} - {{ formatDate(request.end_date) }}
                                             </td>
@@ -144,7 +148,7 @@ onMounted(async () => {
                                                 </span>
                                             </td>
                                             <td class="whitespace-nowrap px-4 py-4 text-sm">
-                                                <Link :href="route('hr.show-request', request.id)" class="text-indigo-600 hover:text-indigo-900">
+                                                <Link :href="route('hr.show-request', request.leave_request_id)" class="text-indigo-600 hover:text-indigo-900">
                                                     View
                                                 </Link>
                                             </td>
@@ -160,7 +164,7 @@ onMounted(async () => {
 
                     <!-- Right Column: Calendar -->
                     <div class="lg:col-span-1">
-                        <div class="sticky top-6 overflow-hidden bg-white shadow sm:rounded-lg">
+                        <div class="sticky top-6 overflow-hidden bg-white shadow sm:rounded-lg border-t-4" :style="{ borderTopColor: departmentColor }">
                             <div class="border-b border-gray-200 bg-gray-50 px-4 py-3">
                                 <h3 class="text-sm font-medium text-gray-900">Leave Calendar</h3>
                             </div>

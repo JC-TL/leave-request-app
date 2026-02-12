@@ -129,7 +129,7 @@ function formatRole(role) {
                                 <select
                                     id="role"
                                     v-model="form.role"
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                                     required
                                 >
                                     <option value="">Select Role</option>
@@ -155,7 +155,7 @@ function formatRole(role) {
                                 <select
                                     id="department_id"
                                     v-model="form.department_id"
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                                     required
                                 >
                                     <option value="">Select Department</option>

@@ -1,5 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import { getLeaveTypeName } from '@/utils/leaveType';
+import { getRelationName } from '@/utils/relations';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import DangerButton from '@/Components/DangerButton.vue';
@@ -17,10 +19,13 @@ const rejectForm = useForm({ reason: '' });
 
 const availableBalance = computed(() => {
     if (!props.balance) return 0;
-    return Math.max(0, props.balance.balance - props.balance.used);
+    return Math.max(0, props.balance.allocated_days - props.balance.used_days);
 });
 
-const totalBalance = computed(() => props.balance?.balance ?? 0);
+const totalBalance = computed(() => props.balance?.allocated_days ?? 0);
+
+const departmentManager = computed(() => props.leaveRequest?.department_manager ?? props.leaveRequest?.departmentManager);
+const hrApprover = computed(() => props.leaveRequest?.hr_approver ?? props.leaveRequest?.hrApprover);
 
 function formatDate(dateString) {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -43,11 +48,11 @@ function formatDateTime(dateString) {
 }
 
 function approve() {
-    approveForm.patch(route('hr.approve-request', props.leaveRequest.id));
+    approveForm.patch(route('hr.approve-request', props.leaveRequest.leave_request_id));
 }
 
 function reject() {
-    rejectForm.patch(route('hr.reject-request', props.leaveRequest.id));
+    rejectForm.patch(route('hr.reject-request', props.leaveRequest.leave_request_id));
 }
 
 function getStatusBadge(status) {
@@ -93,15 +98,15 @@ function getStatusBadge(status) {
                         <dl class="space-y-3">
                             <div class="flex justify-between">
                                 <dt class="text-sm text-gray-500">Name</dt>
-                                <dd class="text-sm font-medium text-gray-900">{{ leaveRequest.employee.name }}</dd>
+                                <dd class="text-sm font-medium text-gray-900">{{ leaveRequest.employee?.name ?? '—' }}</dd>
                             </div>
                             <div class="flex justify-between">
                                 <dt class="text-sm text-gray-500">Department</dt>
-                                <dd class="text-sm font-medium text-gray-900">{{ leaveRequest.employee.department?.name ?? 'N/A' }}</dd>
+                                <dd class="text-sm font-medium text-gray-900">{{ getRelationName(leaveRequest.employee, 'department') ?? 'N/A' }}</dd>
                             </div>
                             <div class="flex justify-between">
                                 <dt class="text-sm text-gray-500">Email</dt>
-                                <dd class="text-sm font-medium text-gray-900">{{ leaveRequest.employee.email }}</dd>
+                                <dd class="text-sm font-medium text-gray-900">{{ leaveRequest.employee?.email ?? '—' }}</dd>
                             </div>
                             <div class="flex justify-between">
                                 <dt class="text-sm text-gray-500">Balance</dt>
@@ -115,7 +120,7 @@ function getStatusBadge(status) {
                         <dl class="space-y-3">
                             <div class="flex justify-between">
                                 <dt class="text-sm text-gray-500">Leave Type</dt>
-                                <dd class="text-sm font-medium text-gray-900">{{ leaveRequest.leave_type }}</dd>
+                                <dd class="text-sm font-medium text-gray-900">{{ getLeaveTypeName(leaveRequest) }}</dd>
                             </div>
                             <div class="flex justify-between">
                                 <dt class="text-sm text-gray-500">Dates</dt>
@@ -144,31 +149,31 @@ function getStatusBadge(status) {
                     <h3 class="mb-4 text-lg font-medium text-gray-900">Approval Timeline</h3>
                     <div class="space-y-4">
                         <div class="flex items-start gap-4">
-                            <div class="flex h-8 w-8 items-center justify-center rounded-full" :class="leaveRequest.department_manager ? 'bg-green-100' : 'bg-gray-100'">
-                                <svg class="h-4 w-4" :class="leaveRequest.department_manager ? 'text-green-600' : 'text-gray-400'" fill="currentColor" viewBox="0 0 20 20">
-                                    <path v-if="leaveRequest.department_manager" fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                            <div class="flex h-8 w-8 items-center justify-center rounded-full" :class="departmentManager ? 'bg-green-100' : 'bg-gray-100'">
+                                <svg class="h-4 w-4" :class="departmentManager ? 'text-green-600' : 'text-gray-400'" fill="currentColor" viewBox="0 0 20 20">
+                                    <path v-if="departmentManager" fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                                     <path v-else fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
                                 </svg>
                             </div>
                             <div>
                                 <p class="font-medium text-gray-900">Manager Approval</p>
-                                <p v-if="leaveRequest.department_manager" class="text-sm text-gray-500">
-                                    Approved by {{ leaveRequest.department_manager.name }} on {{ formatDateTime(leaveRequest.approved_by_dept_at) }}
+                                <p v-if="departmentManager" class="text-sm text-gray-500">
+                                    Approved by {{ departmentManager.name }} on {{ formatDateTime(leaveRequest.approved_by_dept_at) }}
                                 </p>
                                 <p v-else class="text-sm text-gray-500">Pending manager approval</p>
                             </div>
                         </div>
                         <div class="flex items-start gap-4">
-                            <div class="flex h-8 w-8 items-center justify-center rounded-full" :class="leaveRequest.hr_approver ? 'bg-green-100' : 'bg-gray-100'">
-                                <svg class="h-4 w-4" :class="leaveRequest.hr_approver ? 'text-green-600' : 'text-gray-400'" fill="currentColor" viewBox="0 0 20 20">
-                                    <path v-if="leaveRequest.hr_approver" fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                            <div class="flex h-8 w-8 items-center justify-center rounded-full" :class="hrApprover ? 'bg-green-100' : 'bg-gray-100'">
+                                <svg class="h-4 w-4" :class="hrApprover ? 'text-green-600' : 'text-gray-400'" fill="currentColor" viewBox="0 0 20 20">
+                                    <path v-if="hrApprover" fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                                     <path v-else fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
                                 </svg>
                             </div>
                             <div>
                                 <p class="font-medium text-gray-900">HR Approval</p>
-                                <p v-if="leaveRequest.hr_approver" class="text-sm text-gray-500">
-                                    Approved by {{ leaveRequest.hr_approver.name }} on {{ formatDateTime(leaveRequest.approved_by_hr_at) }}
+                                <p v-if="hrApprover" class="text-sm text-gray-500">
+                                    Approved by {{ hrApprover.name }} on {{ formatDateTime(leaveRequest.approved_by_hr_at) }}
                                 </p>
                                 <p v-else class="text-sm text-gray-500">Pending HR approval</p>
                             </div>
