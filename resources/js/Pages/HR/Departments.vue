@@ -33,6 +33,7 @@ const presetColors = [
 
 function openModal(dept = null) {
     editingDept.value = dept;
+    form.clearErrors();
     if (dept) {
         form.name = dept.name;
         form.color = dept.color ?? '#3b82f6';
@@ -75,7 +76,7 @@ function deleteDept(dept) {
         <template #header>
             <div class="flex items-center justify-between">
                 <h2 class="text-xl font-semibold leading-tight text-gray-800">Departments</h2>
-                <PrimaryButton @click="openModal">Add Department</PrimaryButton>
+                <PrimaryButton type="button" @click="openModal()">Add Department</PrimaryButton>
             </div>
         </template>
 
@@ -141,7 +142,7 @@ function deleteDept(dept) {
 
         <!-- Add / Edit Department Modal -->
         <Modal :show="showModal" @close="closeModal">
-            <div class="p-6">
+            <div class="p-6" @click.stop>
                 <h2 class="text-lg font-medium text-gray-900">{{ editingDept ? 'Edit Department' : 'Add Department' }}</h2>
                 <form @submit.prevent="submit" class="mt-6 space-y-4">
                     <div>
@@ -186,7 +187,7 @@ function deleteDept(dept) {
 
                     <div class="mt-6 flex justify-end gap-3">
                         <SecondaryButton type="button" @click="closeModal">Cancel</SecondaryButton>
-                        <PrimaryButton :disabled="form.processing">{{ editingDept ? 'Update Department' : 'Add Department' }}</PrimaryButton>
+                        <PrimaryButton type="submit" :disabled="form.processing">{{ editingDept ? 'Update Department' : 'Add Department' }}</PrimaryButton>
                     </div>
                 </form>
             </div>
